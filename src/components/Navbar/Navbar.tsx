@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import styles from "./Navbar.module.css";
 
-const navLinks = [
+const links = [
   { to: "/", label: "Home" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
@@ -33,15 +33,13 @@ const Navbar: React.FC = () => {
         <span className={styles.menuIcon}></span>
       </button>
       <div className={`${styles.links} ${isMenuOpen ? styles.linksOpen : ""}`}>
-        {navLinks.map((link) => (
+        {links.map((link) => (
           <Link
             key={link.to}
             to={link.to}
-            className={
-              location.pathname === link.to
-                ? `${styles.link} ${styles.active}`
-                : styles.link
-            }
+            className={`${styles.link} ${
+              location.pathname === link.to ? styles.active : ""
+            }`}
             onClick={closeMenu}
           >
             {link.label}
