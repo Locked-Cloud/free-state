@@ -1,0 +1,157 @@
+.navbar {
+  background: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2c3e50;
+  text-decoration: none;
+  background: linear-gradient(135deg, #3498db, #2ecc71);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+.links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.link {
+  color: #666;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.link::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.link:hover {
+  color: #2c3e50;
+}
+
+.link:hover::after {
+  width: 80%;
+}
+
+.active {
+  color: #2c3e50;
+  background: #f8f9fa;
+}
+
+.active::after {
+  width: 80%;
+}
+
+.menuButton {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.menuIcon {
+  width: 24px;
+  height: 2px;
+  background: #2c3e50;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.menuIcon::before,
+.menuIcon::after {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background: #2c3e50;
+  transition: all 0.3s ease;
+}
+
+.menuIcon::before {
+  top: -6px;
+}
+
+.menuIcon::after {
+  bottom: -6px;
+}
+
+.menuOpen .menuIcon {
+  background: transparent;
+}
+
+.menuOpen .menuIcon::before {
+  transform: rotate(45deg);
+  top: 0;
+}
+
+.menuOpen .menuIcon::after {
+  transform: rotate(-45deg);
+  bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .menuButton {
+    display: block;
+  }
+
+  .links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .linksOpen {
+    display: flex;
+  }
+
+  .link {
+    width: 100%;
+    text-align: center;
+  }
+
+  .link::after {
+    display: none;
+  }
+
+  .active {
+    background: linear-gradient(135deg, #3498db, #2ecc71);
+    color: white;
+  }
+}

@@ -1,0 +1,634 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.navigation {
+  margin-bottom: 2rem;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  color: #343a40;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.backButton:hover {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.projectDetails {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.projectHeader {
+  position: relative;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.4),
+    rgba(0, 0, 0, 0.8)
+  );
+  color: white;
+}
+
+.projectImage {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 16px 16px 0 0;
+}
+
+.projectHeaderInfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+}
+
+.projectHeaderInfo h1 {
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem 0;
+  color: white;
+}
+
+.location {
+  font-size: 1.2rem;
+  color: #e9ecef;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.location::before {
+  content: "📍";
+}
+
+.shareButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 8px;
+  color: #343a40;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shareButton::before {
+  content: "🔗";
+}
+
+.shareButton:hover {
+  background-color: white;
+  transform: translateY(-1px);
+}
+
+.mainFeatures {
+  padding: 2rem;
+  background: #f8f9fa;
+  margin: 2rem;
+  border-radius: 12px;
+}
+
+.mainFeatures h2 {
+  color: #343a40;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.8rem;
+}
+
+.mainFeatures ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mainFeatures li {
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mainFeatures li::before {
+  content: "✓";
+  color: #40c057;
+  font-weight: bold;
+}
+
+.section {
+  padding: 2rem;
+  margin: 0 2rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.section h2 {
+  color: #343a40;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.8rem;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 1rem;
+}
+
+.section h3 {
+  color: #495057;
+  margin: 1.5rem 0 1rem;
+  font-size: 1.4rem;
+}
+
+.features ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.features li {
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.features li::before {
+  content: "•";
+  color: #228be6;
+  font-weight: bold;
+}
+
+.propertyTypes {
+  margin-top: 2rem;
+}
+
+.propertyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.propertyCard {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.propertyCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.propertyCard h4 {
+  color: #343a40;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.propertyDetails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.propertyDetails span {
+  padding: 0.5rem;
+  background: white;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.price {
+  color: #40c057 !important;
+  font-weight: 600;
+  grid-column: 1 / -1;
+}
+
+.paymentPlan {
+  margin-top: 2rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.paymentPlan ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.paymentPlan li {
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #495057;
+}
+
+.paymentPlan li::before {
+  content: "💰";
+}
+
+/* Loading Skeleton */
+.skeleton {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.skeletonImage {
+  width: 100%;
+  height: 400px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 16px;
+}
+
+.skeletonContent {
+  margin-top: 2rem;
+}
+
+.skeletonTitle {
+  width: 60%;
+  height: 40px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.skeletonText {
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.skeletonButton {
+  width: 120px;
+  height: 40px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Error State */
+.error {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.error h2 {
+  color: #e03131;
+  margin: 0 0 1rem 0;
+}
+
+.error p {
+  color: #495057;
+  margin: 0 0 2rem 0;
+}
+
+.pdfSection {
+  padding: 2rem;
+  margin: 2rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pdfSection h2 {
+  color: #343a40;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pdfSection h2::before {
+  content: "📄";
+}
+
+.pdfSlider {
+  position: relative;
+  width: 100%;
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pdfContainer {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 1rem;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #adb5bd #e9ecef;
+}
+
+.pdfContainer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.pdfContainer::-webkit-scrollbar-track {
+  background: #e9ecef;
+  border-radius: 4px;
+}
+
+.pdfContainer::-webkit-scrollbar-thumb {
+  background: #adb5bd;
+  border-radius: 4px;
+}
+
+.pdfContainer::-webkit-scrollbar-thumb:hover {
+  background: #868e96;
+}
+
+.pdfCard {
+  flex: 0 0 auto;
+  width: 200px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  position: relative;
+}
+
+.pdfCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.pdfIcon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  color: #e03131;
+}
+
+.pdfName {
+  font-size: 0.9rem;
+  color: #495057;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdfPreview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.pdfPreviewContent {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pdfPreviewClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+  transition: all 0.2s ease;
+}
+
+.pdfPreviewClose:hover {
+  background: #f8f9fa;
+  transform: scale(1.1);
+}
+
+.navigationButtons {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1rem;
+  pointer-events: none;
+}
+
+.navButton {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+.navButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .projectImage {
+    height: 300px;
+  }
+
+  .projectHeaderInfo h1 {
+    font-size: 2rem;
+  }
+
+  .section {
+    margin: 0 1rem 1rem;
+    padding: 1.5rem;
+  }
+
+  .mainFeatures {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .propertyGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pdfSection {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .pdfCard {
+    width: 150px;
+  }
+
+  .pdfPreviewContent {
+    width: 95%;
+    height: 95%;
+  }
+}
+
+@media (max-width: 480px) {
+  .projectImage {
+    height: 250px;
+  }
+
+  .projectHeaderInfo h1 {
+    font-size: 1.8rem;
+  }
+
+  .mainFeatures ul,
+  .features ul {
+    grid-template-columns: 1fr;
+  }
+
+  .section h2 {
+    font-size: 1.6rem;
+  }
+}
+
+.pdfModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.pdfContent {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pdfViewer {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background: rgba(0, 0, 0, 0.7);
+}

@@ -1,0 +1,150 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: calc(100vh - 60px);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.header h1::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 2px;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.section {
+  margin-bottom: 4rem;
+}
+
+.section h2 {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.section p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #666;
+}
+
+.features,
+.benefits,
+.values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature,
+.benefit,
+.value {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature:hover,
+.benefit:hover,
+.value:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.featureIcon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.feature h3,
+.benefit h3,
+.value h3 {
+  font-size: 1.3rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.feature p,
+.benefit p,
+.value p {
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.6;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+  }
+
+  .section h2 {
+    font-size: 1.8rem;
+  }
+
+  .features,
+  .benefits,
+  .values {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 1.8rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .section h2 {
+    font-size: 1.6rem;
+  }
+
+  .feature,
+  .benefit,
+  .value {
+    padding: 1.5rem;
+  }
+}
