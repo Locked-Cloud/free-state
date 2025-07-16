@@ -12,38 +12,28 @@
 
 .header h1 {
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: var(--text-color);
   margin-bottom: 1rem;
-  position: relative;
-  padding-bottom: 1rem;
-}
-
-.header h1::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 4px;
-  background: linear-gradient(90deg, #3498db, #2ecc71);
-  border-radius: 2px;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
   font-size: 1.2rem;
-  color: #666;
+  color: var(--text-light);
   max-width: 600px;
   margin: 0 auto;
 }
 
 .section {
   margin-bottom: 4rem;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .section h2 {
   font-size: 2rem;
-  color: #2c3e50;
+  color: var(--text-color);
   margin-bottom: 2rem;
   text-align: center;
 }
@@ -51,11 +41,198 @@
 .section p {
   font-size: 1.1rem;
   line-height: 1.8;
-  color: #666;
+  color: var(--text-light);
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.features,
-.benefits,
+/* Stats Section */
+.statsSection {
+  margin: 4rem 0;
+  padding: 3rem 0;
+  background: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  padding: 0 2rem;
+}
+
+.statCard {
+  text-align: center;
+  padding: 1.5rem;
+  transition: var(--transition);
+}
+
+.statNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.statLabel {
+  font-size: 1.1rem;
+  color: var(--text-light);
+}
+
+/* Features Section */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  transition: var(--transition);
+}
+
+.feature:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.feature i {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+}
+
+.feature h3 {
+  font-size: 1.3rem;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.feature p {
+  font-size: 1rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+/* Process Section */
+.process {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.processStep {
+  text-align: center;
+  padding: 2rem;
+  background: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  transition: var(--transition);
+}
+
+.processStep:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stepNumber {
+  width: 40px;
+  height: 40px;
+  background: var(--gradient);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0 auto 1.5rem;
+}
+
+/* Team Section */
+.team {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.teamMember {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  transition: var(--transition);
+}
+
+.teamMember:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.memberImage {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--primary-color);
+}
+
+.memberImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teamMember h3 {
+  font-size: 1.3rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.role {
+  color: var(--primary-color);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.memberDescription {
+  color: var(--text-light);
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.socialLinks {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.socialLinks a {
+  color: var(--text-light);
+  font-size: 1.2rem;
+  transition: var(--transition);
+}
+
+.socialLinks a:hover {
+  color: var(--primary-color);
+}
+
+/* Values Section */
 .values {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -63,45 +240,75 @@
   margin-top: 2rem;
 }
 
-.feature,
-.benefit,
 .value {
   background: white;
   padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  transition: var(--transition);
 }
 
-.feature:hover,
-.benefit:hover,
 .value:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
-.featureIcon {
+.value i {
   font-size: 2.5rem;
-  margin-bottom: 1rem;
-  text-align: center;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
 }
 
-.feature h3,
-.benefit h3,
 .value h3 {
   font-size: 1.3rem;
-  color: #2c3e50;
+  color: var(--text-color);
   margin-bottom: 1rem;
-  text-align: center;
 }
 
-.feature p,
-.benefit p,
 .value p {
   font-size: 1rem;
-  color: #666;
+  color: var(--text-light);
   line-height: 1.6;
+}
+
+/* CTA Section */
+.ctaSection {
   text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-top: 4rem;
+}
+
+.ctaSection h2 {
+  font-size: 2rem;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.ctaSection p {
+  color: var(--text-light);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.ctaButton {
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: white;
+  background: var(--gradient);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 768px) {
@@ -121,11 +328,16 @@
     font-size: 1.8rem;
   }
 
-  .features,
-  .benefits,
-  .values {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statNumber {
+    font-size: 2rem;
+  }
+
+  .ctaSection {
+    padding: 3rem 1.5rem;
   }
 }
 
@@ -134,17 +346,18 @@
     font-size: 1.8rem;
   }
 
-  .subtitle {
-    font-size: 1rem;
+  .statsGrid {
+    grid-template-columns: 1fr;
   }
 
-  .section h2 {
-    font-size: 1.6rem;
+  .features,
+  .process,
+  .team,
+  .values {
+    grid-template-columns: 1fr;
   }
 
-  .feature,
-  .benefit,
-  .value {
-    padding: 1.5rem;
+  .ctaButton {
+    width: 100%;
   }
 }

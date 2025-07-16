@@ -8,60 +8,137 @@
 }
 
 .content {
-  text-align: center;
   max-width: 600px;
-  padding: 3rem;
+  text-align: center;
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 0.5s ease-out;
+  padding: 3rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.5s ease-out;
+}
+
+.errorCode {
+  font-size: 8rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 1rem;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulse 2s infinite;
 }
 
 .content h1 {
-  font-size: 6rem;
-  font-weight: 700;
-  margin: 0;
-  background: linear-gradient(135deg, #3498db, #2ecc71);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1;
+  font-size: 2.5rem;
+  color: var(--text-color);
+  margin-bottom: 1rem;
 }
 
-.content h2 {
-  font-size: 2rem;
-  color: #2c3e50;
-  margin: 1rem 0;
-}
-
-.content p {
-  color: #666;
-  margin: 1.5rem 0;
+.message {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  margin-bottom: 2rem;
   line-height: 1.6;
 }
 
-.homeButton {
-  display: inline-flex;
+.illustration {
+  position: relative;
+  height: 200px;
+  margin: 2rem 0;
+}
+
+.building {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 180px;
+  background: var(--gradient);
+  clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+  animation: float 3s ease-in-out infinite;
+}
+
+.shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) scaleY(0.1);
+  width: 160px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  animation: shadow 3s ease-in-out infinite;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.homeButton,
+.backButton {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: var(--border-radius-md);
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #3498db, #2ecc71);
+  transition: var(--transition);
+}
+
+.homeButton {
+  background: var(--gradient);
   color: white;
-  border-radius: 8px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.3s ease;
+  border: none;
 }
 
-.homeButton:hover {
+.backButton {
+  background: white;
+  color: var(--text-color);
+  border: 2px solid var(--border-color);
+}
+
+.homeButton:hover,
+.backButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
-.homeButton i {
-  font-size: 1.2rem;
+.suggestions {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border-color);
 }
 
-@keyframes fadeIn {
+.suggestions h2 {
+  font-size: 1.3rem;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.suggestions ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.suggestions a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.suggestions a:hover {
+  color: var(--secondary-color);
+}
+
+@keyframes slideUp {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -72,38 +149,87 @@
   }
 }
 
-@media (max-width: 768px) {
-  .content {
-    padding: 2rem;
+@keyframes pulse {
+  0% {
+    transform: scale(1);
   }
-
-  .content h1 {
-    font-size: 4rem;
+  50% {
+    transform: scale(1.05);
   }
-
-  .content h2 {
-    font-size: 1.5rem;
+  100% {
+    transform: scale(1);
   }
 }
 
-@media (max-width: 480px) {
+@keyframes float {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+@keyframes shadow {
+  0%,
+  100% {
+    transform: translateX(-50%) scaleX(1) scaleY(0.1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateX(-50%) scaleX(0.8) scaleY(0.08);
+    opacity: 0.2;
+  }
+}
+
+@media (max-width: 768px) {
   .container {
     padding: 1rem;
   }
 
   .content {
-    padding: 1.5rem;
+    padding: 2rem;
+  }
+
+  .errorCode {
+    font-size: 6rem;
   }
 
   .content h1 {
-    font-size: 3rem;
+    font-size: 2rem;
   }
 
-  .content h2 {
-    font-size: 1.2rem;
+  .actions {
+    flex-direction: column;
   }
 
-  .homeButton {
-    padding: 0.8rem 1.5rem;
+  .homeButton,
+  .backButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .errorCode {
+    font-size: 5rem;
+  }
+
+  .content h1 {
+    font-size: 1.8rem;
+  }
+
+  .message {
+    font-size: 1rem;
+  }
+
+  .illustration {
+    height: 150px;
+  }
+
+  .building {
+    width: 150px;
+    height: 135px;
   }
 }
