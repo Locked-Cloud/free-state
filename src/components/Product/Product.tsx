@@ -507,8 +507,8 @@ const Product: React.FC = () => {
 
   const renderProjects = () => (
     <div className={styles.projectsGrid}>
-      {placeDetails.map((project) => (
-        <div key={`project-${project.project_id}`}>
+      {placeDetails.map((project, index) => (
+        <div key={`project-${project.project_id}-${index}`}>
           {renderProjectCard(project)}
         </div>
       ))}
