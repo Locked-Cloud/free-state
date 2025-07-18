@@ -119,6 +119,46 @@
   bottom: 0;
 }
 
+.username {
+  color: #555;
+  font-size: 0.9rem;
+  margin-right: 1rem;
+  font-weight: 500;
+}
+
+.loginButton {
+  background-color: #339af0;
+  color: white !important;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.loginButton:hover {
+  background-color: #228be6;
+  color: white !important;
+}
+
+.loginButton::after {
+  display: none;
+}
+
+.logoutButton {
+  background-color: #e03131;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.logoutButton:hover {
+  background-color: #c92a2a;
+}
+
 @media (max-width: 768px) {
   .menuButton {
     display: block;
@@ -153,5 +193,15 @@
   .active {
     background: linear-gradient(135deg, #3498db, #2ecc71);
     color: white;
+  }
+
+  .username {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .loginButton,
+  .logoutButton {
+    width: 100%;
   }
 }
