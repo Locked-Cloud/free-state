@@ -13,6 +13,7 @@ import Unauthorized from "./components/Unauthorized/Unauthorized";
 import Forbidden from "./components/Forbidden/Forbidden";
 import ServerError from "./components/ServerError/ServerError";
 import ConnectGoogle from "./components/Data/ConnectGoogle";
+import OutOfStock from "./components/OutOfStock/OutOfStock";
 
 function App() {
   return (
@@ -33,6 +34,14 @@ function App() {
             <Route path="/forbidden" element={<Forbidden />} />
             <Route path="/server-error" element={<ServerError />} />
             <Route path="/connect-google" element={<ConnectGoogle />} />
+            {/* Test route for OutOfStock */}
+            <Route 
+              path="/test-out-of-stock" 
+              element={<OutOfStock 
+                companyName="Test Company" 
+                companyImage="https://placehold.co/800x600?text=Test+Company" 
+              />} 
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

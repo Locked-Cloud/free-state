@@ -2,11 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import styles from "./Product.module.css";
 import useTitle from "../../hooks/useTitle";
+import OutOfStock from "../OutOfStock/OutOfStock";
+import OptimizedImage from "../common/OptimizedImage";
 
 // Google Sheet constants
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 const COMPANIES_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 const PLACES_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`;
+
+// Remove the inline OutOfStock component since we now have a standalone one
 
 interface Company {
   id: string;
@@ -15,6 +19,7 @@ interface Company {
   website: string;
   image: string;
   location: string;
+  active: number; // 1 for active, 0 for inactive
 }
 
 interface Project {
@@ -39,7 +44,9 @@ const getDirectImageUrl = (url: string): string => {
       }
 
       if (fileId) {
-        return `https://lh3.googleusercontent.com/d/${fileId}`;
+        // Add a small random delay to stagger requests and add cache parameter
+        const cacheBuster = Date.now() % 1000;
+        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
       }
     }
 
@@ -126,11 +133,26 @@ const Product: React.FC = () => {
         // Fetch company data
         const companyResponse = await fetch(COMPANIES_SHEET_URL);
         const companyText = await companyResponse.text();
-        const companyRows = companyText.split("\n").slice(1); // Skip header row
+        const companyRows = companyText.split("\n");
+
+        // Parse the header row to find column indices
+        const headerRow = companyRows[0]
+          .split(",")
+          .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
+        console.log("Header row:", headerRow);
+
+        // Find the index of the "active" column
+        const activeColumnIndex = headerRow.findIndex(
+          (col) => col === "active" || col === "status"
+        );
+        console.log("Active column index:", activeColumnIndex);
+
+        // Skip header row for data processing
+        const dataRows = companyRows.slice(1);
 
         let company: Company | null = null;
 
-        for (const row of companyRows) {
+        for (const row of dataRows) {
           const matches = row.match(/("([^"]*)"|([^,]+))(,|$)/g) || [];
           const columns = matches.map((column) =>
             column
@@ -140,9 +162,28 @@ const Product: React.FC = () => {
           );
 
           if (columns[0] && columns[0] === companyId) {
+            console.log("Found company with ID:", companyId);
+            console.log("All columns:", columns);
+
             const imageUrl = columns[4]
               ? getDirectImageUrl(columns[4])
               : "https://placehold.co/800x600?text=Image+Not+Found";
+
+            // Get the active value from the correct column index
+            let activeValue = "1"; // Default to active
+            if (
+              activeColumnIndex !== -1 &&
+              columns[activeColumnIndex] !== undefined
+            ) {
+              activeValue = columns[activeColumnIndex];
+            }
+
+            console.log(
+              "Active column value:",
+              activeValue,
+              "Parsed as:",
+              parseInt(activeValue || "1")
+            );
 
             company = {
               id: columns[0],
@@ -151,6 +192,7 @@ const Product: React.FC = () => {
               website: columns[3] || "",
               image: imageUrl,
               location: columns[5] || "Multiple Locations",
+              active: parseInt(activeValue || "1"), // Use the found active value
             };
             break;
           }
@@ -162,86 +204,92 @@ const Product: React.FC = () => {
 
         setCompanyData(company);
 
-        // Fetch projects data
-        const projectsResponse = await fetch(PLACES_SHEET_URL);
-        if (!projectsResponse.ok) {
-          throw new Error(`HTTP error! status: ${projectsResponse.status}`);
-        }
-
-        const csvText = await projectsResponse.text();
-        if (!csvText.trim()) {
-          throw new Error("No data received from the sheet");
-        }
-
-        const rows = parseCSV(csvText);
-        const projectsList: Project[] = [];
-
-        // Find the header row to determine column indices
-        const headerRow = rows[0];
-        const idIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "id"
-        );
-        const projectIdIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "project_id"
-        );
-        const nameIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "name"
-        );
-        const locationIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "location"
-        );
-        const keyFeaturesIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "key_features"
-        );
-        const imagePathIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "image_path"
-        );
-
-        // Skip header row
-        for (let i = 1; i < rows.length; i++) {
-          const columns = rows[i];
-
-          if (columns.length < Math.max(idIndex, projectIdIndex) + 1) continue;
-
-          const rowId = columns[idIndex].replace(/"/g, "");
-          if (rowId === company.id) {
-            let projectId = `project-${i}`;
-            if (projectIdIndex >= 0 && columns[projectIdIndex]) {
-              projectId = columns[projectIdIndex].replace(/"/g, "");
-            } else if (nameIndex >= 0 && columns[nameIndex]) {
-              // fallback: use project name as id (slugified)
-              projectId = columns[nameIndex]
-                .trim()
-                .toLowerCase()
-                .replace(/\s+/g, "-")
-                .replace(/[^a-z0-9\-]/g, "");
-            }
-            console.log("Parsed projectId:", projectId, "for row:", columns);
-            const features =
-              keyFeaturesIndex >= 0 && columns[keyFeaturesIndex]
-                ? parseKeyFeatures(columns[keyFeaturesIndex])
-                : [
-                    "Premium Location",
-                    "Modern Design",
-                    "Smart Home Technology",
-                  ];
-
-            const imagePath =
-              imagePathIndex >= 0 && columns[imagePathIndex]
-                ? getDirectImageUrl(columns[imagePathIndex])
-                : company.image;
-
-            projectsList.push({
-              id: projectId,
-              title: columns[nameIndex] || `Project ${i}`,
-              location: columns[locationIndex] || company.location,
-              image: imagePath,
-              features: features.slice(0, 3), // Limit to 3 features for display
-            });
+        // Only fetch projects if company is active
+        if (company.active === 1) {
+          // Fetch projects data
+          const projectsResponse = await fetch(PLACES_SHEET_URL);
+          if (!projectsResponse.ok) {
+            throw new Error(`HTTP error! status: ${projectsResponse.status}`);
           }
-        }
 
-        setProjects(projectsList);
+          const csvText = await projectsResponse.text();
+          if (!csvText.trim()) {
+            throw new Error("No data received from the sheet");
+          }
+
+          const rows = parseCSV(csvText);
+          const projectsList: Project[] = [];
+
+          // Find the header row to determine column indices
+          const headerRow = rows[0];
+          const idIndex = headerRow.findIndex(
+            (col) => col.toLowerCase() === "id"
+          );
+          const projectIdIndex = headerRow.findIndex(
+            (col) => col.toLowerCase() === "project_id"
+          );
+          const nameIndex = headerRow.findIndex(
+            (col) => col.toLowerCase() === "name"
+          );
+          const locationIndex = headerRow.findIndex(
+            (col) => col.toLowerCase() === "location"
+          );
+          const keyFeaturesIndex = headerRow.findIndex(
+            (col) => col.toLowerCase() === "key_features"
+          );
+          const imagePathIndex = headerRow.findIndex(
+            (col) => col.toLowerCase() === "image_path"
+          );
+
+          // Skip header row
+          for (let i = 1; i < rows.length; i++) {
+            const columns = rows[i];
+
+            if (columns.length < Math.max(idIndex, projectIdIndex) + 1)
+              continue;
+
+            const rowId = columns[idIndex].replace(/"/g, "");
+            if (rowId === company.id) {
+              let projectId = `project-${i}`;
+              if (projectIdIndex >= 0 && columns[projectIdIndex]) {
+                projectId = columns[projectIdIndex].replace(/"/g, "");
+              } else if (nameIndex >= 0 && columns[nameIndex]) {
+                // fallback: use project name as id (slugified)
+                projectId = columns[nameIndex]
+                  .trim()
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")
+                  .replace(/[^a-z0-9\-]/g, "");
+              }
+              console.log("Parsed projectId:", projectId, "for row:", columns);
+              const features =
+                keyFeaturesIndex >= 0 && columns[keyFeaturesIndex]
+                  ? parseKeyFeatures(columns[keyFeaturesIndex])
+                  : [
+                      "Premium Location",
+                      "Modern Design",
+                      "Smart Home Technology",
+                    ];
+
+              const imagePath =
+                imagePathIndex >= 0 && columns[imagePathIndex]
+                  ? getDirectImageUrl(columns[imagePathIndex])
+                  : company.image;
+
+              projectsList.push({
+                id: projectId,
+                title: columns[nameIndex] || `Project ${i}`,
+                location: columns[locationIndex] || company.location,
+                image: imagePath,
+                features: features.slice(0, 3), // Limit to 3 features for display
+              });
+            }
+          }
+
+          setProjects(projectsList);
+        } else {
+          setProjects([]); // No projects if company is inactive
+        }
         setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -270,7 +318,7 @@ const Product: React.FC = () => {
           <h2>Projects</h2>
           {projects && projects.length > 0 ? (
             <div className={styles.projectsGrid}>
-              {projects.map((project: Project) => (
+              {projects.map((project: Project, index: number) => (
                 <div
                   key={project.id}
                   className={styles.projectCard}
@@ -279,15 +327,12 @@ const Product: React.FC = () => {
                   }
                 >
                   <div className={styles.projectImageContainer}>
-                    <img
+                    <OptimizedImage
                       src={project.image}
                       alt={project.title}
                       className={styles.projectImage}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src =
-                          "https://placehold.co/800x600?text=Image+Not+Found";
-                      }}
+                      loadingDelay={index * 150} // Stagger loading by 150ms per item
+                      loadingClassName={styles.imageLoading}
                     />
                   </div>
                   <div className={styles.projectInfo}>
@@ -395,6 +440,16 @@ const Product: React.FC = () => {
     );
   }
 
+  // If company is inactive, show the OutOfStock component
+  if (companyData && companyData.active === 0) {
+    return (
+      <OutOfStock
+        companyName={companyData.name}
+        companyImage={companyData.image}
+      />
+    );
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.navigation}>
@@ -405,14 +460,11 @@ const Product: React.FC = () => {
 
       <div className={styles.companyDetails}>
         <div className={styles.imageSection}>
-          <img
-            src={companyData?.image}
-            alt={companyData?.name}
+          <OptimizedImage
+            src={companyData?.image || ""}
+            alt={companyData?.name || "Company"}
             className={styles.companyImage}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "https://placehold.co/800x600?text=Image+Not+Found";
-            }}
+            loadingClassName={styles.imageLoading}
           />
         </div>
         <div className={styles.infoSection}>

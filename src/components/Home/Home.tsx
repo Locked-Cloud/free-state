@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Home.module.css";
+import OptimizedImage from "../common/OptimizedImage";
 
 interface Company {
   id: number;
@@ -8,6 +9,7 @@ interface Company {
   description: string;
   website: string;
   imageUrl: string;
+  active: number; // 1 for active, 0 for inactive
 }
 
 const DEFAULT_LOGO = "https://placehold.co/800x600?text=Image+Not+Found";
@@ -25,7 +27,9 @@ const getDirectImageUrl = (url: string): string => {
         fileId = url.split("id=")[1].split("&")[0];
       }
       if (fileId) {
-        return `https://lh3.googleusercontent.com/d/${fileId}`;
+        // Add a cache-busting parameter to prevent 429 errors
+        const cacheBuster = Date.now() % 1000;
+        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
       }
     }
     if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
@@ -66,8 +70,26 @@ const Home: React.FC = () => {
       try {
         const response = await fetch(COMPANIES_SHEET_URL);
         const csvText = await response.text();
-        const rows = csvText.split("\n").slice(1);
-        const parsedCompanies = rows
+
+        // Split into rows
+        const allRows = csvText.split("\n");
+
+        // Parse the header row to find column indices
+        const headerRow = allRows[0]
+          .split(",")
+          .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
+        console.log("Home - Header row:", headerRow);
+
+        // Find the index of the "active" column
+        const activeColumnIndex = headerRow.findIndex(
+          (col) => col === "active" || col === "status"
+        );
+        console.log("Home - Active column index:", activeColumnIndex);
+
+        // Skip header row for data processing
+        const dataRows = allRows.slice(1);
+
+        const parsedCompanies = dataRows
           .map((row) => {
             const matches = row.match(/("([^"]*)"|([^,]+))(,|$)/g) || [];
             const columns = matches.map((column) =>
@@ -79,17 +101,38 @@ const Home: React.FC = () => {
 
             if (columns[0] && columns[1]) {
               const imageUrl = getDirectImageUrl(columns[4]);
+
+              // Get the active value from the correct column index
+              let activeValue = "1"; // Default to active
+              if (
+                activeColumnIndex !== -1 &&
+                columns[activeColumnIndex] !== undefined
+              ) {
+                activeValue = columns[activeColumnIndex];
+              }
+
+              console.log(
+                "Home - Company:",
+                columns[1],
+                "Active value:",
+                activeValue,
+                "Parsed as:",
+                parseInt(activeValue || "1")
+              );
+
               return {
                 id: parseInt(columns[0], 10),
                 name: columns[1],
                 description: columns[2] || "",
                 website: columns[3] || "",
                 imageUrl,
+                active: parseInt(activeValue || "1"), // Use the found active value
               };
             }
             return null;
           })
           .filter((company): company is Company => company !== null);
+        // Remove the filter for active companies to show all companies
 
         setCompanies(parsedCompanies);
         setFilteredCompanies(parsedCompanies);
@@ -210,21 +253,28 @@ const Home: React.FC = () => {
         </div>
       ) : (
         <div className={styles.companiesGrid}>
-          {filteredCompanies.map((company) => (
+          {filteredCompanies.map((company, index) => (
             <div
               key={company.id}
-              className={styles.companyCard}
+              className={`${styles.companyCard} ${
+                company.active === 0 ? styles.inactiveCompany : ""
+              }`}
               onClick={() => handleCardClick(company)}
             >
               <div className={styles.imageContainer}>
-                <img
+                <OptimizedImage
                   src={company.imageUrl}
                   alt={`${company.name} logo`}
                   className={styles.companyImage}
-                  onError={handleImageError}
-                  loading="lazy"
-                  crossOrigin="anonymous"
+                  loadingDelay={index * 200} // Stagger loading by 200ms per item
+                  loadingClassName={styles.imageLoading}
+                  fallbackSrc={DEFAULT_LOGO}
                 />
+                {company.active === 0 && (
+                  <div className={styles.unavailableBadge}>
+                    Currently Unavailable
+                  </div>
+                )}
               </div>
               <div className={styles.contentContainer}>
                 <div className={styles.companyHeader}>

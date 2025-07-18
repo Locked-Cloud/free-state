@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./ProjectDetails.module.css";
 import useTitle from "../../hooks/useTitle";
+import OptimizedImage from "../common/OptimizedImage";
 
 // Google Sheet constants
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
@@ -55,7 +56,9 @@ const getDirectImageUrl = (url: string): string => {
       }
 
       if (fileId) {
-        return `https://lh3.googleusercontent.com/d/${fileId}`;
+        // Add a cache-busting parameter to prevent 429 errors
+        const cacheBuster = Date.now() % 1000;
+        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
       }
     }
 
@@ -731,14 +734,11 @@ const ProjectDetails: React.FC = () => {
 
       <div className={styles.projectDetails}>
         <div className={styles.projectHeader}>
-          <img
+          <OptimizedImage
             src={project.image}
             alt={project.name}
             className={styles.projectImage}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "https://placehold.co/800x600?text=Image+Not+Found";
-            }}
+            loadingClassName={styles.imageLoading}
           />
           <div className={styles.projectHeaderInfo}>
             <h1>{project.name}</h1>

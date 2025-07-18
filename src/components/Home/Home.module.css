@@ -101,6 +101,28 @@
   box-shadow: var(--shadow-lg);
 }
 
+.inactiveCompany {
+  position: relative;
+  filter: grayscale(70%);
+}
+
+.inactiveCompany:hover {
+  filter: grayscale(40%);
+}
+
+.unavailableBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(224, 49, 49, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  z-index: 2;
+}
+
 .imageContainer {
   width: 100%;
   height: 200px;
@@ -108,11 +130,17 @@
   position: relative;
 }
 
+.imageLoading {
+  opacity: 0.6;
+  filter: blur(5px);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
 .companyImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
 }
 
 .companyCard:hover .companyImage {

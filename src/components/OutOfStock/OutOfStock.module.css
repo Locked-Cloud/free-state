@@ -1,0 +1,171 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.navigation {
+  margin-bottom: 2rem;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  color: #343a40;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+}
+
+.backButton:hover {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.outOfStockContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.outOfStockContent {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.outOfStockTitle {
+  font-size: 2.2rem;
+  color: #343a40;
+  margin-bottom: 2rem;
+  position: relative;
+  padding-bottom: 0.75rem;
+  display: inline-block;
+}
+
+.outOfStockTitle::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #e03131, #fa5252);
+  border-radius: 2px;
+}
+
+.outOfStockImageContainer {
+  width: 100%;
+  max-width: 500px;
+  height: 300px;
+  margin: 0 auto 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.outOfStockImageContainer::after {
+  content: "UNAVAILABLE";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  background-color: rgba(224, 49, 49, 0.8);
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 0.5rem 2rem;
+  border-radius: 4px;
+  letter-spacing: 2px;
+  z-index: 2;
+}
+
+.outOfStockImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(80%);
+}
+
+.outOfStockMessage {
+  margin: 2rem 0;
+  color: #495057;
+  line-height: 1.7;
+}
+
+.outOfStockMessage p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.returnHomeButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.875rem 2rem;
+  background: #339af0;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.returnHomeButton:hover {
+  background: #228be6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Add responsive styles for Out of Stock page */
+@media (max-width: 768px) {
+  .outOfStockTitle {
+    font-size: 1.8rem;
+  }
+  
+  .outOfStockImageContainer {
+    height: 250px;
+  }
+  
+  .outOfStockImageContainer::after {
+    font-size: 1.5rem;
+    padding: 0.4rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .outOfStockTitle {
+    font-size: 1.5rem;
+  }
+  
+  .outOfStockImageContainer {
+    height: 200px;
+  }
+  
+  .outOfStockImageContainer::after {
+    font-size: 1.2rem;
+    padding: 0.3rem 1rem;
+  }
+  
+  .outOfStockMessage p {
+    font-size: 1rem;
+  }
+} 
