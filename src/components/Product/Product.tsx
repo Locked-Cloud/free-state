@@ -107,7 +107,7 @@ const parseKeyFeatures = (keyFeaturesStr: string): string[] => {
 };
 
 const Product: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: companyId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,7 +139,7 @@ const Product: React.FC = () => {
               .trim()
           );
 
-          if (columns[0] && columns[0] === id) {
+          if (columns[0] && columns[0] === companyId) {
             const imageUrl = columns[4]
               ? getDirectImageUrl(columns[4])
               : "https://placehold.co/800x600?text=Image+Not+Found";
@@ -205,8 +205,18 @@ const Product: React.FC = () => {
 
           const rowId = columns[idIndex].replace(/"/g, "");
           if (rowId === company.id) {
-            const projectId =
-              columns[projectIdIndex]?.replace(/"/g, "") || `project-${i}`;
+            let projectId = `project-${i}`;
+            if (projectIdIndex >= 0 && columns[projectIdIndex]) {
+              projectId = columns[projectIdIndex].replace(/"/g, "");
+            } else if (nameIndex >= 0 && columns[nameIndex]) {
+              // fallback: use project name as id (slugified)
+              projectId = columns[nameIndex]
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, "-")
+                .replace(/[^a-z0-9\-]/g, "");
+            }
+            console.log("Parsed projectId:", projectId, "for row:", columns);
             const features =
               keyFeaturesIndex >= 0 && columns[keyFeaturesIndex]
                 ? parseKeyFeatures(columns[keyFeaturesIndex])
@@ -245,7 +255,7 @@ const Product: React.FC = () => {
     };
 
     fetchCompanyData();
-  }, [id]);
+  }, [companyId]);
 
   const handleRetry = () => {
     setLoading(true);
@@ -264,7 +274,9 @@ const Product: React.FC = () => {
                 <div
                   key={project.id}
                   className={styles.projectCard}
-                  onClick={() => navigate(`/projects/${project.id}`)}
+                  onClick={() =>
+                    navigate(`/projects/${companyId}/${project.id}`)
+                  }
                 >
                   <div className={styles.projectImageContainer}>
                     <img

@@ -122,6 +122,42 @@ const parseKeyFeatures = (keyFeaturesStr: string): string[] => {
   return keyFeaturesStr.split(",").map((feature) => feature.trim());
 };
 
+function parsePropertyType(typeStr: string) {
+  // Example: "Type A 410m – EGP 122,000,000", "Twin House 225m – 5 Beds – EGP 36,000,000"
+  // Try to extract type, size, bedrooms, price
+  let type = "",
+    size = "",
+    bedrooms = "",
+    price = "";
+  let str = typeStr.trim();
+
+  // Extract price (EGP ...)
+  const priceMatch = str.match(/EGP[\s\d,]+/i);
+  if (priceMatch) {
+    price = priceMatch[0].replace(/–|EGP/gi, "").trim();
+    str = str.replace(priceMatch[0], "").replace(/–/g, "").trim();
+  }
+
+  // Extract bedrooms (e.g., '5 Beds', '3 Bedrooms')
+  const bedsMatch = str.match(/(\d+)\s*(Beds?|Bedrooms?)/i);
+  if (bedsMatch) {
+    bedrooms = bedsMatch[0].trim();
+    str = str.replace(bedsMatch[0], "").replace(/–/g, "").trim();
+  }
+
+  // Extract size (e.g., '410m', '65–80m', '135–148m')
+  const sizeMatch = str.match(/(\d+[–-]?\d*)m/);
+  if (sizeMatch) {
+    size = sizeMatch[0].replace(/–/g, "-").trim();
+    str = str.replace(sizeMatch[0], "").replace(/–/g, "").trim();
+  }
+
+  // The rest is the type
+  type = str.trim();
+
+  return { type, size, bedrooms, price };
+}
+
 const parsePropertyData = (
   data: string
 ): { mainFeatures: string[]; sections: Section[] } => {
@@ -329,7 +365,10 @@ const parseSections = (
 };
 
 const ProjectDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { companyId, projectId } = useParams<{
+    companyId: string;
+    projectId: string;
+  }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -386,6 +425,12 @@ const ProjectDetails: React.FC = () => {
         const propertyTypesIndex = headerRow.findIndex(
           (col) => col.toLowerCase() === "property_types"
         );
+        const deliveryDateIndex = headerRow.findIndex(
+          (col) => col.toLowerCase() === "delivery_date"
+        );
+        const pdfIndex = headerRow.findIndex(
+          (col) => col.toLowerCase() === "pdf"
+        );
         const imagePathIndex = headerRow.findIndex(
           (col) => col.toLowerCase() === "image_path"
         );
@@ -395,32 +440,36 @@ const ProjectDetails: React.FC = () => {
         const launchDateIndex = headerRow.findIndex(
           (col) => col.toLowerCase() === "launch_date"
         );
-        const deliveryDateIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "delivery_date"
-        );
-        const documentsIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "documents"
-        );
-        const pdfIndex = headerRow.findIndex(
-          (col) => col.toLowerCase() === "pdf"
-        );
         const paymentMethodsIndex = headerRow.findIndex(
           (col) => col.toLowerCase() === "payment_methods"
         );
 
-        // Find the project with matching ID
         let projectData: ProjectDetail | null = null;
-
+        const companyIdIndex = headerRow.findIndex(
+          (col) => col.toLowerCase() === "id"
+        );
         for (let i = 1; i < rows.length; i++) {
           const columns = rows[i];
 
-          if (columns.length <= projectIdIndex) {
-            continue;
+          // Find by projectId (from URL param)
+          let rowProjectId = "";
+          if (projectIdIndex >= 0 && columns[projectIdIndex]) {
+            rowProjectId = columns[projectIdIndex].replace(/"/g, "");
+          } else if (nameIndex >= 0 && columns[nameIndex]) {
+            rowProjectId = columns[nameIndex]
+              .trim()
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/[^a-z0-9\-]/g, "");
           }
 
-          const projectId = columns[projectIdIndex]?.replace(/"/g, "");
+          // Find by companyId (from URL param)
+          let rowCompanyId = "";
+          if (companyIdIndex >= 0 && columns[companyIdIndex]) {
+            rowCompanyId = columns[companyIdIndex].replace(/"/g, "");
+          }
 
-          if (projectId === id) {
+          if (rowProjectId === projectId && rowCompanyId === companyId) {
             // Parse main features
             let mainFeatures: string[] = [];
             let sections: Section[] = [];
@@ -460,8 +509,11 @@ const ProjectDetails: React.FC = () => {
             }
 
             // Then check if there's a documents column with multiple documents
-            if (documentsIndex >= 0 && columns[documentsIndex]) {
-              const docsString = columns[documentsIndex];
+            if (
+              columns[columns.length - 1] &&
+              columns[columns.length - 1].includes(";")
+            ) {
+              const docsString = columns[columns.length - 1];
               if (docsString.includes(";")) {
                 const docPairs = docsString.split(";");
                 docPairs.forEach((pair) => {
@@ -482,100 +534,41 @@ const ProjectDetails: React.FC = () => {
               paymentMethodsInfo = columns[paymentMethodsIndex].trim();
             }
 
-            // Improve the property types parsing to handle the format in the Google Sheet
-            // Parse property types by section
+            // Replace the property types parsing logic inside the main projectData parsing block:
             if (propertyTypesIndex >= 0 && columns[propertyTypesIndex]) {
               const propertyTypesStr = columns[propertyTypesIndex];
 
-              // Check if property types are divided by sections with a pipe character
-              if (propertyTypesStr.includes("|")) {
-                const sectionPropertyTypes = propertyTypesStr.split("|");
-                sectionPropertyTypes.forEach((sectionData) => {
-                  const parts = sectionData.trim().split(":");
-                  if (parts.length >= 2) {
-                    const sectionName = parts[0].trim();
-                    const propertyTypesText = parts[1].trim();
-
-                    // Find the matching section or create one if it doesn't exist
-                    let sectionIndex = sections.findIndex((section) =>
-                      section.title.includes(sectionName)
-                    );
-
-                    if (sectionIndex === -1) {
-                      // Create a new section if it doesn't exist
-                      sections.push({
-                        title: sectionName,
-                        features: [],
-                        propertyTypes: [],
-                        paymentPlan: [],
-                      });
-                      sectionIndex = sections.length - 1;
-                    }
-
-                    // Parse the property types
-                    const propertyTypes = propertyTypesText
-                      .split(";")
-                      .filter((typeStr) => typeStr.trim() !== "") // Filter out empty strings
-                      .map((typeStr) => {
-                        const typeParts = typeStr
-                          .trim()
-                          .split("-")
-                          .map((p) => p.trim());
-
-                        // Make sure we have at least 4 parts
-                        while (typeParts.length < 4) {
-                          typeParts.push("");
-                        }
-
-                        return {
-                          type: typeParts[0] || "",
-                          size: typeParts[1] || "",
-                          bedrooms: typeParts[2] || "",
-                          price: typeParts[3] || "",
-                        };
-                      });
-
-                    // Add to the section
-                    sections[sectionIndex].propertyTypes = propertyTypes;
-                  }
-                });
-              } else {
-                // If no section division, parse as regular property types
-                const propertyTypes = propertyTypesStr
+              // Split by '|' for sections
+              const sectionParts = propertyTypesStr.split("|");
+              sectionParts.forEach((sectionData) => {
+                let [sectionName, sectionTypes] = sectionData.split(":");
+                if (!sectionTypes) {
+                  // If no section name, treat all as types
+                  sectionTypes = sectionName;
+                  sectionName = "Properties";
+                }
+                sectionName = sectionName.trim();
+                const propertyTypes = sectionTypes
                   .split(";")
-                  .filter((typeStr) => typeStr.trim() !== "") // Filter out empty strings
-                  .map((typeStr) => {
-                    const typeParts = typeStr
-                      .trim()
-                      .split("-")
-                      .map((p) => p.trim());
-
-                    // Make sure we have at least 4 parts
-                    while (typeParts.length < 4) {
-                      typeParts.push("");
-                    }
-
-                    return {
-                      type: typeParts[0] || "",
-                      size: typeParts[1] || "",
-                      bedrooms: typeParts[2] || "",
-                      price: typeParts[3] || "",
-                    };
-                  });
-
-                // Add to the first section if it exists
-                if (sections.length > 0) {
-                  sections[0].propertyTypes = propertyTypes;
-                } else if (propertyTypes.length > 0) {
-                  // Create a default section if none exists
+                  .map((typeStr) => parsePropertyType(typeStr))
+                  .filter(
+                    (pt) => pt.type || pt.size || pt.bedrooms || pt.price
+                  );
+                // Find or create the section
+                let sectionIndex = sections.findIndex((section) =>
+                  section.title.includes(sectionName)
+                );
+                if (sectionIndex === -1) {
                   sections.push({
-                    title: "Properties",
+                    title: sectionName,
                     features: [],
-                    propertyTypes: propertyTypes,
+                    propertyTypes: [],
                     paymentPlan: [],
                   });
+                  sectionIndex = sections.length - 1;
                 }
-              }
+                sections[sectionIndex].propertyTypes = propertyTypes;
+              });
             }
 
             // Update the payment plan section to include the payment methods info
@@ -636,7 +629,7 @@ const ProjectDetails: React.FC = () => {
     };
 
     fetchProjectData();
-  }, [id]);
+  }, [projectId, companyId]);
 
   const handleShareClick = () => {
     if (navigator.share) {

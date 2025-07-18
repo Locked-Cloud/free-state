@@ -25,7 +25,10 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/product/:id" element={<Product />} />
-            <Route path="/projects/:id" element={<ProjectDetails />} />
+            <Route
+              path="/projects/:companyId/:projectId"
+              element={<ProjectDetails />}
+            />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/forbidden" element={<Forbidden />} />
             <Route path="/server-error" element={<ServerError />} />
