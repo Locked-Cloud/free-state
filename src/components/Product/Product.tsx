@@ -7,8 +7,8 @@ import OptimizedImage from "../common/OptimizedImage";
 
 // Google Sheet constants
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-// Use CORS proxy for production environment
-const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+// Use a more reliable CORS proxy
+const CORS_PROXY = "https://corsproxy.io/?";
 const COMPANIES_SHEET_URL =
   process.env.NODE_ENV === "production"
     ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`
@@ -62,7 +62,8 @@ const getDirectImageUrl = (url: string): string => {
       return url;
     }
   } catch (error) {
-    console.error("Error processing image URL:", error);
+    // Replace detailed error logging with generic message
+    console.error("Image processing error");
   }
 
   return "https://placehold.co/800x600?text=Image+Not+Found";
@@ -147,13 +148,11 @@ const Product: React.FC = () => {
         const headerRow = companyRows[0]
           .split(",")
           .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
-        console.log("Header row:", headerRow);
 
         // Find the index of the "active" column
         const activeColumnIndex = headerRow.findIndex(
           (col) => col === "active" || col === "status"
         );
-        console.log("Active column index:", activeColumnIndex);
 
         // Skip header row for data processing
         const dataRows = companyRows.slice(1);
@@ -170,9 +169,6 @@ const Product: React.FC = () => {
           );
 
           if (columns[0] && columns[0] === companyId) {
-            console.log("Found company with ID:", companyId);
-            console.log("All columns:", columns);
-
             const imageUrl = columns[4]
               ? getDirectImageUrl(columns[4])
               : "https://placehold.co/800x600?text=Image+Not+Found";
@@ -185,13 +181,6 @@ const Product: React.FC = () => {
             ) {
               activeValue = columns[activeColumnIndex];
             }
-
-            console.log(
-              "Active column value:",
-              activeValue,
-              "Parsed as:",
-              parseInt(activeValue || "1")
-            );
 
             company = {
               id: columns[0],
@@ -269,7 +258,6 @@ const Product: React.FC = () => {
                   .replace(/\s+/g, "-")
                   .replace(/[^a-z0-9\-]/g, "");
               }
-              console.log("Parsed projectId:", projectId, "for row:", columns);
               const features =
                 keyFeaturesIndex >= 0 && columns[keyFeaturesIndex]
                   ? parseKeyFeatures(columns[keyFeaturesIndex])
@@ -300,7 +288,8 @@ const Product: React.FC = () => {
         }
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        // Replace detailed error logging with generic message
+        console.error("Data fetching error");
         setError(
           err instanceof Error
             ? err.message

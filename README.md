@@ -71,7 +71,7 @@ npm install gh-pages --save-dev
 2. Update package.json
 
 ```json
-"homepage": "https://yourusername.github.io/free-state",
+"homepage": "https://locked-cloud.github.io/free-state",
 "scripts": {
   "predeploy": "npm run build",
   "deploy": "gh-pages -d build"

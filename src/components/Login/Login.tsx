@@ -5,8 +5,8 @@ import { useAuth } from "../../contexts/AuthContext";
 
 // Google Sheet constants
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-// Use CORS proxy for production environment
-const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+// Use a more reliable CORS proxy
+const CORS_PROXY = "https://corsproxy.io/?";
 const LOGIN_SHEET_URL =
   process.env.NODE_ENV === "production"
     ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=447441264`
@@ -119,7 +119,8 @@ const Login: React.FC = () => {
         // Redirect will happen in the useEffect hook
       }
     } catch (err) {
-      console.error("Login error:", err);
+      // Replace detailed error logging with generic message
+      console.error("Authentication error occurred");
       setError(
         err instanceof Error ? err.message : "An error occurred during login"
       );

@@ -6,11 +6,12 @@ import OptimizedImage from "../common/OptimizedImage";
 
 // Google Sheet constants
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-// Use CORS proxy for production environment
-const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
-const PLACES_SHEET_URL = process.env.NODE_ENV === 'production'
-  ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`
-  : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`;
+// Use a more reliable CORS proxy
+const CORS_PROXY = "https://corsproxy.io/?";
+const PLACES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`;
 
 interface ProjectDetail {
   id: string;
@@ -70,7 +71,8 @@ const getDirectImageUrl = (url: string): string => {
       return url;
     }
   } catch (error) {
-    console.error("Error processing image URL:", error);
+    // Replace detailed error logging with generic message
+    console.error("Image processing error");
   }
 
   return "https://placehold.co/800x600?text=Image+Not+Found";
@@ -268,7 +270,8 @@ const parsePropertyData = (
       sections.push({ ...currentSection });
     }
   } catch (error) {
-    console.error("Error parsing property data:", error);
+    // Replace detailed error logging with generic message
+    console.error("Data parsing error");
   }
 
   return {
@@ -625,7 +628,8 @@ const ProjectDetails: React.FC = () => {
         setProject(projectData);
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching project data:", err);
+        // Replace detailed error logging with generic message
+        console.error("Data fetching error");
         setError(
           err instanceof Error
             ? err.message
@@ -647,7 +651,8 @@ const ProjectDetails: React.FC = () => {
           url: window.location.href,
         })
         .catch((err) => {
-          console.error("Error sharing:", err);
+          // Replace detailed error logging with generic message
+          console.error("Sharing error");
         });
     } else {
       navigator.clipboard
@@ -657,7 +662,8 @@ const ProjectDetails: React.FC = () => {
           setTimeout(() => setCopied(false), 2000);
         })
         .catch((err) => {
-          console.error("Error copying to clipboard:", err);
+          // Replace detailed error logging with generic message
+          console.error("Clipboard error");
         });
     }
   };

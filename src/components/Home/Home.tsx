@@ -13,8 +13,8 @@ interface Company {
 }
 
 const DEFAULT_LOGO = "https://placehold.co/800x600?text=Image+Not+Found";
-// Use CORS proxy for production environment
-const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+// Use a more reliable CORS proxy
+const CORS_PROXY = "https://corsproxy.io/?";
 const COMPANIES_SHEET_URL =
   process.env.NODE_ENV === "production"
     ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM/export?format=csv`
@@ -41,7 +41,8 @@ const getDirectImageUrl = (url: string): string => {
       return url;
     }
   } catch (error) {
-    console.error("Error processing image URL:", error);
+    // Replace detailed error logging with generic message
+    console.error("Image processing error");
   }
   return DEFAULT_LOGO;
 };
@@ -83,13 +84,11 @@ const Home: React.FC = () => {
         const headerRow = allRows[0]
           .split(",")
           .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
-        console.log("Home - Header row:", headerRow);
 
         // Find the index of the "active" column
         const activeColumnIndex = headerRow.findIndex(
           (col) => col === "active" || col === "status"
         );
-        console.log("Home - Active column index:", activeColumnIndex);
 
         // Skip header row for data processing
         const dataRows = allRows.slice(1);
@@ -116,15 +115,6 @@ const Home: React.FC = () => {
                 activeValue = columns[activeColumnIndex];
               }
 
-              console.log(
-                "Home - Company:",
-                columns[1],
-                "Active value:",
-                activeValue,
-                "Parsed as:",
-                parseInt(activeValue || "1")
-              );
-
               return {
                 id: parseInt(columns[0], 10),
                 name: columns[1],
@@ -143,7 +133,8 @@ const Home: React.FC = () => {
         setFilteredCompanies(parsedCompanies);
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        // Replace detailed error logging with generic message
+        console.error("Data fetching error");
         setError("Failed to load company data. Please try again later.");
         setLoading(false);
       }
