@@ -13,7 +13,12 @@ interface Company {
 }
 
 const DEFAULT_LOGO = "https://placehold.co/800x600?text=Image+Not+Found";
-const COMPANIES_SHEET_URL = `https://docs.google.com/spreadsheets/d/1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM/export?format=csv`;
+// Use CORS proxy for production environment
+const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+const COMPANIES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM/export?format=csv`
+    : `https://docs.google.com/spreadsheets/d/1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM/export?format=csv`;
 
 const getDirectImageUrl = (url: string): string => {
   if (!url) return DEFAULT_LOGO;

@@ -7,8 +7,16 @@ import OptimizedImage from "../common/OptimizedImage";
 
 // Google Sheet constants
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const COMPANIES_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-const PLACES_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`;
+// Use CORS proxy for production environment
+const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+const COMPANIES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+const PLACES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`;
 
 // Remove the inline OutOfStock component since we now have a standalone one
 

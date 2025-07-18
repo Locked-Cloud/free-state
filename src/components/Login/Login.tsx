@@ -5,7 +5,12 @@ import { useAuth } from "../../contexts/AuthContext";
 
 // Google Sheet constants
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const LOGIN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=447441264`;
+// Use CORS proxy for production environment
+const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+const LOGIN_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=447441264`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=447441264`;
 
 interface LoginFormData {
   username: string;
