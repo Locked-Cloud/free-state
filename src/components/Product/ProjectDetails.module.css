@@ -31,7 +31,7 @@
 .projectDetails {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -47,9 +47,15 @@
 
 .projectImage {
   width: 100%;
-  height: 400px;
+  height: 500px;
   object-fit: cover;
   border-radius: 16px 16px 0 0;
+  filter: brightness(0.9);
+  transition: filter 0.3s ease;
+}
+
+.projectImage:hover {
+  filter: brightness(1);
 }
 
 .projectHeaderInfo {
@@ -57,14 +63,16 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 2rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 3rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+  backdrop-filter: blur(5px);
 }
 
 .projectHeaderInfo h1 {
-  font-size: 2.5rem;
+  font-size: 3rem;
   margin: 0 0 0.5rem 0;
   color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .location {
@@ -80,14 +88,44 @@
   content: "📍";
 }
 
+.highlightBadge {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6b6b, #f03e3e);
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  border-radius: 30px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  animation: pulse 2s infinite;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+  }
+}
+
 .shareButton {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 1.5rem;
+  right: 1.5rem;
   padding: 0.75rem 1.5rem;
   background-color: rgba(255, 255, 255, 0.9);
   border: none;
-  border-radius: 8px;
+  border-radius: 30px;
   color: #343a40;
   font-weight: 500;
   cursor: pointer;
@@ -95,6 +133,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .shareButton::before {
@@ -103,20 +143,70 @@
 
 .shareButton:hover {
   background-color: white;
-  transform: translateY(-1px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Project Overview Section */
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.overviewItem {
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  border-left: 4px solid #228be6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.overviewItem:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.overviewItem h3 {
+  color: #343a40;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.overviewItem p {
+  color: #495057;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .mainFeatures {
-  padding: 2rem;
-  background: #f8f9fa;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   margin: 2rem;
-  border-radius: 12px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 }
 
 .mainFeatures h2 {
   color: #343a40;
   margin: 0 0 1.5rem 0;
   font-size: 1.8rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.mainFeatures h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #339af0, #74c0fc);
+  border-radius: 2px;
 }
 
 .mainFeatures ul {
@@ -129,27 +219,45 @@
 }
 
 .mainFeatures li {
-  padding: 1rem;
+  padding: 1.2rem;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
 }
 
 .mainFeatures li::before {
   content: "✓";
   color: #40c057;
   font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(64, 192, 87, 0.1);
+  border-radius: 50%;
+}
+
+.featureItem {
+  transition: all 0.3s ease;
+}
+
+.featureItem:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
 .section {
-  padding: 2rem;
+  padding: 2.5rem;
   margin: 0 2rem 2rem;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 }
 
 .section h2 {
@@ -158,6 +266,18 @@
   font-size: 1.8rem;
   border-bottom: 2px solid #e9ecef;
   padding-bottom: 1rem;
+  position: relative;
+}
+
+.section h2::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #339af0, #74c0fc);
+  border-radius: 2px;
 }
 
 .section h3 {
@@ -176,18 +296,21 @@
 }
 
 .features li {
-  padding: 0.75rem;
+  padding: 1rem;
   background: #f8f9fa;
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
 }
 
 .features li::before {
   content: "•";
   color: #228be6;
   font-weight: bold;
+  font-size: 1.5rem;
 }
 
 .propertyTypes {
@@ -201,21 +324,36 @@
 }
 
 .propertyCard {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 16px;
+  padding: 1.8rem;
+  transition: all 0.3s ease;
+  border-left: 4px solid #339af0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .propertyCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .propertyCard h4 {
   color: #343a40;
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
+  margin: 0 0 1.2rem 0;
+  font-size: 1.3rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.propertyCard h4::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: #339af0;
+  border-radius: 2px;
 }
 
 .propertyDetails {
@@ -225,25 +363,50 @@
 }
 
 .propertyDetails span {
-  padding: 0.5rem;
+  padding: 0.8rem;
   background: white;
-  border-radius: 6px;
+  border-radius: 10px;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #495057;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.propertyDetails span:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.propertySize {
+  color: #1c7ed6;
+  font-weight: 500;
+}
+
+.propertyBedrooms {
+  color: #7950f2;
+  font-weight: 500;
 }
 
 .price {
   color: #40c057 !important;
   font-weight: 600;
   grid-column: 1 / -1;
+  font-size: 1.2rem !important;
+  background: linear-gradient(
+    135deg,
+    rgba(64, 192, 87, 0.1),
+    rgba(64, 192, 87, 0.05)
+  ) !important;
+  border-left: 3px solid #40c057 !important;
 }
 
 .paymentPlan {
   margin-top: 2rem;
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 16px;
+  padding: 1.8rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .paymentPlan ul {
@@ -255,17 +418,47 @@
 }
 
 .paymentPlan li {
-  padding: 1rem;
+  padding: 1.2rem;
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
   color: #495057;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.paymentItem {
+  border-left: 3px solid #fcc419;
+  transition: all 0.3s ease;
+}
+
+.paymentItem:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .paymentPlan li::before {
   content: "💰";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(252, 196, 25, 0.1);
+  border-radius: 50%;
+}
+
+.paymentMethods {
+  background: linear-gradient(135deg, #fff9db, #fff3bf);
+  border-left: 4px solid #fcc419;
+  padding: 1.5rem;
+  border-radius: 12px;
+  color: #495057;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 /* Loading Skeleton */
@@ -333,7 +526,7 @@
   padding: 4rem 2rem;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .error h2 {
@@ -347,11 +540,11 @@
 }
 
 .pdfSection {
-  padding: 2rem;
+  padding: 2.5rem;
   margin: 2rem;
-  background: #f8f9fa;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 }
 
 .pdfSection h2 {
@@ -360,25 +553,38 @@
   font-size: 1.8rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
+  position: relative;
+  padding-bottom: 0.5rem;
 }
 
 .pdfSection h2::before {
   content: "📄";
 }
 
+.pdfSection h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #339af0, #74c0fc);
+  border-radius: 2px;
+}
+
 .pdfSlider {
   position: relative;
   width: 100%;
   background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .pdfContainer {
   display: flex;
-  gap: 1rem;
+  gap: 1.2rem;
   overflow-x: auto;
   padding: 1rem;
   scroll-behavior: smooth;
@@ -408,33 +614,40 @@
 .pdfCard {
   flex: 0 0 auto;
   width: 200px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 1rem;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 12px;
+  padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-align: center;
   position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .pdfCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .pdfIcon {
   font-size: 3rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
   color: #e03131;
+  transition: transform 0.3s ease;
+}
+
+.pdfCard:hover .pdfIcon {
+  transform: scale(1.1);
 }
 
 .pdfName {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #495057;
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .pdfPreview {
@@ -455,8 +668,9 @@
   width: 90%;
   height: 90%;
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .pdfPreviewClose {
@@ -473,14 +687,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   z-index: 1001;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .pdfPreviewClose:hover {
   background: #f8f9fa;
   transform: scale(1.1);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
 .navigationButtons {
@@ -505,14 +720,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   pointer-events: auto;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .navButton:hover {
   background: white;
   transform: scale(1.1);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
 .navButton:disabled {
@@ -527,7 +743,11 @@
   }
 
   .projectImage {
-    height: 300px;
+    height: 350px;
+  }
+
+  .projectHeaderInfo {
+    padding: 1.5rem;
   }
 
   .projectHeaderInfo h1 {
@@ -561,6 +781,10 @@
     width: 95%;
     height: 95%;
   }
+
+  .overviewGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -593,6 +817,7 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .pdfContent {
@@ -600,8 +825,9 @@
   width: 90%;
   height: 90%;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .pdfViewer {
@@ -612,13 +838,13 @@
 
 .closeButton {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 15px;
+  right: 15px;
   background: rgba(0, 0, 0, 0.5);
   color: white;
   border: none;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   font-size: 20px;
   cursor: pointer;
@@ -626,9 +852,10 @@
   align-items: center;
   justify-content: center;
   z-index: 1;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .closeButton:hover {
   background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
 }
