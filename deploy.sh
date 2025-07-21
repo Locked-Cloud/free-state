@@ -10,10 +10,5 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Ensure _redirects file exists
-echo "Ensuring Netlify configuration exists..."
-echo "/* /index.html 200" > build/_redirects
-
 echo "Build completed successfully!"
-echo "To deploy to Netlify, run: netlify deploy"
-echo "Or upload the 'build' folder to your hosting provider of choice." 
+echo "Upload the 'build' folder to Cloudflare Pages or push to your connected repository." 
