@@ -1,3 +1,4 @@
+// Build info: Cloudflare Pages force rebuild - useLocation import removed
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
