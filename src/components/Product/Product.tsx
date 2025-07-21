@@ -256,7 +256,7 @@ const Product: React.FC = () => {
                   .trim()
                   .toLowerCase()
                   .replace(/\s+/g, "-")
-                  .replace(/[^a-z0-9\-]/g, "");
+                  .replace(/[^a-z0-9-]/g, "");
               }
               const features =
                 keyFeaturesIndex >= 0 && columns[keyFeaturesIndex]
