@@ -166,13 +166,6 @@ const Home: React.FC = () => {
     setFilteredCompanies(result);
   }, [companies, searchTerm, sortBy]);
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const target = e.target as HTMLImageElement;
-    if (target.src !== DEFAULT_LOGO) {
-      target.src = DEFAULT_LOGO;
-    }
-  };
-
   const handleCardClick = (company: Company) => {
     navigate(`/product/${company.id}`, {
       state: {
