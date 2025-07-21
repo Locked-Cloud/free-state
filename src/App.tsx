@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
+import { AuthProvider } from "./contexts/AuthContext";
 // Lazy load all main page components
 const Home = lazy(() => import("./components/Home/Home"));
 const About = lazy(() => import("./components/About/About"));
@@ -24,7 +25,6 @@ const Logout = lazy(() => import("./components/Logout/Logout"));
 const ProtectedRoute = lazy(
   () => import("./components/ProtectedRoute/ProtectedRoute")
 );
-import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
   return (
