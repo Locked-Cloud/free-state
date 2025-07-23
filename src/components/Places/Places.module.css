@@ -1,0 +1,123 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: calc(100vh - 60px);
+  background: linear-gradient(135deg, #f8fafc 0%, #e3e9f7 100%);
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #22223b;
+  margin-bottom: 2.5rem;
+  background: linear-gradient(90deg, #4f8cff 0%, #6dd5ed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.placesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 2.5rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.placeCard {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  transition: transform 0.25s cubic-bezier(0.4, 2, 0.3, 1), box-shadow 0.25s;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.placeCard:hover {
+  transform: translateY(-12px) scale(1.03);
+  box-shadow: 0 16px 40px 0 rgba(31, 38, 135, 0.22);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.imageContainer {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+  border-radius: 1.2rem;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(80, 120, 255, 0.08);
+  background: linear-gradient(120deg, #e0e7ff 0%, #f8fafc 100%);
+}
+
+.placeImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 8px rgba(80, 120, 255, 0.07);
+  transition: filter 0.2s;
+}
+
+.placeCard:hover .placeImage {
+  filter: brightness(1.08) saturate(1.15);
+}
+
+.contentContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0 0 0;
+}
+
+.placeHeader {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+
+.placeHeader h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #22223b;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.description {
+  font-size: 1.05rem;
+  color: #4a5568;
+  text-align: center;
+  margin: 0.5rem 0 0.2rem 0;
+  line-height: 1.5;
+  min-height: 2.2em;
+}
+
+.error {
+  color: #e63946;
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 1.2rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

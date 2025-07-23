@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import useImageLoader from "../../hooks/useImageLoader";
 
 interface OptimizedImageProps
@@ -25,13 +25,15 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     fallbackImage: fallbackSrc,
     loadingDelay: loadingDelay,
   });
+  const [error, setError] = useState(false);
 
   return (
     <img
-      src={imageUrl}
+      src={error ? fallbackSrc : imageUrl}
       alt={alt}
       className={`${className} ${isLoading ? loadingClassName : ""}`}
-      loading="lazy" // Use native lazy loading
+      loading="lazy"
+      onError={() => setError(true)}
       {...props}
     />
   );

@@ -26,11 +26,20 @@ const OTP = lazy(() => import("./components/OTP/OTP"));
 const ProtectedRoute = lazy(
   () => import("./components/ProtectedRoute/ProtectedRoute")
 );
+const Places = lazy(() => import("./components/Places/Places"));
+const LocationProjects = lazy(
+  () => import("./components/Places/LocationProjects")
+);
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <div className="App">
           <Suspense fallback={<div className="loading">Loading...</div>}>
             <Navbar />
@@ -138,6 +147,22 @@ function App() {
                         companyName="Test Company"
                         companyImage="https://placehold.co/800x600?text=Test+Company"
                       />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/places"
+                  element={
+                    <ProtectedRoute>
+                      <Places />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/places/:id_loc"
+                  element={
+                    <ProtectedRoute>
+                      <LocationProjects />
                     </ProtectedRoute>
                   }
                 />
