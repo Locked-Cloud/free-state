@@ -22,6 +22,7 @@ const ConnectGoogle = lazy(() => import("./components/Data/ConnectGoogle"));
 const OutOfStock = lazy(() => import("./components/OutOfStock/OutOfStock"));
 const Login = lazy(() => import("./components/Login/Login"));
 const Logout = lazy(() => import("./components/Logout/Logout"));
+const OTP = lazy(() => import("./components/OTP/OTP"));
 const ProtectedRoute = lazy(
   () => import("./components/ProtectedRoute/ProtectedRoute")
 );
@@ -37,6 +38,16 @@ function App() {
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<Login />} />
+
+                {/* OTP verification route */}
+                <Route
+                  path="/otp"
+                  element={
+                    <ProtectedRoute>
+                      <OTP />
+                    </ProtectedRoute>
+                  }
+                />
 
                 {/* Protected routes - require authentication */}
                 <Route

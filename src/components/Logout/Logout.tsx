@@ -6,6 +6,10 @@ const Logout: React.FC = () => {
   const { logout } = useAuth();
 
   useEffect(() => {
+    // Clear OTP verification status
+    sessionStorage.removeItem("otpVerified");
+
+    // Logout user
     logout();
   }, [logout]);
 

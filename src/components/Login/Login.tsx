@@ -31,10 +31,14 @@ const Login: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      // Check if there's a saved redirect path
-      const redirectPath = sessionStorage.getItem("redirectPath") || "/";
-      sessionStorage.removeItem("redirectPath"); // Clear after use
-      navigate(redirectPath);
+      // Check if OTP is verified
+      const isOtpVerified = sessionStorage.getItem("otpVerified") === "true";
+
+      if (isOtpVerified) {
+        navigate("/");
+      } else {
+        navigate("/otp");
+      }
     }
   }, [isAuthenticated, navigate]);
 
@@ -113,6 +117,9 @@ const Login: React.FC = () => {
       } else if (!isActive) {
         setError("Your account is inactive. Please contact support.");
       } else {
+        // Reset OTP verification status
+        sessionStorage.removeItem("otpVerified");
+
         // Use the login function from context
         login(formData.username);
 

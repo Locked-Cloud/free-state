@@ -1,0 +1,97 @@
+.needsOtpContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.needsOtpCard {
+  width: 100%;
+  max-width: 500px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.needsOtpCard:hover {
+  transform: translateY(-5px);
+}
+
+.needsOtpTitle {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.needsOtpIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  color: #f59f00;
+}
+
+.needsOtpMessage {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.needsOtpInstructions {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  background-color: #fff9db;
+  border-left: 4px solid #f59f00;
+  padding: 1rem;
+  text-align: left;
+  border-radius: 4px;
+}
+
+.needsOtpActions {
+  margin-top: 2rem;
+}
+
+.logoutButton {
+  padding: 0.875rem 2rem;
+  background-color: #339af0;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.logoutButton:hover {
+  background-color: #228be6;
+}
+
+.needsOtpFooter {
+  margin-top: 2rem;
+  color: #868e96;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+  .needsOtpCard {
+    padding: 1.5rem;
+  }
+
+  .needsOtpTitle {
+    font-size: 1.75rem;
+  }
+
+  .needsOtpIcon {
+    width: 60px;
+    height: 60px;
+  }
+}
