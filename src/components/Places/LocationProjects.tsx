@@ -9,14 +9,15 @@ interface Project {
   name: string;
   image: string;
   description?: string;
+  companyId: string; // Add company ID to the interface
 }
 
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 const CORS_PROXY = "https://corsproxy.io/?";
 const PROJECTS_SHEET_URL =
   process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`
-    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=2114410627`;
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=2114410627`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=2114410627`;
 
 const getDirectImageUrl = (url: string): string => {
   if (!url) return "https://placehold.co/800x600?text=Image+Not+Found";
@@ -42,6 +43,43 @@ const getDirectImageUrl = (url: string): string => {
   return "https://placehold.co/800x600?text=Image+Not+Found";
 };
 
+// Proper CSV parser that handles quoted fields and commas within fields
+const parseCSVLine = (line: string): string[] => {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < line.length) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote
+        current += '"';
+        i += 2;
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes;
+        i++;
+      }
+    } else if (char === "," && !inQuotes) {
+      // End of field
+      result.push(current.trim());
+      current = "";
+      i++;
+    } else {
+      current += char;
+      i++;
+    }
+  }
+
+  // Add the last field
+  result.push(current.trim());
+  return result;
+};
+
 const LocationProjects: React.FC = () => {
   const { id_loc } = useParams<{ id_loc: string }>();
   const navigate = useNavigate();
@@ -56,70 +94,134 @@ const LocationProjects: React.FC = () => {
       try {
         const response = await fetch(PROJECTS_SHEET_URL);
         const csvText = await response.text();
-        const rows = csvText.split("\n");
-        const header = rows[0]
-          .split(",")
-          .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
-        const idLocIndex = header.findIndex((col) => col === "id_loc");
-        const idIndex = header.findIndex(
-          (col) => col === "project_id" || col === "id"
+
+        const lines = csvText.split("\n").filter((line) => line.trim());
+
+        if (lines.length === 0) {
+          throw new Error("Empty CSV data");
+        }
+
+        // Parse header line properly
+        const headerLine = lines[0];
+
+        const header = parseCSVLine(headerLine).map((col) =>
+          col.toLowerCase().replace(/"/g, "")
         );
+
+        // Find column indices
+        const companyIdIndex = header.findIndex((col) => col === "id"); // This is company ID
+        const projectIdIndex = header.findIndex((col) => col === "project_id"); // Look for project_id column
         const nameIndex = header.findIndex((col) => col === "name");
-        const imageIndex = header.findIndex(
-          (col) => col === "image_path" || col === "image_url"
-        );
         const descIndex = header.findIndex((col) => col === "description");
-        const dataRows = rows.slice(1);
-        const filteredProjects = dataRows
-          .map((row) => {
-            const matches = row.match(/("([^"]*)"|([^,]+))(,|$)/g) || [];
-            const columns = matches.map((column) =>
-              column
-                .replace(/(^,)|(,$)/g, "")
-                .replace(/^"|"$/g, "")
-                .trim()
-            );
-            if (columns[idLocIndex] === id_loc) {
-              return {
-                id: columns[idIndex] || "",
-                id_loc: columns[idLocIndex],
-                name: columns[nameIndex] || "",
-                image: getDirectImageUrl(columns[imageIndex]),
-                description:
-                  descIndex !== -1 && columns[descIndex]
-                    ? columns[descIndex]
-                    : "",
-              };
+        const imageIndex = header.findIndex((col) => col === "image_url");
+        const idLocIndex = header.findIndex((col) => col === "id_loc");
+
+        if (nameIndex === -1 || idLocIndex === -1) {
+          const errorMsg = `Missing required columns! Found: ${header.join(
+            ", "
+          )}`;
+          console.error("❌", errorMsg);
+          throw new Error(errorMsg);
+        }
+
+        // Parse data rows
+        const dataRows = lines.slice(1);
+        const filteredProjects: Project[] = [];
+
+        let projectCounter = 1; // Counter for projects in this location
+
+        for (let i = 0; i < dataRows.length; i++) {
+          const row = dataRows[i];
+
+          // Use proper CSV parsing
+          const columns = parseCSVLine(row);
+
+          // Ensure we have enough columns
+          if (
+            columns.length <=
+            Math.max(
+              companyIdIndex,
+              projectIdIndex,
+              nameIndex,
+              descIndex,
+              imageIndex,
+              idLocIndex
+            )
+          ) {
+            continue;
+          }
+
+          const companyId =
+            companyIdIndex !== -1 ? columns[companyIdIndex] : "";
+          const projectId =
+            projectIdIndex !== -1 ? columns[projectIdIndex] : null;
+          const rowIdLoc = idLocIndex !== -1 ? columns[idLocIndex] : "";
+          const rowName = nameIndex !== -1 ? columns[nameIndex] : "";
+
+          // Check if this project belongs to the requested location
+          if (rowIdLoc && rowIdLoc === id_loc) {
+            // Create unique project ID: use project_id if exists, otherwise create from company+row
+            let uniqueProjectId;
+            if (projectId && projectId.trim() !== "") {
+              uniqueProjectId = projectId;
+            } else {
+              // Create unique ID from company ID and row number
+              uniqueProjectId = `${companyId}_${projectCounter}`;
             }
-            return null;
-          })
-          .filter((proj): proj is NonNullable<typeof proj> => proj !== null);
+
+            const project: Project = {
+              id: uniqueProjectId,
+              id_loc: rowIdLoc,
+              name: rowName || "",
+              image: getDirectImageUrl(
+                imageIndex !== -1 ? columns[imageIndex] : ""
+              ),
+              description: descIndex !== -1 ? columns[descIndex] : "",
+              companyId: companyId, // Store the actual company ID
+            };
+
+            filteredProjects.push(project);
+            projectCounter++; // Increment counter for next project
+          }
+        }
+
         setProjects(filteredProjects);
         setLoading(false);
       } catch (err) {
-        setError("Failed to load projects data. Please try again later.");
+        console.error("💥 Error fetching projects:", err);
+        setError(
+          `Failed to load projects: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }`
+        );
         setLoading(false);
       }
     };
+
     fetchProjects();
-    // Get place name from navigation state if available
+
     if (location.state && (location.state as any).place) {
       setPlaceName((location.state as any).place.name);
     }
   }, [id_loc, location.state]);
 
   const handleProjectClick = (project: Project) => {
-    navigate(`/projects/${id_loc}/${project.id}`);
+    const targetUrl = `/projects/${project.companyId}/${project.id}`;
+
+    navigate(targetUrl);
   };
 
   if (loading) {
     return (
       <div className={styles.container}>
         <h1 className={styles.title}>Projects in {placeName || id_loc}</h1>
-        <div>Loading...</div>
+        <div className={styles.loadingSpinner}>
+          <div className={styles.spinner}></div>
+        </div>
       </div>
     );
   }
+
   if (error) {
     return (
       <div className={styles.container}>
@@ -128,16 +230,30 @@ const LocationProjects: React.FC = () => {
       </div>
     );
   }
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Projects in {placeName || id_loc}</h1>
-      <div className={styles.placesGrid}>
+
+      <div
+        className={
+          projects.length === 0
+            ? `${styles.placesGrid} ${styles["placesGrid--centered"]}`
+            : styles.placesGrid
+        }
+      >
         {projects.length === 0 ? (
-          <div>No projects found for this location.</div>
+          <div className={styles.noProjects}>
+            <span className={styles.noProjectsIcon}>🏗️</span>
+            No projects found for this location.
+            <div className={styles.noProjectsSecondary}>
+              Please check back later or explore other locations!
+            </div>
+          </div>
         ) : (
           projects.map((project, index) => (
             <div
-              key={project.id}
+              key={`${project.id}_${index}`}
               className={styles.placeCard}
               onClick={() => handleProjectClick(project)}
             >
@@ -157,10 +273,15 @@ const LocationProjects: React.FC = () => {
                 {project.description && (
                   <p className={styles.description}>{project.description}</p>
                 )}
-                <div className={styles.viewMore}>
-                  <span>View Details</span>
-                  <span className={styles.arrow}>&rarr;</span>
-                </div>
+                <button
+                  className={styles.viewMoreButton}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleProjectClick(project);
+                  }}
+                >
+                  View Details &rarr;
+                </button>
               </div>
             </div>
           ))
