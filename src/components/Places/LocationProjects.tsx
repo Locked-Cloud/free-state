@@ -138,13 +138,11 @@ const LocationProjects: React.FC = () => {
         setError(null);
 
         let csvText = "";
-        let successfulUrl = "";
 
         try {
           const response = await fetch(PROJECTS_SHEET_URL);
           if (response.ok) {
             csvText = await response.text();
-            successfulUrl = PROJECTS_SHEET_URL;
           } else {
             throw new Error(`Main URL failed: ${response.status}`);
           }
@@ -161,7 +159,6 @@ const LocationProjects: React.FC = () => {
               const altResponse = await fetch(altUrl);
               if (altResponse.ok) {
                 csvText = await altResponse.text();
-                successfulUrl = altUrl;
                 console.log("✅ Alternative URL successful with GID:", altGid);
                 break;
               }
@@ -475,6 +472,9 @@ const LocationProjects: React.FC = () => {
                 <div className={styles.placeHeader}>
                   <h2>{project.name}</h2>
                 </div>
+                {project.description && (
+                  <p className={styles.description}>{project.description}</p>
+                )}
                 <button
                   className={styles.viewMoreButton}
                   aria-label={`View details for ${project.name}`}
