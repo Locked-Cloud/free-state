@@ -10,8 +10,8 @@ const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 const CORS_PROXY = "https://corsproxy.io/?";
 const LOGIN_SHEET_URL =
   process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=447441264`
-    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=447441264`;
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1815551767`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1815551767`;
 
 interface LoginFormData {
   username: string;
