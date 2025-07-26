@@ -32,7 +32,6 @@ const PUBLIC_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edi
 
 const getDirectImageUrl = (url: string): string => {
   if (!url || url.trim() === "") {
-    console.warn("Empty image URL provided");
     return "https://placehold.co/800x600?text=No+Image";
   }
 
@@ -84,42 +83,55 @@ const getDirectImageUrl = (url: string): string => {
       return cleanUrl;
     }
   } catch (error) {
-    console.warn("❌ Error processing image URL:", error);
+    // Error processing image URL
   }
 
   return "https://placehold.co/800x600?text=Invalid+URL";
 };
 
-const parseCSVLine = (line: string): string[] => {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  let i = 0;
+const parseCSV = (text: string): string[][] => {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentCell = "";
+  let insideQuotes = false;
 
-  while (i < line.length) {
-    const char = line[i];
-    const nextChar = line[i + 1];
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
 
     if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        current += '"';
-        i += 2;
-      } else {
-        inQuotes = !inQuotes;
+      if (insideQuotes && nextChar === '"') {
+        currentCell += '"';
         i++;
+      } else {
+        insideQuotes = !insideQuotes;
       }
-    } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-      i++;
+    } else if (char === "," && !insideQuotes) {
+      currentRow.push(currentCell.trim());
+      currentCell = "";
+    } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+      if (char === "\r" && nextChar === "\n") {
+        i++; // Skip the \n in \r\n
+      }
+      currentRow.push(currentCell.trim());
+      if (currentRow.some((cell) => cell)) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentCell = "";
     } else {
-      current += char;
-      i++;
+      currentCell += char;
     }
   }
 
-  result.push(current.trim());
-  return result;
+  if (currentCell) {
+    currentRow.push(currentCell.trim());
+  }
+  if (currentRow.length > 0) {
+    rows.push(currentRow);
+  }
+
+  return rows;
 };
 
 const LocationProjects: React.FC = () => {
@@ -147,23 +159,18 @@ const LocationProjects: React.FC = () => {
             throw new Error(`Main URL failed: ${response.status}`);
           }
         } catch (mainError) {
-          console.log("🔄 Main URL failed, trying alternatives...");
-
           for (const altGid of ALTERNATIVE_GIDS) {
             if (altGid === DATA_SHEET_GID) continue;
 
             const altUrl = getProjectsSheetURL(altGid);
-            console.log("🌐 Trying alternative URL:", altUrl);
 
             try {
               const altResponse = await fetch(altUrl);
               if (altResponse.ok) {
                 csvText = await altResponse.text();
-                console.log("✅ Alternative URL successful with GID:", altGid);
                 break;
               }
             } catch (altError) {
-              console.log("❌ Alternative GID", altGid, "failed");
               continue;
             }
           }
@@ -196,14 +203,13 @@ const LocationProjects: React.FC = () => {
           );
         }
 
-        const lines = csvText.split("\n").filter((line) => line.trim());
+        const rows = parseCSV(csvText);
 
-        if (lines.length === 0) {
+        if (rows.length === 0) {
           throw new Error("Empty CSV data");
         }
 
-        const headerLine = lines[0];
-        const header = parseCSVLine(headerLine).map((col) =>
+        const header = rows[0].map((col: string) =>
           col.toLowerCase().replace(/"/g, "").trim()
         );
 
@@ -249,7 +255,7 @@ const LocationProjects: React.FC = () => {
           throw new Error(errorMsg);
         }
 
-        const dataRows = lines.slice(1);
+        const dataRows = rows.slice(1);
         const filteredProjects: Project[] = [];
 
         let projectCounter = 1;
@@ -257,10 +263,10 @@ const LocationProjects: React.FC = () => {
         for (let i = 0; i < dataRows.length; i++) {
           const row = dataRows[i];
 
-          if (!row.trim()) continue;
+          if (!row || row.length === 0) continue;
 
           try {
-            const columns = parseCSVLine(row);
+            const columns = row;
 
             const maxIndex = Math.max(
               companyIdIndex,
@@ -272,12 +278,6 @@ const LocationProjects: React.FC = () => {
             );
 
             if (columns.length <= maxIndex) {
-              console.warn(
-                `Row ${i + 1} has insufficient columns:`,
-                columns.length,
-                "vs required:",
-                maxIndex + 1
-              );
               continue;
             }
 
@@ -323,7 +323,6 @@ const LocationProjects: React.FC = () => {
               projectCounter++;
             }
           } catch (rowError) {
-            console.warn(`Error parsing row ${i + 1}:`, rowError);
             continue;
           }
         }
@@ -362,7 +361,6 @@ const LocationProjects: React.FC = () => {
 
   const handleProjectClick = (project: Project) => {
     const targetUrl = `/projects/${project.companyId}/${project.id}`;
-    console.log("Navigating to:", targetUrl);
     navigate(targetUrl);
   };
 
@@ -458,13 +456,7 @@ const LocationProjects: React.FC = () => {
                   loadingDelay={index * 150}
                   loadingClassName={styles.imageLoading}
                   onError={(e) => {
-                    console.warn(
-                      `❌ Failed to load image for "${project.name}":`,
-                      {
-                        src: project.image,
-                        error: e,
-                      }
-                    );
+                    // Failed to load image
                   }}
                 />
               </div>
