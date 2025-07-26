@@ -742,12 +742,19 @@
     padding: 1rem;
   }
 
+  .backButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
   .heroSection {
     padding: 0 1rem;
+    margin-bottom: 2rem;
   }
 
   .heroImage {
-    height: 300px;
+    height: 280px;
+    border-radius: 16px;
   }
 
   .heroOverlay {
@@ -758,27 +765,51 @@
   }
 
   .heroTitle {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+
+  .heroSubtitle {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
   }
 
   .heroLocation {
-    font-size: 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
   }
 
   .heroBadges {
     justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .premiumBadge,
+  .sectionBadge {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
   }
 
   .shareButton {
     align-self: flex-start;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
   }
 
   .mainContent {
     padding: 0 1rem;
+    gap: 2rem;
   }
 
   .sectionTitle {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .sectionTitle::after {
+    width: 3rem;
+    height: 2px;
   }
 
   .summaryGrid {
@@ -787,72 +818,170 @@
   }
 
   .summaryCard {
-    padding: 1.5rem;
+    padding: 1.2rem;
+    flex-direction: row;
+    text-align: left;
   }
 
   .summaryIcon {
     width: 3rem;
     height: 3rem;
     font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  .summaryContent h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .summaryContent p {
+    font-size: 1.1rem;
+  }
+
+  .categoryTitle {
+    font-size: 1.2rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .tableContainer {
+    border-radius: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .dataTable {
     font-size: 0.85rem;
+    min-width: 100%;
   }
 
   .dataTable th,
   .tableLabel,
   .tableValue,
   .tableNumber {
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.8rem;
   }
 
   .tableLabel {
     width: 40%;
+    font-size: 0.8rem;
+  }
+
+  .tableValue {
+    font-size: 0.85rem;
+  }
+
+  .unitTypeCell,
+  .facilityCell,
+  .featureCell {
+    gap: 0.5rem;
+  }
+
+  .unitIcon,
+  .facilityIcon,
+  .featureIcon,
+  .labelIcon {
+    font-size: 1rem;
+  }
+
+  .priceValue {
+    font-size: 1rem;
+  }
+
+  .priceHighlight {
+    font-size: 1.1rem;
+    padding: 0.2rem 0.5rem;
   }
 
   .ctaSection {
-    padding: 3rem 1rem;
+    padding: 2.5rem 1rem;
   }
 
   .ctaTitle {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
   }
 
   .ctaText {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .ctaButtons {
     flex-direction: column;
     align-items: center;
+    gap: 0.8rem;
   }
 
   .primaryButton,
   .secondaryButton {
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
   }
 
   .pdfModal {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .pdfContent {
-    width: 95vw;
-    height: 90vh;
+    width: 98vw;
+    height: 92vh;
+    border-radius: 8px;
+  }
+
+  .pdfHeader {
+    padding: 0.8rem 1rem;
+  }
+
+  .pdfHeader h3 {
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
   .heroTitle {
-    font-size: 1.75rem;
+    font-size: 1.6rem;
+  }
+
+  .heroSubtitle {
+    font-size: 0.9rem;
+  }
+
+  .heroLocation {
+    font-size: 0.85rem;
   }
 
   .summaryCard {
+    padding: 1rem;
     flex-direction: column;
     text-align: center;
-    gap: 1rem;
+    gap: 0.8rem;
+  }
+
+  .summaryIcon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.8rem;
+    margin: 0 auto;
+  }
+
+  .summaryContent h3 {
+    font-size: 0.8rem;
+  }
+
+  .summaryContent p {
+    font-size: 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.3rem;
+  }
+
+  .categoryTitle {
+    font-size: 1.1rem;
+    padding: 0.5rem 0.8rem;
   }
 
   .dataTable {
@@ -863,115 +992,227 @@
   .tableLabel,
   .tableValue,
   .tableNumber {
-    padding: 0.5rem 0.75rem;
+    padding: 0.6rem 0.7rem;
   }
 
   .tableLabel {
     width: 45%;
+    font-size: 0.75rem;
+  }
+
+  .tableValue {
+    font-size: 0.8rem;
+  }
+
+  .priceValue {
+    font-size: 0.9rem;
+  }
+
+  .priceHighlight {
+    font-size: 1rem;
+    padding: 0.15rem 0.4rem;
   }
 
   .ctaTitle {
-    font-size: 1.75rem;
+    font-size: 1.6rem;
   }
 
-  /* Stack table cells on very small screens */
+  .ctaText {
+    font-size: 0.95rem;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.85rem;
+  }
+
+  /* Mobile-optimized table layout for very small screens */
+  .dataTable thead {
+    display: none;
+  }
+
   .dataTable,
-  .dataTable thead,
   .dataTable tbody,
-  .dataTable th,
-  .dataTable td,
-  .dataTable tr {
+  .dataTable tr,
+  .dataTable td {
     display: block;
-  }
-
-  .dataTable thead tr {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
+    width: 100%;
   }
 
   .dataTable tr {
     border: 1px solid var(--border-color);
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
     border-radius: 8px;
     overflow: hidden;
+    background: var(--surface-color);
+    box-shadow: var(--shadow-sm);
   }
 
   .dataTable td {
     border: none;
     position: relative;
-    padding-left: 50% !important;
+    padding: 0.8rem 1rem !important;
     text-align: left;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  }
+
+  .dataTable td:last-child {
+    border-bottom: none;
   }
 
   .dataTable td:before {
     content: attr(data-label);
     position: absolute;
-    left: 6px;
-    width: 45%;
-    padding-right: 10px;
-    white-space: nowrap;
+    left: 1rem;
+    top: 0.4rem;
     font-weight: 600;
-    color: var(--text-primary);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .dataTable .tableValue,
+  .dataTable .tableNumber {
+    padding-top: 1.8rem !important;
+    padding-left: 1rem !important;
+    width: 100% !important;
+  }
+
+  .dataTable .tableLabel {
+    display: none;
+  }
+
+  /* Special handling for unit types table on mobile */
+  .dataTable tbody tr td:nth-child(1):before {
+    content: "Unit Type";
+  }
+
+  .dataTable tbody tr td:nth-child(2):before {
+    content: "Size";
+  }
+
+  .dataTable tbody tr td:nth-child(3):before {
+    content: "Bedrooms";
+  }
+
+  .dataTable tbody tr td:nth-child(4):before {
+    content: "Price";
+  }
+
+  /* For facilities table */
+  .dataTable tbody tr td:nth-child(1):before {
+    content: "#";
+  }
+
+  .dataTable tbody tr td:nth-child(2):before {
+    content: "Facility";
+  }
+
+  .dataTable tbody tr td:nth-child(3):before {
+    content: "Details";
+  }
+
+  /* Adjust mobile card spacing */
+  .unitTypeCell,
+  .facilityCell,
+  .featureCell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .unitIcon,
+  .facilityIcon,
+  .featureIcon {
+    align-self: flex-start;
   }
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  :root {
-    --border-color: #000000;
-    --text-secondary: #000000;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3);
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  .heroImg:hover {
-    transform: none;
-  }
-
-  .summaryCard:hover {
-    transform: none;
-  }
-}
-
-/* Print styles */
-@media print {
-  .navigation,
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .backButton,
   .shareButton,
-  .ctaSection,
-  .pdfModal {
-    display: none !important;
+  .primaryButton,
+  .secondaryButton,
+  .linkButton {
+    min-height: 44px;
+    min-width: 44px;
   }
 
-  .container {
-    background: white !important;
+  .summaryCard:hover,
+  .dataTable tbody tr:hover {
+    transform: none;
+    background: var(--surface-color);
   }
 
+  .tableContainer {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .tableContainer::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .tableContainer::-webkit-scrollbar-track {
+    background: var(--border-color);
+    border-radius: 2px;
+  }
+
+  .tableContainer::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 2px;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .heroImage {
+    height: 200px;
+  }
+
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ctaSection {
+    padding: 2rem 1rem;
+  }
+
+  .ctaButtons {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: auto;
+    min-width: 140px;
+  }
+}
+
+/* Dark mode support for mobile */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
   .heroOverlay {
-    background: rgba(0, 0, 0, 0.7) !important;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.8) 100%);
   }
 
-  * {
-    box-shadow: none !important;
+  .tableContainer {
+    border: 1px solid #374151;
   }
 
-  .dataTable {
-    border: 1px solid #000 !important;
+  .dataTable tr {
+    border-color: #374151;
+    background: #1f2937;
   }
 
-  .dataTable th,
   .dataTable td {
-    border: 1px solid #000 !important;
+    border-bottom-color: rgba(75, 85, 99, 0.5);
   }
 }
