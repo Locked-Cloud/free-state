@@ -1015,19 +1015,7 @@ const ProjectDetails: React.FC = () => {
         </section>
       </div>
 
-      {/* CTA Section */}
-      <div className={styles.ctaSection}>
-        <div className={styles.ctaContent}>
-          <h2 className={styles.ctaTitle}>Interested in {project.name}?</h2>
-          <p className={styles.ctaText}>
-            Contact our sales team for more information, site visits, and personalized payment plans.
-          </p>
-          <div className={styles.ctaButtons}>
-            <button className={styles.primaryButton}>📞 Contact Sales Team</button>
-            <button className={styles.secondaryButton}>🏠 Schedule Site Visit</button>
-          </div>
-        </div>
-      </div>
+     
 
       {/* PDF Modal */}
       {activePdf && (
