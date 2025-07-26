@@ -15,7 +15,7 @@ interface Project {
 const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 const CORS_PROXY = "https://corsproxy.io/?";
 
-const DATA_SHEET_GID = "2114410627";
+const DATA_SHEET_GID = "1884577336";
 
 const getProjectsSheetURL = (gid: string) => {
   const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
