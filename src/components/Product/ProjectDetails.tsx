@@ -1,463 +1,354 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import styles from "./ProjectDetails.module.css";
-import useTitle from "../../hooks/useTitle";
-import OptimizedImage from "../common/OptimizedImage";
+import type React from "react"
+import { useState, useEffect } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import styles from "./ProjectDetails.module.css"
+import useTitle from "../../hooks/useTitle"
+import OptimizedImage from "../common/OptimizedImage"
 
 // Google Sheet constants
-const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const CORS_PROXY = "https://corsproxy.io/?";
+const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM"
+const CORS_PROXY = "https://corsproxy.io/?"
 const PLACES_SHEET_URL =
   process.env.NODE_ENV === "production"
     ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`
-    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`;
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`
 
 interface ProjectDetail {
-  id: string;
-  projectId: string;
-  name: string;
-  projectSection: string;
-  locationArea: string;
-  locationDetails: string;
-  facilities: string;
-  unitTypesAndSizes: string;
-  bedroomsPerUnit: string;
-  startingPriceEGP: string;
-  specialFeatures: string;
-  paymentPlan: string;
-  deliveryTimeline: string;
-  imagePath: string;
-  pdf: string;
+  id: string
+  projectId: string
+  idLoc: string
+  name: string
+  projectSection: string
+  locationArea: string
+  locationDetails: string
+  facilities: string
+  unitTypesAndSizes: string
+  bedroomsPerUnit: string
+  startingPriceEGP: string
+  specialFeatures: string
+  paymentPlan: string
+  deliveryTimeline: string
+  imagePath: string
+  pdf: string
   // Parsed data for display
   facilitiesList: Array<{
-    name: string;
-    size?: string;
-  }>;
+    name: string
+  }>
   unitTypesList: Array<{
-    type: string;
-    size: string;
-    bedrooms: string;
-    price: string;
-    category?: string;
-  }>;
-  specialFeaturesList: string[];
+    type: string
+    size: string
+    bedrooms: string
+    price: string
+    category?: string
+  }>
+  specialFeaturesList: string[]
   priceRange: {
-    min: number;
-    max: number;
-    hasRange: boolean;
-    formattedMin: string;
-    formattedMax: string;
-  };
+    min: number
+    max: number
+    hasRange: boolean
+    formattedMin: string
+    formattedMax: string
+  }
 }
 
 // Enhanced image URL processing
 const getDirectImageUrl = (url: string): string => {
   if (!url || url.trim() === "") {
-    return "https://placehold.co/1200x500/e2e8f0/64748b?text=Luxury+Real+Estate+Project";
+    return ""
   }
 
   try {
-    const cleanUrl = url.replace(/[""]/g, "").trim();
+    const cleanUrl = url.replace(/[""]/g, "").trim()
 
     if (cleanUrl.includes("drive.google.com")) {
-      let fileId = "";
+      let fileId = ""
       if (cleanUrl.includes("/file/d/")) {
-        fileId = cleanUrl.split("/file/d/")[1].split("/")[0];
+        fileId = cleanUrl.split("/file/d/")[1].split("/")[0]
       } else if (cleanUrl.includes("id=")) {
-        fileId = cleanUrl.split("id=")[1].split("&")[0];
+        fileId = cleanUrl.split("id=")[1].split("&")[0]
       }
 
       if (fileId) {
-        const cacheBuster = Date.now() % 1000;
-        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
+        const cacheBuster = Date.now() % 1000
+        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`
       }
     }
 
-    return cleanUrl;
+    return cleanUrl
   } catch (error) {
-    console.error("Image processing error:", error);
-    return "https://placehold.co/1200x500/e2e8f0/64748b?text=Luxury+Real+Estate+Project";
+    return ""
   }
-};
+}
 
+// Robust CSV parser for Google Sheets format
 const parseCSV = (text: string): string[][] => {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentCell = "";
-  let insideQuotes = false;
+  const result: string[][] = []
+  let row: string[] = []
+  let cell = ""
+  let inQuotes = false
+  let i = 0
 
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i + 1];
+  while (i < text.length) {
+    const char = text[i]
+    const nextChar = text[i + 1]
 
     if (char === '"') {
-      if (insideQuotes && nextChar === '"') {
-        currentCell += '"';
-        i++;
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote
+        cell += '"'
+        i += 2
+        continue
       } else {
-        insideQuotes = !insideQuotes;
+        // Toggle quote state
+        inQuotes = !inQuotes
+        i++
+        continue
       }
-    } else if (char === "," && !insideQuotes) {
-      currentRow.push(currentCell.trim());
-      currentCell = "";
-    } else if (char === "\n" && !insideQuotes) {
-      currentRow.push(currentCell.trim());
-      if (currentRow.some((cell) => cell)) {
-        rows.push(currentRow);
+    }
+
+    if (!inQuotes) {
+      if (char === ",") {
+        // End of cell
+        row.push(cell.trim())
+        cell = ""
+        i++
+        continue
+      } else if (char === "\n" || char === "\r") {
+        // End of row
+        if (cell || row.length > 0) {
+          row.push(cell.trim())
+          if (row.some((c) => c.trim())) {
+            // Only add non-empty rows
+            result.push(row)
+          }
+          row = []
+          cell = ""
+        }
+        // Skip \r\n combinations
+        if (char === "\r" && nextChar === "\n") {
+          i += 2
+        } else {
+          i++
+        }
+        continue
       }
-      currentRow = [];
-      currentCell = "";
-    } else {
-      currentCell += char;
+    }
+
+    cell += char
+    i++
+  }
+
+  // Add final cell and row if they exist
+  if (cell || row.length > 0) {
+    row.push(cell.trim())
+    if (row.some((c) => c.trim())) {
+      result.push(row)
     }
   }
 
-  if (currentCell) {
-    currentRow.push(currentCell.trim());
-  }
-  if (currentRow.length > 0) {
-    rows.push(currentRow);
-  }
+  return result
+}
 
-  return rows;
-};
+// Standardized data cleaning function
+const cleanData = (data: string): string => {
+  if (!data) return ""
+  return data.replace(/[""]/g, "").trim()
+}
 
-// Parse facilities - now handles regular facilities, not unit sizes
-const parseFacilities = (
-  facilitiesStr: string
-): Array<{ name: string; size?: string }> => {
-  if (
-    !facilitiesStr ||
-    facilitiesStr.trim() === "" ||
-    facilitiesStr.toLowerCase() === "n/a"
-  ) {
-    return [];
+// Parse facilities from standardized format
+const parseFacilities = (facilitiesStr: string): Array<{ name: string }> => {
+  const cleaned = cleanData(facilitiesStr)
+  if (!cleaned || cleaned.toLowerCase() === "n/a") {
+    return []
   }
 
-  const cleaned = facilitiesStr.replace(/[""]/g, "").trim();
-  const facilities: Array<{ name: string; size?: string }> = [];
-
-  cleaned
+  return cleaned
     .split(";")
     .map((item) => item.trim())
     .filter(Boolean)
-    .forEach((item) => {
-      // Regular facility items like "Commercial area", "Hotels", "90% Water View (Sea and Lagoon)"
-      facilities.push({
-        name: item,
-      });
-    });
+    .map((name) => ({ name }))
+}
 
-  return facilities;
-};
-
-// Enhanced unit types parsing based on the actual CSV structure
+// Parse unit types with enhanced handling
 const parseUnitTypes = (
   unitTypesStr: string,
-  facilitiesStr: string,
   bedroomsStr: string,
-  pricesStr: string
+  pricesStr: string,
 ): Array<{
-  type: string;
-  size: string;
-  bedrooms: string;
-  price: string;
-  category?: string;
+  type: string
+  size: string
+  bedrooms: string
+  price: string
+  category?: string
 }> => {
   const unitTypes: Array<{
-    type: string;
-    size: string;
-    bedrooms: string;
-    price: string;
-    category?: string;
-  }> = [];
+    type: string
+    size: string
+    bedrooms: string
+    price: string
+    category?: string
+  }> = []
 
-  const seenTypes = new Map<string, number>(); // Track normalized names to array indices
+  const cleanedUnitTypes = cleanData(unitTypesStr)
+  const cleanedBedrooms = cleanData(bedroomsStr)
+  const cleanedPrices = cleanData(pricesStr)
 
-  // Helper function to normalize unit names for comparison
-  const normalizeUnitName = (name: string): string => {
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "") // remove all spaces
-      .replace(/grandvilla/g, "grandvilla") // normalize grand villa variations
-      .replace(/standalone/g, "standalone"); // normalize standalone variations
-  };
-
-  // Helper function to get the best display name (prefer more descriptive names)
-  const getBestDisplayName = (name1: string, name2: string): string => {
-    // Prefer names with spaces and proper capitalization
-    if (name1.includes(" ") && !name2.includes(" ")) return name1;
-    if (name2.includes(" ") && !name1.includes(" ")) return name2;
-    // Prefer longer, more descriptive names
-    if (name1.length > name2.length) return name1;
-    return name2;
-  };
-
-  // Parse unit types and sizes: "StandAlone - 210m²; Crysta Villa - 255m²; Crysta GrandVilla - 365m²"
-  const unitSizeData: { [key: string]: string } = {};
-  if (
-    unitTypesStr &&
-    unitTypesStr.trim() !== "" &&
-    unitTypesStr.toLowerCase() !== "n/a"
-  ) {
-    const unitEntries = unitTypesStr.split(";").map((entry) => entry.trim());
-    unitEntries.forEach((entry) => {
-      if (entry.includes(" - ") && entry.includes("m²")) {
-        const parts = entry.split(" - ");
-        if (parts.length === 2) {
-          const unitName = parts[0].trim();
-          const size = parts[1].trim();
-          unitSizeData[unitName] = size;
-        }
-      }
-    });
+  if (!cleanedUnitTypes || cleanedUnitTypes.toLowerCase() === "n/a") {
+    return unitTypes
   }
 
-  // Parse bedroom data: "StandAlone: 3; Crysta Villa: 4; Crysta GrandVilla: 5"
-  const bedroomData: { [key: string]: string } = {};
-  if (
-    bedroomsStr &&
-    bedroomsStr.trim() !== "" &&
-    bedroomsStr.toLowerCase() !== "n/a"
-  ) {
-    const bedroomEntries = bedroomsStr.split(";").map((entry) => entry.trim());
-    bedroomEntries.forEach((entry) => {
-      const match = entry.match(/(.+?):\s*(.+)/);
+  // Parse bedroom data into lookup object
+  const bedroomData: { [key: string]: string } = {}
+  if (cleanedBedrooms && cleanedBedrooms.toLowerCase() !== "n/a") {
+    cleanedBedrooms.split(";").forEach((entry) => {
+      const match = entry.trim().match(/(.+?):\s*(.+)/)
       if (match) {
-        const unitName = match[1].trim();
-        const bedrooms = match[2].trim();
-        bedroomData[unitName] = bedrooms;
+        const unitName = match[1].trim()
+        const bedrooms = match[2].trim()
+        bedroomData[unitName] = bedrooms
       }
-    });
+    })
   }
 
-  // Parse price data: "StandAlone: 37,600,000 EGP; Crysta Villa: 47,000,000 EGP"
-  const priceData: { [key: string]: string } = {};
-  if (
-    pricesStr &&
-    pricesStr.trim() !== "" &&
-    pricesStr.toLowerCase() !== "n/a"
-  ) {
-    const priceEntries = pricesStr.split(";").map((entry) => entry.trim());
-    priceEntries.forEach((entry) => {
-      const match = entry.match(/(.+?):\s*(.+)/);
+  // Parse price data into lookup object
+  const priceData: { [key: string]: string } = {}
+  if (cleanedPrices && cleanedPrices.toLowerCase() !== "n/a") {
+    cleanedPrices.split(";").forEach((entry) => {
+      const match = entry.trim().match(/(.+?):\s*(.+)/)
       if (match) {
-        const unitName = match[1].trim();
-        const price = match[2].trim();
-        priceData[unitName] = price;
+        const unitName = match[1].trim()
+        const price = match[2].trim()
+        priceData[unitName] = price
       }
-    });
+    })
   }
 
-  // Get all unique unit names from all data sources
-  const allUnitNames = new Set([
-    ...Object.keys(unitSizeData),
-    ...Object.keys(bedroomData),
-    ...Object.keys(priceData),
-  ]);
+  // Parse unit types
+  cleanedUnitTypes.split(";").forEach((entry) => {
+    const trimmedEntry = entry.trim()
+    if (!trimmedEntry) return
 
-  // Create unit types from the combined data with smart deduplication
-  allUnitNames.forEach((unitName) => {
-    const normalizedName = normalizeUnitName(unitName);
+    // Handle different formats: "UnitName - Size" or "UnitName"
+    const parts = trimmedEntry.split(" - ").map((p) => p.trim())
+    const unitName = parts[0]
+    const size = parts[1] || "Contact for details"
 
-    // Check if we already have a similar unit type
-    const existingIndex = seenTypes.get(normalizedName);
-
-    if (existingIndex !== undefined) {
-      // Update existing unit with better data
-      const existingUnit = unitTypes[existingIndex];
-
-      // Use the better display name
-      existingUnit.type = getBestDisplayName(existingUnit.type, unitName);
-
-      // Update with better data if available
-      const bedrooms = bedroomData[unitName];
-      const price = priceData[unitName];
-      const size = unitSizeData[unitName];
-
-      if (bedrooms && existingUnit.bedrooms === "Contact for details") {
-        if (bedrooms.toLowerCase() === "n/a") {
-          existingUnit.bedrooms = "Contact for details";
-        } else {
-          const bedCount = Number.parseInt(bedrooms);
-          if (!isNaN(bedCount)) {
-            existingUnit.bedrooms =
-              bedCount === 1 ? "1 Bedroom" : `${bedCount} Bedrooms`;
-          } else {
-            existingUnit.bedrooms = bedrooms;
-          }
-        }
+    // Get bedrooms
+    let bedrooms = "Contact for details"
+    const bedroomCount = bedroomData[unitName]
+    if (bedroomCount) {
+      const bedCount = Number.parseInt(bedroomCount)
+      if (!isNaN(bedCount)) {
+        bedrooms = bedCount === 1 ? "1 Bedroom" : `${bedCount} Bedrooms`
+      } else {
+        bedrooms = bedroomCount
       }
-
-      if (price && existingUnit.price === "Contact for pricing") {
-        if (price.includes("EGP")) {
-          const priceMatch = price.match(/([\d,]+)\s*EGP/);
-          if (priceMatch) {
-            const numericPrice = Number.parseInt(
-              priceMatch[1].replace(/,/g, "")
-            );
-            if (!isNaN(numericPrice)) {
-              existingUnit.price = `EGP ${numericPrice.toLocaleString()}`;
-            }
-          }
-        }
-      }
-
-      if (size && existingUnit.size === "Contact for details") {
-        existingUnit.size = size;
-      }
-    } else {
-      // Create new unit type
-      const bedrooms = bedroomData[unitName] || "Contact for details";
-      let formattedBedrooms = bedrooms;
-      if (
-        bedrooms !== "N/A" &&
-        bedrooms !== "Contact for details" &&
-        bedrooms.toLowerCase() !== "n/a"
-      ) {
-        const bedCount = Number.parseInt(bedrooms);
-        if (!isNaN(bedCount)) {
-          formattedBedrooms =
-            bedCount === 1 ? "1 Bedroom" : `${bedCount} Bedrooms`;
-        }
-      } else if (bedrooms.toLowerCase() === "n/a") {
-        formattedBedrooms = "Contact for details";
-      }
-
-      // Get price info and format it
-      const rawPrice = priceData[unitName] || "Contact for pricing";
-      let formattedPrice = rawPrice;
-      if (rawPrice.includes("EGP")) {
-        const priceMatch = rawPrice.match(/([\d,]+)\s*EGP/);
-        if (priceMatch) {
-          const numericPrice = Number.parseInt(priceMatch[1].replace(/,/g, ""));
-          if (!isNaN(numericPrice)) {
-            formattedPrice = `EGP ${numericPrice.toLocaleString()}`;
-          }
-        }
-      }
-
-      // Get size info
-      const size = unitSizeData[unitName] || "Contact for details";
-
-      // Categorize unit types
-      let category = "Standard";
-      const lowerUnitName = unitName.toLowerCase();
-      if (lowerUnitName.includes("crysta")) {
-        if (lowerUnitName.includes("grand")) {
-          category = "Crysta Grand Collection";
-        } else {
-          category = "Crysta Collection";
-        }
-      } else if (lowerUnitName.includes("villa")) {
-        category = "Villas";
-      } else if (
-        lowerUnitName.includes("house") ||
-        lowerUnitName.includes("town")
-      ) {
-        if (lowerUnitName.includes("beach")) {
-          category = "Beach Houses";
-        } else {
-          category = "Houses & Townhouses";
-        }
-      } else if (lowerUnitName.includes("cabana")) {
-        category = "Beach Units";
-      } else if (lowerUnitName.includes("beach")) {
-        category = "Beach Houses";
-      }
-
-      const newUnit = {
-        type: unitName,
-        size: size,
-        bedrooms:
-          formattedBedrooms === "N/A"
-            ? "Contact for details"
-            : formattedBedrooms,
-        price: formattedPrice,
-        category,
-      };
-
-      unitTypes.push(newUnit);
-      seenTypes.set(normalizedName, unitTypes.length - 1);
     }
-  });
 
-  // Sort by category and then by price (lowest to highest)
+    // Get price
+    let price = "Contact for pricing"
+    const priceValue = priceData[unitName]
+    if (priceValue) {
+      const numericPrice = Number.parseInt(priceValue)
+      if (!isNaN(numericPrice)) {
+        price = `EGP ${numericPrice.toLocaleString()}`
+      } else {
+        price = priceValue
+      }
+    }
+
+    // Categorize unit types
+    let category = "Standard"
+    const lowerUnitName = unitName.toLowerCase()
+    if (lowerUnitName.includes("chalet")) {
+      category = lowerUnitName.includes("premium") ? "Premium Chalets" : "Chalets"
+    } else if (lowerUnitName.includes("villa")) {
+      if (lowerUnitName.includes("twin")) {
+        category = "Twin Villas"
+      } else if (lowerUnitName.includes("standalone")) {
+        category = "Standalone Villas"
+      } else {
+        category = "Villas"
+      }
+    } else if (lowerUnitName.includes("beach house")) {
+      category = "Beach Houses"
+    } else if (lowerUnitName.includes("townhouse") || lowerUnitName.includes("town house")) {
+      category = "Townhouses"
+    } else if (lowerUnitName.includes("cabana")) {
+      category = "Cabanas"
+    }
+
+    unitTypes.push({
+      type: unitName,
+      size,
+      bedrooms,
+      price,
+      category,
+    })
+  })
+
+  // Sort by category and then by price
   return unitTypes.sort((a, b) => {
     if (a.category !== b.category) {
-      return (a.category || "").localeCompare(b.category || "");
+      return (a.category || "").localeCompare(b.category || "")
     }
 
-    // Sort by price within category
-    const priceA = a.price.match(/[\d,]+/);
-    const priceB = b.price.match(/[\d,]+/);
+    // Extract numeric price for sorting
+    const priceA = a.price.match(/[\d,]+/)
+    const priceB = b.price.match(/[\d,]+/)
 
     if (priceA && priceB) {
-      const numA = Number.parseInt(priceA[0].replace(/,/g, ""));
-      const numB = Number.parseInt(priceB[0].replace(/,/g, ""));
-      return numA - numB;
+      const numA = Number.parseInt(priceA[0].replace(/,/g, ""))
+      const numB = Number.parseInt(priceB[0].replace(/,/g, ""))
+      return numA - numB
     }
 
-    return a.type.localeCompare(b.type);
-  });
-};
+    return a.type.localeCompare(b.type)
+  })
+}
 
-// Parse special features from CSV format
+// Parse special features from standardized format
 const parseSpecialFeatures = (featuresStr: string): string[] => {
-  if (
-    !featuresStr ||
-    featuresStr.trim() === "" ||
-    featuresStr.toLowerCase() === "n/a"
-  ) {
-    return [];
+  const cleaned = cleanData(featuresStr)
+  if (!cleaned || cleaned.toLowerCase() === "n/a") {
+    return []
   }
 
-  const cleaned = featuresStr.replace(/[""]/g, "").trim();
   return cleaned
     .split(";")
     .map((feature) => feature.trim())
-    .filter((feature) => feature && feature.toLowerCase() !== "n/a");
-};
+    .filter((feature) => feature && feature.toLowerCase() !== "n/a")
+}
 
-// Parse price range from the new price format
+// Parse price range with enhanced error handling
 const parsePriceRange = (pricesStr: string): any => {
-  const defaultPrice = {
-    min: 6900000,
-    max: 90000000,
-    hasRange: true,
-    formattedMin: "EGP 6,900,000",
-    formattedMax: "EGP 90,000,000",
-  };
-
-  if (
-    !pricesStr ||
-    pricesStr.trim() === "" ||
-    pricesStr.toLowerCase() === "n/a"
-  ) {
-    return defaultPrice;
+  const cleaned = cleanData(pricesStr)
+  if (!cleaned || cleaned.toLowerCase() === "n/a") {
+    return {
+      min: 0,
+      max: 0,
+      hasRange: false,
+      formattedMin: "Contact for pricing",
+      formattedMax: "Contact for pricing",
+    }
   }
 
-  const prices: number[] = [];
-  const priceEntries = pricesStr.split(";").map((entry) => entry.trim());
-
-  priceEntries.forEach((entry) => {
-    // Match pattern like "StandAlone: 37,600,000 EGP"
-    const match = entry.match(/:\s*([\d,]+)\s*EGP/);
+  const prices: number[] = []
+  cleaned.split(";").forEach((entry) => {
+    const match = entry.trim().match(/:\s*([\d,]+)/)
     if (match) {
-      const numericPrice = Number.parseInt(match[1].replace(/,/g, ""));
+      const numericPrice = Number.parseInt(match[1].replace(/,/g, ""))
       if (!isNaN(numericPrice)) {
-        prices.push(numericPrice);
+        prices.push(numericPrice)
       }
     }
-  });
+  })
 
   if (prices.length > 0) {
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
+    const min = Math.min(...prices)
+    const max = Math.max(...prices)
 
     return {
       min,
@@ -465,198 +356,108 @@ const parsePriceRange = (pricesStr: string): any => {
       hasRange: min !== max,
       formattedMin: `EGP ${min.toLocaleString()}`,
       formattedMax: `EGP ${max.toLocaleString()}`,
-    };
+    }
   }
 
-  return defaultPrice;
-};
-
-// Enhanced column index finder that handles \r\n characters
-const getColumnIndex = (headers: string[], columnName: string): number => {
-  const normalizedColumnName = columnName.toLowerCase().trim();
-  return headers.findIndex((header) => {
-    const normalizedHeader = header
-      .toLowerCase()
-      .trim()
-      .replace(/\r?\n/g, "")
-      .replace(/\r/g, "");
-    return (
-      normalizedHeader === normalizedColumnName ||
-      normalizedHeader.includes(normalizedColumnName) ||
-      normalizedColumnName.includes(normalizedHeader)
-    );
-  });
-};
+  return {
+    min: 0,
+    max: 0,
+    hasRange: false,
+    formattedMin: "Contact for pricing",
+    formattedMax: "Contact for pricing",
+  }
+}
 
 const ProjectDetails: React.FC = () => {
   const { companyId, projectId } = useParams<{
-    companyId: string;
-    projectId: string;
-  }>();
-  const navigate = useNavigate();
-  const [project, setProject] = useState<ProjectDetail | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activePdf, setActivePdf] = useState<string | null>(null);
-  const [pdfError, setPdfError] = useState<boolean>(false);
-  const [copied, setCopied] = useState<boolean>(false);
+    companyId: string
+    projectId: string
+  }>()
+  const navigate = useNavigate()
+  const [project, setProject] = useState<ProjectDetail | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [activePdf, setActivePdf] = useState<string | null>(null)
+  const [pdfError, setPdfError] = useState<boolean>(false)
+  const [copied, setCopied] = useState<boolean>(false)
 
-  useTitle("Project Details");
+  useTitle("Project Details")
 
   useEffect(() => {
     const fetchProjectData = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true)
+        setError(null)
 
-        const response = await fetch(PLACES_SHEET_URL);
+        const response = await fetch(PLACES_SHEET_URL)
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
 
-        const csvText = await response.text();
+        const csvText = await response.text()
 
         if (!csvText.trim()) {
-          throw new Error("No data received from the sheet");
+          throw new Error("No data received from the sheet")
         }
 
-        const rows = parseCSV(csvText);
+        const rows = parseCSV(csvText)
 
         if (rows.length < 2) {
-          throw new Error("Invalid data format - no data rows found");
+          throw new Error("Invalid data format - no data rows found")
         }
 
-        // Get headers and find column indices with enhanced matching
-        const headers = rows[0].map((h) =>
-          h.toLowerCase().trim().replace(/\r?\n/g, "").replace(/\r/g, "")
-        );
+        // Ensure we have at least 16 columns for all expected data
+        const expectedColumns = 16
+        const headers = rows[0]
 
-        const columnIndices = {
-          id: getColumnIndex(headers, "id"),
-          projectId: getColumnIndex(headers, "project_id"),
-          name: getColumnIndex(headers, "name"),
-          projectSection: getColumnIndex(headers, "project section"),
-          locationArea: getColumnIndex(headers, "location - area"),
-          locationDetails: getColumnIndex(headers, "location - details"),
-          facilities: getColumnIndex(headers, "facilities"),
-          unitTypesAndSizes: getColumnIndex(headers, "unit types and sizes"),
-          bedroomsPerUnit: getColumnIndex(headers, "bedrooms (per unit)"),
-          startingPriceEGP: getColumnIndex(headers, "starting price (egp)"),
-          specialFeatures: getColumnIndex(headers, "special features"),
-          paymentPlan: getColumnIndex(headers, "payment plan"),
-          deliveryTimeline: getColumnIndex(headers, "delivery timeline"),
-          imagePath: getColumnIndex(headers, "image_path"),
-          pdf: getColumnIndex(headers, "pdf"),
-        };
+        if (headers.length < expectedColumns) {
+          console.warn(`Warning: Expected ${expectedColumns} columns, got ${headers.length}`)
+        }
 
-        let projectData: ProjectDetail | null = null;
+        let projectData: ProjectDetail | null = null
 
         // Search for the project
         for (let i = 1; i < rows.length; i++) {
-          const row = rows[i];
+          const row = rows[i]
 
-          const rowCompanyId =
-            columnIndices.id >= 0
-              ? row[columnIndices.id]?.replace(/[""]/g, "").trim()
-              : "";
-          const rowProjectId =
-            columnIndices.projectId >= 0
-              ? row[columnIndices.projectId]?.replace(/[""]/g, "").trim()
-              : "";
+          // Ensure row has enough columns
+          while (row.length < expectedColumns) {
+            row.push("")
+          }
 
-          if (rowCompanyId === companyId && rowProjectId === projectId) {
-            // Extract all raw data
+          const rowCompanyId = cleanData(row[0] || "")
+          const rowProjectId = cleanData(row[1] || "")
+
+          if (String(rowCompanyId) === String(companyId) && String(rowProjectId) === String(projectId)) {
+            // Extract all raw data with standardized cleaning
             const rawData = {
               id: rowCompanyId,
               projectId: rowProjectId,
-              name:
-                columnIndices.name >= 0
-                  ? row[columnIndices.name]?.replace(/[""]/g, "").trim() ||
-                    "N/A"
-                  : "N/A",
-              projectSection:
-                columnIndices.projectSection >= 0
-                  ? row[columnIndices.projectSection]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              locationArea:
-                columnIndices.locationArea >= 0
-                  ? row[columnIndices.locationArea]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              locationDetails:
-                columnIndices.locationDetails >= 0
-                  ? row[columnIndices.locationDetails]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              facilities:
-                columnIndices.facilities >= 0
-                  ? row[columnIndices.facilities]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              unitTypesAndSizes:
-                columnIndices.unitTypesAndSizes >= 0
-                  ? row[columnIndices.unitTypesAndSizes]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              bedroomsPerUnit:
-                columnIndices.bedroomsPerUnit >= 0
-                  ? row[columnIndices.bedroomsPerUnit]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              startingPriceEGP:
-                columnIndices.startingPriceEGP >= 0
-                  ? row[columnIndices.startingPriceEGP]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              specialFeatures:
-                columnIndices.specialFeatures >= 0
-                  ? row[columnIndices.specialFeatures]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              paymentPlan:
-                columnIndices.paymentPlan >= 0
-                  ? row[columnIndices.paymentPlan]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              deliveryTimeline:
-                columnIndices.deliveryTimeline >= 0
-                  ? row[columnIndices.deliveryTimeline]
-                      ?.replace(/[""]/g, "")
-                      .trim() || "N/A"
-                  : "N/A",
-              imagePath:
-                columnIndices.imagePath >= 0
-                  ? row[columnIndices.imagePath]?.replace(/[""]/g, "").trim() ||
-                    ""
-                  : "",
-              pdf:
-                columnIndices.pdf >= 0
-                  ? row[columnIndices.pdf]?.replace(/[""]/g, "").trim() || ""
-                  : "",
-            };
+              idLoc: cleanData(row[2] || ""),
+              name: cleanData(row[3] || ""),
+              projectSection: cleanData(row[4] || ""),
+              locationArea: cleanData(row[5] || ""),
+              locationDetails: cleanData(row[6] || ""),
+              facilities: cleanData(row[7] || ""),
+              unitTypesAndSizes: cleanData(row[8] || ""),
+              bedroomsPerUnit: cleanData(row[9] || ""),
+              startingPriceEGP: cleanData(row[10] || ""),
+              specialFeatures: cleanData(row[11] || ""),
+              paymentPlan: cleanData(row[12] || ""),
+              deliveryTimeline: cleanData(row[13] || ""),
+              imagePath: cleanData(row[14] || ""),
+              pdf: cleanData(row[15] || ""),
+            }
 
             // Parse the data for display
-            const facilitiesList = parseFacilities(rawData.facilities);
+            const facilitiesList = parseFacilities(rawData.facilities)
             const unitTypesList = parseUnitTypes(
               rawData.unitTypesAndSizes,
-              rawData.facilities,
               rawData.bedroomsPerUnit,
-              rawData.startingPriceEGP
-            );
-            const specialFeaturesList = parseSpecialFeatures(
-              rawData.specialFeatures
-            );
-            const priceRange = parsePriceRange(rawData.startingPriceEGP);
+              rawData.startingPriceEGP,
+            )
+            const specialFeaturesList = parseSpecialFeatures(rawData.specialFeatures)
+            const priceRange = parsePriceRange(rawData.startingPriceEGP)
 
             projectData = {
               ...rawData,
@@ -665,32 +466,27 @@ const ProjectDetails: React.FC = () => {
               specialFeaturesList,
               priceRange,
               imagePath: getDirectImageUrl(rawData.imagePath),
-            };
-            break;
+            }
+            break
           }
         }
 
         if (!projectData) {
-          throw new Error("Project not found in Google Sheets");
+          throw new Error("Project not found in Google Sheets")
         }
 
-        setProject(projectData);
+        setProject(projectData)
       } catch (err) {
-        console.error("Error fetching project data:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load project data. Please try again."
-        );
+        setError(err instanceof Error ? err.message : "Failed to load project data. Please try again.")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
     if (projectId && companyId) {
-      fetchProjectData();
+      fetchProjectData()
     }
-  }, [projectId, companyId]);
+  }, [projectId, companyId])
 
   const handleShareClick = () => {
     if (navigator.share) {
@@ -700,48 +496,51 @@ const ProjectDetails: React.FC = () => {
           text: `Check out ${project?.name} at ${project?.locationArea}`,
           url: window.location.href,
         })
-        .catch((err) => console.error("Sharing error"));
+        .catch((err) => console.error("Sharing error"))
     } else {
       navigator.clipboard
         .writeText(window.location.href)
         .then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
         })
-        .catch((err) => console.error("Clipboard error"));
+        .catch((err) => console.error("Clipboard error"))
     }
-  };
+  }
 
   const openPdf = (url: string) => {
-    if (!url) return;
+    if (!url) return
 
     if (url.includes("drive.google.com")) {
-      window.open(url, "_blank");
-      return;
+      window.open(url, "_blank")
+      return
     }
 
-    setActivePdf(url);
-  };
+    setActivePdf(url)
+  }
 
   const closePdf = () => {
-    setActivePdf(null);
-    setPdfError(false);
-  };
+    setActivePdf(null)
+    setPdfError(false)
+  }
 
   const handlePdfError = () => {
-    setPdfError(true);
-  };
+    setPdfError(true)
+  }
 
   // Group unit types by category
   const groupedUnitTypes =
-    project?.unitTypesList.reduce((groups, unit) => {
-      const category = unit.category || "Other";
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(unit);
-      return groups;
-    }, {} as Record<string, typeof project.unitTypesList>) || {};
+    project?.unitTypesList.reduce(
+      (groups, unit) => {
+        const category = unit.category || "Other"
+        if (!groups[category]) {
+          groups[category] = []
+        }
+        groups[category].push(unit)
+        return groups
+      },
+      {} as Record<string, typeof project.unitTypesList>,
+    ) || {}
 
   if (loading) {
     return (
@@ -751,7 +550,7 @@ const ProjectDetails: React.FC = () => {
           <p>Loading project details from Google Sheets...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error || !project) {
@@ -766,7 +565,7 @@ const ProjectDetails: React.FC = () => {
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -789,22 +588,17 @@ const ProjectDetails: React.FC = () => {
           />
           <div className={styles.heroOverlay}>
             <div className={styles.heroContent}>
-              <h1 className={styles.heroTitle}>{project.name}</h1>
-              {project.projectSection !== "N/A" && (
-                <p className={styles.heroSubtitle}>{project.projectSection}</p>
-              )}
+              <h1 className={styles.heroTitle}>{project.name || "Project Details"}</h1>
+              {project.projectSection && <p className={styles.heroSubtitle}>{project.projectSection}</p>}
               <div className={styles.heroLocation}>
                 <span className={styles.locationIcon}>📍</span>
-                {project.locationArea}
-                {project.locationDetails !== "N/A" &&
-                  ` • ${project.locationDetails}`}
+                {project.locationArea || "Location not specified"}
+                {project.locationDetails && ` • ${project.locationDetails}`}
               </div>
               <div className={styles.heroBadges}>
                 <span className={styles.premiumBadge}>Premium Property</span>
                 <span className={styles.sectionBadge}>
-                  {project.unitTypesList.length > 0
-                    ? `${project.unitTypesList.length} Unit Types`
-                    : "Luxury Project"}
+                  {project.unitTypesList.length > 0 ? `${project.unitTypesList.length} Unit Types` : "Luxury Project"}
                 </span>
               </div>
             </div>
@@ -826,32 +620,28 @@ const ProjectDetails: React.FC = () => {
               <div className={styles.summaryIcon}>🏢</div>
               <div className={styles.summaryContent}>
                 <h3>Project Name</h3>
-                <p>{project.name}</p>
+                <p>{project.name || "Not specified"}</p>
               </div>
             </div>
             <div className={styles.summaryCard}>
               <div className={styles.summaryIcon}>📍</div>
               <div className={styles.summaryContent}>
                 <h3>Location</h3>
-                <p>{project.locationArea}</p>
+                <p>{project.locationArea || "Not specified"}</p>
               </div>
             </div>
             <div className={styles.summaryCard}>
               <div className={styles.summaryIcon}>💰</div>
               <div className={styles.summaryContent}>
                 <h3>Starting Price</h3>
-                <p>
-                  {project.priceRange.formattedMin !== "Contact for pricing"
-                    ? project.priceRange.formattedMin
-                    : project.startingPriceEGP}
-                </p>
+                <p>{project.priceRange.formattedMin}</p>
               </div>
             </div>
             <div className={styles.summaryCard}>
               <div className={styles.summaryIcon}>📅</div>
               <div className={styles.summaryContent}>
                 <h3>Delivery</h3>
-                <p>{project.deliveryTimeline}</p>
+                <p>{project.deliveryTimeline || "Not specified"}</p>
               </div>
             </div>
           </div>
@@ -884,19 +674,13 @@ const ProjectDetails: React.FC = () => {
                             </div>
                           </td>
                           <td className={styles.tableValue}>
-                            <span className={styles.sizeValue}>
-                              {unit.size}
-                            </span>
+                            <span className={styles.sizeValue}>{unit.size}</span>
                           </td>
                           <td className={styles.tableValue}>
-                            <span className={styles.bedroomValue}>
-                              {unit.bedrooms}
-                            </span>
+                            <span className={styles.bedroomValue}>{unit.bedrooms}</span>
                           </td>
                           <td className={styles.tableValue}>
-                            <span className={styles.priceValue}>
-                              {unit.price}
-                            </span>
+                            <span className={styles.priceValue}>{unit.price}</span>
                           </td>
                         </tr>
                       ))}
@@ -974,9 +758,7 @@ const ProjectDetails: React.FC = () => {
 
         {/* Project Information */}
         <section>
-          <h2 className={styles.sectionTitle}>
-            📊 Complete Project Information
-          </h2>
+          <h2 className={styles.sectionTitle}>📊 Complete Project Information</h2>
           <div className={styles.tableContainer}>
             <table className={styles.dataTable}>
               <thead>
@@ -991,85 +773,67 @@ const ProjectDetails: React.FC = () => {
                     <span className={styles.labelIcon}>🆔</span>
                     Project ID
                   </td>
-                  <td className={styles.tableValue}>{project.projectId}</td>
+                  <td className={styles.tableValue}>{project.projectId || "Not specified"}</td>
                 </tr>
                 <tr>
                   <td className={styles.tableLabel}>
                     <span className={styles.labelIcon}>🏢</span>
                     Project Name
                   </td>
-                  <td className={styles.tableValue}>{project.name}</td>
+                  <td className={styles.tableValue}>{project.name || "Not specified"}</td>
                 </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>🏗️</span>
-                    Project Section
-                  </td>
-                  <td className={styles.tableValue}>
-                    {project.projectSection}
-                  </td>
-                </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>🌍</span>
-                    Location Area
-                  </td>
-                  <td className={styles.tableValue}>{project.locationArea}</td>
-                </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>📍</span>
-                    Location Details
-                  </td>
-                  <td className={styles.tableValue}>
-                    {project.locationDetails}
-                  </td>
-                </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>🛏️</span>
-                    Bedrooms (Per Unit)
-                  </td>
-                  <td className={styles.tableValue}>
-                    {project.bedroomsPerUnit}
-                  </td>
-                </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>💰</span>
-                    Starting Price (EGP)
-                  </td>
-                  <td className={styles.tableValue}>
-                    <span className={styles.priceHighlight}>
-                      {project.priceRange.formattedMin !== "Contact for pricing"
-                        ? project.priceRange.formattedMin
-                        : project.startingPriceEGP}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>💳</span>
-                    Payment Plan
-                  </td>
-                  <td className={styles.tableValue}>{project.paymentPlan}</td>
-                </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>📅</span>
-                    Delivery Timeline
-                  </td>
-                  <td className={styles.tableValue}>
-                    {project.deliveryTimeline}
-                  </td>
-                </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>🖼️</span>
-                    Project Image
-                  </td>
-                  <td className={styles.tableValue}>
-                    {project.imagePath ? (
+                {project.projectSection && (
+                  <tr>
+                    <td className={styles.tableLabel}>
+                      <span className={styles.labelIcon}>🏗️</span>
+                      Project Section
+                    </td>
+                    <td className={styles.tableValue}>{project.projectSection}</td>
+                  </tr>
+                )}
+                {project.locationArea && (
+                  <tr>
+                    <td className={styles.tableLabel}>
+                      <span className={styles.labelIcon}>🌍</span>
+                      Location Area
+                    </td>
+                    <td className={styles.tableValue}>{project.locationArea}</td>
+                  </tr>
+                )}
+                {project.locationDetails && (
+                  <tr>
+                    <td className={styles.tableLabel}>
+                      <span className={styles.labelIcon}>📍</span>
+                      Location Details
+                    </td>
+                    <td className={styles.tableValue}>{project.locationDetails}</td>
+                  </tr>
+                )}
+                {project.paymentPlan && (
+                  <tr>
+                    <td className={styles.tableLabel}>
+                      <span className={styles.labelIcon}>💳</span>
+                      Payment Plan
+                    </td>
+                    <td className={styles.tableValue}>{project.paymentPlan}</td>
+                  </tr>
+                )}
+                {project.deliveryTimeline && (
+                  <tr>
+                    <td className={styles.tableLabel}>
+                      <span className={styles.labelIcon}>📅</span>
+                      Delivery Timeline
+                    </td>
+                    <td className={styles.tableValue}>{project.deliveryTimeline}</td>
+                  </tr>
+                )}
+                {project.imagePath && (
+                  <tr>
+                    <td className={styles.tableLabel}>
+                      <span className={styles.labelIcon}>🖼️</span>
+                      Project Image
+                    </td>
+                    <td className={styles.tableValue}>
                       <a
                         href={project.imagePath}
                         target="_blank"
@@ -1078,29 +842,22 @@ const ProjectDetails: React.FC = () => {
                       >
                         📷 View Project Image
                       </a>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td className={styles.tableLabel}>
-                    <span className={styles.labelIcon}>📄</span>
-                    Project Brochure
-                  </td>
-                  <td className={styles.tableValue}>
-                    {project.pdf ? (
-                      <button
-                        onClick={() => openPdf(project.pdf)}
-                        className={styles.linkButton}
-                      >
+                    </td>
+                  </tr>
+                )}
+                {project.pdf && (
+                  <tr>
+                    <td className={styles.tableLabel}>
+                      <span className={styles.labelIcon}>📄</span>
+                      Project Brochure
+                    </td>
+                    <td className={styles.tableValue}>
+                      <button onClick={() => openPdf(project.pdf)} className={styles.linkButton}>
                         📋 View Project Brochure
                       </button>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -1110,10 +867,7 @@ const ProjectDetails: React.FC = () => {
       {/* PDF Modal */}
       {activePdf && (
         <div className={styles.pdfModal} onClick={closePdf}>
-          <div
-            className={styles.pdfContent}
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className={styles.pdfContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.pdfHeader}>
               <h3>📄 Project Document</h3>
               <button className={styles.pdfCloseButton} onClick={closePdf}>
@@ -1126,10 +880,7 @@ const ProjectDetails: React.FC = () => {
                 <h3>Unable to load document</h3>
                 <p>The document could not be loaded in the viewer.</p>
                 <div className={styles.pdfErrorActions}>
-                  <button
-                    className={styles.primaryButton}
-                    onClick={() => window.open(activePdf, "_blank")}
-                  >
+                  <button className={styles.primaryButton} onClick={() => window.open(activePdf, "_blank")}>
                     🔗 Open in New Tab
                   </button>
                   <button className={styles.secondaryButton} onClick={closePdf}>
@@ -1150,7 +901,7 @@ const ProjectDetails: React.FC = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ProjectDetails;
+export default ProjectDetails
