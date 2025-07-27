@@ -24,7 +24,6 @@ interface Company {
   id: string;
   name: string;
   description: string;
-  website: string;
   image: string;
   location: string;
   active: number; // 1 for active, 0 for inactive
@@ -186,7 +185,6 @@ const Product: React.FC = () => {
               id: columns[0],
               name: columns[1],
               description: columns[2] || "",
-              website: columns[3] || "",
               image: imageUrl,
               location: columns[5] || "Multiple Locations",
               active: parseInt(activeValue || "1"), // Use the found active value
@@ -377,34 +375,7 @@ const Product: React.FC = () => {
           </p>
         </div>
       );
-    } else if (activeTab === "contact") {
-      return (
-        <div className={`${styles.section} ${styles.fadeIn}`}>
-          <h2>Contact Information</h2>
-          <div className={styles.contactInfo}>
-            <div className={styles.contactItem}>
-              <h3>Address</h3>
-              <p>123 Development Avenue, {companyData?.location || "Egypt"}</p>
-            </div>
-            <div className={styles.contactItem}>
-              <h3>Phone</h3>
-              <p>+20 123 456 7890</p>
-            </div>
-            <div className={styles.contactItem}>
-              <h3>Email</h3>
-              <p>
-                info@{companyData?.name.toLowerCase().replace(/\s+/g, "")}
-                dev.com
-              </p>
-            </div>
-            <div className={styles.contactItem}>
-              <h3>Working Hours</h3>
-              <p>Sunday - Thursday: 9:00 AM - 5:00 PM</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
+    } 
   };
 
   if (loading) {
@@ -467,16 +438,6 @@ const Product: React.FC = () => {
         <div className={styles.infoSection}>
           <h1 className={styles.companyName}>{companyData?.name}</h1>
           <p className={styles.description}>{companyData?.description}</p>
-          <div className={styles.actions}>
-            <a
-              href={companyData?.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.websiteButton}
-            >
-              Visit Website
-            </a>
-          </div>
         </div>
       </div>
 
@@ -497,14 +458,7 @@ const Product: React.FC = () => {
         >
           About
         </button>
-        <button
-          className={`${styles.tab} ${
-            activeTab === "contact" ? styles.active : ""
-          }`}
-          onClick={() => setActiveTab("contact")}
-        >
-          Contact
-        </button>
+        
       </div>
 
       {renderContent()}
