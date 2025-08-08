@@ -133,6 +133,27 @@
   cursor: not-allowed;
 }
 
+/* Security-related styles */
+.blockedMessage {
+  background-color: #fff4f4;
+  border: 1px solid #ffcdd2;
+  color: #d32f2f;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.securityNote {
+  color: #757575;
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: 20px;
+  padding: 10px;
+  border-top: 1px solid #eee;
+}
+
 @media (max-width: 576px) {
   .otpCard {
     padding: 1.5rem;
@@ -145,5 +166,11 @@
   .otpInput {
     height: 50px;
     font-size: 1.25rem;
+  }
+  
+  .blockedMessage,
+  .securityNote {
+    font-size: 0.8rem;
+    padding: 8px;
   }
 }

@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import { AuthProvider } from "./contexts/AuthContext";
+import SessionTimeout from "./components/SessionTimeout";
+
 // Lazy load all main page components
 const Home = lazy(() => import("./components/Home/Home"));
 const About = lazy(() => import("./components/About/About"));
@@ -43,6 +45,10 @@ function App() {
         <div className="App">
           <Suspense fallback={<div className="loading">Loading...</div>}>
             <Navbar />
+            <SessionTimeout 
+              warningThreshold={5 * 60 * 1000} // 5 minutes warning before session expires
+              sessionDuration={30 * 60 * 1000} // 30 minutes total session duration
+            />
             <main className="content">
               <Routes>
                 {/* Public routes */}

@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import styles from "./OTP.module.css";
-
-// Google Sheet constants
-const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const CORS_PROXY = "https://corsproxy.io/?";
-const OTP_SHEET_URL =
-  process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1815551767`
-    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1815551767`;
+import { fetchSheetData, parseCSV } from "../../utils/sheetUtils";
+import { 
+  checkRateLimit, 
+  recordAttempt, 
+  resetRateLimit, 
+  formatBlockedTime,
+  sanitizeInput 
+} from "../../utils/securityUtils";
 
 const OTP: React.FC = () => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
@@ -18,9 +18,14 @@ const OTP: React.FC = () => {
   const [countdown, setCountdown] = useState<number>(60);
   const [canResend, setCanResend] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [rateLimitInfo, setRateLimitInfo] = useState<{
+    isLimited: boolean;
+    remainingAttempts: number;
+    blockedUntil: number | null;
+  }>({ isLimited: false, remainingAttempts: 3, blockedUntil: null });
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, updateLastActivity } = useAuth();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -30,6 +35,12 @@ const OTP: React.FC = () => {
 
     const currentUsername = localStorage.getItem("username");
     setUsername(currentUsername);
+
+    // Check rate limit for OTP attempts
+    if (currentUsername) {
+      const rateLimit = checkRateLimit('otp', currentUsername);
+      setRateLimitInfo(rateLimit);
+    }
 
     const isOtpVerified = sessionStorage.getItem("otpVerified") === "true";
     if (isOtpVerified) {
@@ -56,11 +67,23 @@ const OTP: React.FC = () => {
   }, []);
 
   const handleChange = (index: number, value: string) => {
+    // Sanitize input to prevent XSS attacks
+    value = sanitizeInput(value);
+    
     if (value && !/^\d*$/.test(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
+
+    // Clear error when user types
+    if (error) setError(null);
+    
+    // Check rate limit status when user starts typing
+    if (username && index === 0) {
+      const rateLimit = checkRateLimit('otp', username);
+      setRateLimitInfo(rateLimit);
+    }
 
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
@@ -110,30 +133,41 @@ const OTP: React.FC = () => {
       return;
     }
 
+    // Check rate limiting
+    if (!username) {
+      setError("Username not found. Please log in again.");
+      navigate("/login");
+      return;
+    }
+
+    const rateLimit = checkRateLimit('otp', username);
+    setRateLimitInfo(rateLimit);
+    
+    if (rateLimit.isLimited) {
+      setError(
+        `Too many failed attempts. Please try again in ${formatBlockedTime(rateLimit.blockedUntil!)}.`
+      );
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
     try {
-      const response = await fetch(OTP_SHEET_URL);
-      if (!response.ok) {
-        throw new Error("Failed to connect to the verification server");
+      // Fetch user data with caching and error handling
+      const result = await fetchSheetData('users');
+      
+      if (!result.success) {
+        throw new Error(result.error || "Failed to connect to the verification server");
       }
 
-      const csvText = await response.text();
-      if (!csvText.trim()) {
-        throw new Error("No user data available");
-      }
+      // Parse the CSV data
+      const rows = parseCSV(result.data || "");
+      const headerRow = rows[0].map((col: string) => col.toLowerCase());
 
-      const rows = csvText.split("\n");
-      const headerRow = rows[0]
-        .split(",")
-        .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
-
-      // 🔍 Log parsed headers to debug column name mismatches
-      console.log("Parsed headers from CSV:", headerRow);
-
-      const usernameIndex = headerRow.findIndex((col) => col === "username");
-      const otpIndex = headerRow.findIndex((col) => col === "manual_otp");
+      const usernameIndex = headerRow.findIndex((col: string) => col === "username");
+      const otpIndex = headerRow.findIndex((col: string) => col === "manual_otp");
+      const roleIndex = headerRow.findIndex((col: string) => col === "role");
 
       if (usernameIndex === -1 || otpIndex === -1) {
         throw new Error(
@@ -143,31 +177,47 @@ const OTP: React.FC = () => {
 
       const dataRows = rows.slice(1);
       let otpVerified = false;
+      let userRole = "user";
 
       for (const row of dataRows) {
-        const columns = row
-          .split(",")
-          .map((col) => col.replace(/^"|"$/g, "").trim());
+        if (row.length <= Math.max(usernameIndex, otpIndex)) continue;
 
-        if (columns.length <= Math.max(usernameIndex, otpIndex)) continue;
-
-        const rowUsername = columns[usernameIndex];
-        const storedOtp = columns[otpIndex];
+        const rowUsername = row[usernameIndex];
+        const storedOtp = row[otpIndex];
 
         if (rowUsername === username && storedOtp === otpValue) {
           otpVerified = true;
+          
+          // Get user role if available
+          if (roleIndex !== -1 && row[roleIndex]) {
+            userRole = row[roleIndex];
+          }
+          
           break;
         }
       }
 
       if (otpVerified) {
+        // Reset rate limiting on successful verification
+        resetRateLimit('otp', username);
+        
+        // Mark OTP as verified
         sessionStorage.setItem("otpVerified", "true");
+        
+        // Update last activity timestamp
+        updateLastActivity();
+        
         setTimeout(() => {
           setLoading(false);
           navigate("/");
         }, 1000);
       } else {
-        throw new Error("Invalid verification code");
+        // Record failed attempt for rate limiting
+        recordAttempt('otp', username);
+        const updatedRateLimit = checkRateLimit('otp', username);
+        setRateLimitInfo(updatedRateLimit);
+        
+        throw new Error(`Invalid verification code. ${updatedRateLimit.remainingAttempts} attempts remaining.`);
       }
     } catch (err) {
       setLoading(false);
@@ -176,13 +226,26 @@ const OTP: React.FC = () => {
   };
 
   const handleResendOTP = () => {
-    if (!canResend) return;
+    if (!canResend || !username) return;
+
+    // Check rate limiting for resend attempts
+    const resendRateLimit = checkRateLimit('otp_resend', username);
+    
+    if (resendRateLimit.isLimited) {
+      setError(
+        `Too many resend attempts. Please try again in ${formatBlockedTime(resendRateLimit.blockedUntil!)}.`
+      );
+      return;
+    }
 
     setCountdown(60);
     setCanResend(false);
     setOtp(Array(6).fill(""));
     setError(null);
     inputRefs.current[0]?.focus();
+
+    // Record this resend attempt
+    recordAttempt('otp_resend', username);
 
     console.log("Resending OTP to:", username);
   };
@@ -198,6 +261,12 @@ const OTP: React.FC = () => {
         </p>
 
         {error && <div className={styles.errorMessage}>{error}</div>}
+        
+        {rateLimitInfo.isLimited && (
+          <div className={styles.blockedMessage}>
+            Account temporarily locked. Please try again in {formatBlockedTime(rateLimitInfo.blockedUntil!)}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className={styles.otpForm}>
           <div className={styles.otpInputGroup}>
@@ -212,9 +281,10 @@ const OTP: React.FC = () => {
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={index === 0 ? handlePaste : undefined}
                 className={styles.otpInput}
-                disabled={loading}
+                disabled={loading || rateLimitInfo.isLimited}
                 autoFocus={index === 0}
                 required
+                autoComplete="one-time-code"
               />
             ))}
           </div>
@@ -222,7 +292,7 @@ const OTP: React.FC = () => {
           <button
             type="submit"
             className={styles.verifyButton}
-            disabled={loading || otp.join("").length !== 6}
+            disabled={loading || otp.join("").length !== 6 || rateLimitInfo.isLimited}
           >
             {loading ? "Verifying..." : "Verify"}
           </button>
@@ -233,7 +303,7 @@ const OTP: React.FC = () => {
             <button
               onClick={handleResendOTP}
               className={styles.resendButton}
-              disabled={loading}
+              disabled={loading || rateLimitInfo.isLimited}
             >
               Resend Code
             </button>
@@ -242,6 +312,10 @@ const OTP: React.FC = () => {
               Resend code in <span>{countdown}s</span>
             </p>
           )}
+        </div>
+        
+        <div className={styles.securityNote}>
+          This verification is secured with rate limiting to prevent unauthorized access.
         </div>
       </div>
     </div>

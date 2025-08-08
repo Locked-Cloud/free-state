@@ -97,6 +97,28 @@
   text-align: center;
 }
 
+.blockedMessage {
+  background-color: #fff3bf;
+  color: #e67700;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  border-left: 4px solid #e67700;
+}
+
+.securityNote {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: #868e96;
+  font-size: 0.85rem;
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #339af0;
+}
+
 .loginFooter {
   margin-top: 2rem;
   text-align: center;
