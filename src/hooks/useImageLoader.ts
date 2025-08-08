@@ -16,7 +16,7 @@ const DEFAULT_FALLBACK = "https://placehold.co/800x600?text=Image+Not+Found";
 const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
   const { fallbackImage = DEFAULT_FALLBACK, loadingDelay = 0 } = options;
 
-  const [imageUrl, setImageUrl] = useState<string>(url);
+  const [imageUrl, setImageUrl] = useState<string>(transformGoogleDriveUrl(url));
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
 
@@ -31,25 +31,39 @@ const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
     setIsLoading(true);
     setHasError(false);
 
-    const transformedUrl = transformGoogleDriveUrl(url);
+    // Build a list of candidate URLs (for Google Drive links we will try several patterns)
+    const candidates: string[] = buildUrlCandidates(url);
+    let currentIndex = 0;
 
-    // Implement a delay to stagger image loading
-    const timer = setTimeout(() => {
-      const img = new Image();
-
-      img.onload = () => {
-        setImageUrl(transformedUrl);
-        setIsLoading(false);
-      };
-
-      img.onerror = () => {
+    const attemptLoad = () => {
+      if (currentIndex >= candidates.length) {
+        // All attempts failed – use fallback
         setImageUrl(fallbackImage);
         setIsLoading(false);
         setHasError(true);
-      };
+        return;
+      }
 
-      img.src = transformedUrl;
-    }, loadingDelay);
+      const candidateUrl = candidates[currentIndex];
+      // Update image while loading so <img> src reflects the attempt
+      setImageUrl(candidateUrl);
+
+      const img = new Image();
+      img.onload = () => {
+        // Successful load
+        setImageUrl(candidateUrl);
+        setIsLoading(false);
+      };
+      img.onerror = () => {
+        // Try next candidate
+        currentIndex += 1;
+        attemptLoad();
+      };
+      img.src = candidateUrl;
+    };
+
+    // Optional delay before starting first attempt
+    const timer = setTimeout(attemptLoad, loadingDelay);
 
     return () => clearTimeout(timer);
   }, [url, fallbackImage, loadingDelay]);
@@ -65,18 +79,17 @@ const addCacheBuster = (url: string): string => {
   return url.includes("?") ? `${url}&${cacheParam}` : `${url}?${cacheParam}`;
 };
 
-// CORS proxy for Google Drive URLs
-const CORS_PROXY = "https://corsproxy.io/?";
+// Transform Google Drive links to direct-download URLs
 
-// Transform Google Drive links (or already transformed lh3 links) to a direct-download endpoint
+// Transform Google Drive links to a format that works with CORS restrictions
 const transformGoogleDriveUrl = (rawUrl: string): string => {
   if (!rawUrl) return rawUrl;
 
-  // If already using lh3.googleusercontent.com or uc?export, just append cache-buster
+  // If already using lh3.googleusercontent.com, just append cache-buster
   if (rawUrl.includes("lh3.googleusercontent.com/d/")) {
     return addCacheBuster(rawUrl);
   }
-
+  
   let fileId = "";
   if (rawUrl.includes("/file/d/")) {
     fileId = rawUrl.split("/file/d/")[1].split("/")[0];
@@ -86,6 +99,35 @@ const transformGoogleDriveUrl = (rawUrl: string): string => {
 
   if (!fileId) return rawUrl;
 
-  // Use CORS proxy for Google Drive URLs
-  return addCacheBuster(`${CORS_PROXY}https://drive.google.com/uc?export=download&id=${fileId}`);
+  // Use drive.google.com/thumbnail which has fewer CORS restrictions
+  // Size=w1000 provides a reasonably large image that works for most purposes
+  return addCacheBuster(`https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`);
+};
+
+// Build list of URLs to try when loading the image
+const buildUrlCandidates = (rawUrl: string): string[] => {
+  const list: string[] = [];
+
+  // 1) Preferred thumbnail transformation
+  const thumb = transformGoogleDriveUrl(rawUrl);
+  if (thumb) list.push(thumb);
+
+  // 2) Direct lh3.googleusercontent.com path if we can extract fileId
+  let fileId = "";
+  if (rawUrl.includes("/file/d/")) {
+    fileId = rawUrl.split("/file/d/")[1].split("/")[0];
+  } else if (rawUrl.includes("id=")) {
+    fileId = rawUrl.split("id=")[1].split("&")[0];
+  }
+  if (fileId) {
+    list.push(addCacheBuster(`https://lh3.googleusercontent.com/d/${fileId}=w1000`));
+  }
+
+  // 3) Original URL (with cache buster) as last resort
+  if (rawUrl) {
+    list.push(addCacheBuster(rawUrl));
+  }
+
+  // Remove duplicates
+  return Array.from(new Set(list));
 };

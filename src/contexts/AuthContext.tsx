@@ -44,6 +44,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [lastActivity, setLastActivity] = useState<number>(Date.now());
 
+  // Logout function
+  const logout = useCallback(() => {
+    // Clear auth data from localStorage
+    localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
+    localStorage.removeItem(STORAGE_KEYS.USERNAME);
+    localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY);
+
+    // Clear OTP verification
+    sessionStorage.removeItem("otpVerified");
+
+    // Reset state
+    setIsAuthenticated(false);
+    setUsername(null);
+    setUserRole(null);
+  }, []);
+
   // Check if the session is expired
   const isSessionExpired = useCallback(() => {
     const lastActivityTime = Number(localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY)) || 0;
@@ -59,19 +77,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Initialize auth state from storage
   useEffect(() => {
-    // Check if user is already authenticated
     const authStatus = localStorage.getItem(STORAGE_KEYS.IS_AUTHENTICATED);
     const storedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
     const storedRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE);
     const storedLastActivity = localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY);
 
-    // Check if session is expired
     if (authStatus === "true" && storedUsername) {
       if (isSessionExpired()) {
-        // Session expired, log out
         logout();
       } else {
-        // Session valid, restore state
         setIsAuthenticated(true);
         setUsername(storedUsername);
         setUserRole(storedRole);
@@ -81,72 +95,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     }
 
-    // Set up activity tracking
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    
     const handleUserActivity = () => {
       if (isAuthenticated) {
         updateLastActivity();
       }
     };
 
-    events.forEach(event => {
-      window.addEventListener(event, handleUserActivity);
-    });
+    events.forEach(event => window.addEventListener(event, handleUserActivity));
 
     return () => {
-      events.forEach(event => {
-        window.removeEventListener(event, handleUserActivity);
-      });
+      events.forEach(event => window.removeEventListener(event, handleUserActivity));
     };
-  }, [isAuthenticated, isSessionExpired, updateLastActivity]);
+  }, [isAuthenticated, isSessionExpired, updateLastActivity, logout]); // ✅ Fixed: added `logout`
 
   // Login function
   const login = useCallback((username: string, role: string = "user") => {
     const now = Date.now();
-    
-    // Store auth data in localStorage
+
     localStorage.setItem(STORAGE_KEYS.IS_AUTHENTICATED, "true");
     localStorage.setItem(STORAGE_KEYS.USERNAME, username);
     localStorage.setItem(STORAGE_KEYS.USER_ROLE, role);
     localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, now.toString());
-    
-    // Update state
+
     setIsAuthenticated(true);
     setUsername(username);
     setUserRole(role);
     setLastActivity(now);
   }, []);
 
-  // Logout function
-  const logout = useCallback(() => {
-    // Clear auth data from localStorage
-    localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
-    localStorage.removeItem(STORAGE_KEYS.USERNAME);
-    localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY);
-    
-    // Clear OTP verification
-    sessionStorage.removeItem("otpVerified");
-    
-    // Reset state
-    setIsAuthenticated(false);
-    setUsername(null);
-    setUserRole(null);
-  }, []);
-
   return (
-    <AuthContext.Provider 
-      value={{ 
-        isAuthenticated, 
-        username, 
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        username,
         userRole,
         lastActivity,
-        login, 
+        login,
         logout,
         updateLastActivity,
-        isSessionExpired
+        isSessionExpired,
       }}
     >
       {children}

@@ -25,7 +25,7 @@ const OTP: React.FC = () => {
   }>({ isLimited: false, remainingAttempts: 3, blockedUntil: null });
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
-  const { isAuthenticated, updateLastActivity } = useAuth();
+  const { isAuthenticated, updateLastActivity, login } = useAuth();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -206,7 +206,12 @@ const OTP: React.FC = () => {
         
         // Update last activity timestamp
         updateLastActivity();
-        
+
+        // Persist role in auth context for later authorization logic
+        if (username) {
+          login(username, userRole);
+        }
+
         setTimeout(() => {
           setLoading(false);
           navigate("/");

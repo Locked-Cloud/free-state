@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import styles from "./Places.module.css";
 import OptimizedImage from "../common/OptimizedImage";
+import { fetchSheetData, parseCSV, getDirectImageUrl } from "../../utils/sheetUtils";
+import { SHEET_TYPES } from "../../utils/sheetUtils";
 
 interface Project {
   id: string;
@@ -12,128 +14,7 @@ interface Project {
   companyId: string;
 }
 
-const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const CORS_PROXY = "https://corsproxy.io/?";
-
-const DATA_SHEET_GID = "1884577336";
-
-const getProjectsSheetURL = (gid: string) => {
-  const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
-  return process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}${baseUrl}`
-    : baseUrl;
-};
-
-const PROJECTS_SHEET_URL = getProjectsSheetURL(DATA_SHEET_GID);
-
-const ALTERNATIVE_GIDS = ["0", "1977229403", "658730705", "123456789"];
-
-const PUBLIC_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing`;
-
-const getDirectImageUrl = (url: string): string => {
-  if (!url || url.trim() === "") {
-    return "https://placehold.co/800x600?text=No+Image";
-  }
-
-  try {
-    const cleanUrl = url.trim();
-
-    if (cleanUrl.includes("drive.google.com")) {
-      let fileId = "";
-
-      if (cleanUrl.includes("/file/d/")) {
-        const match = cleanUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      } else if (cleanUrl.includes("id=")) {
-        const match = cleanUrl.match(/id=([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      } else if (cleanUrl.includes("/d/")) {
-        const match = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      }
-
-      if (fileId) {
-        // Use CORS proxy for Google Drive URLs
-        const driveUrls = [
-          `${CORS_PROXY}https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600`,
-          `${CORS_PROXY}https://drive.google.com/uc?id=${fileId}&export=view`,
-          `https://lh3.googleusercontent.com/d/${fileId}=w800-h600`,
-          `${CORS_PROXY}https://drive.google.com/uc?export=view&id=${fileId}`,
-        ];
-
-        return driveUrls[0];
-      }
-    }
-
-    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl)) {
-      return cleanUrl;
-    }
-
-    if (
-      cleanUrl.includes("imgur.com") ||
-      cleanUrl.includes("cloudinary.com") ||
-      cleanUrl.includes("amazonaws.com") ||
-      cleanUrl.includes("unsplash.com") ||
-      cleanUrl.includes("picsum.photos") ||
-      cleanUrl.includes("via.placeholder.com")
-    ) {
-      return cleanUrl;
-    }
-
-    if (cleanUrl.startsWith("http")) {
-      return cleanUrl;
-    }
-  } catch (error) {
-    // Error processing image URL
-  }
-
-  return "https://placehold.co/800x600?text=Invalid+URL";
-};
-
-const parseCSV = (text: string): string[][] => {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentCell = "";
-  let insideQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i + 1];
-
-    if (char === '"') {
-      if (insideQuotes && nextChar === '"') {
-        currentCell += '"';
-        i++;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-    } else if (char === "," && !insideQuotes) {
-      currentRow.push(currentCell.trim());
-      currentCell = "";
-    } else if ((char === "\n" || char === "\r") && !insideQuotes) {
-      if (char === "\r" && nextChar === "\n") {
-        i++; // Skip the \n in \r\n
-      }
-      currentRow.push(currentCell.trim());
-      if (currentRow.some((cell) => cell)) {
-        rows.push(currentRow);
-      }
-      currentRow = [];
-      currentCell = "";
-    } else {
-      currentCell += char;
-    }
-  }
-
-  if (currentCell) {
-    currentRow.push(currentCell.trim());
-  }
-  if (currentRow.length > 0) {
-    rows.push(currentRow);
-  }
-
-  return rows;
-};
+// getDirectImageUrl and parseCSV are now imported from sheetUtils
 
 const LocationProjects: React.FC = () => {
   const { id_loc } = useParams<{ id_loc: string }>();
@@ -150,57 +31,18 @@ const LocationProjects: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        let csvText = "";
-
-        try {
-          const response = await fetch(PROJECTS_SHEET_URL);
-          if (response.ok) {
-            csvText = await response.text();
-          } else {
-            throw new Error(`Main URL failed: ${response.status}`);
-          }
-        } catch (mainError) {
-          for (const altGid of ALTERNATIVE_GIDS) {
-            if (altGid === DATA_SHEET_GID) continue;
-
-            const altUrl = getProjectsSheetURL(altGid);
-
-            try {
-              const altResponse = await fetch(altUrl);
-              if (altResponse.ok) {
-                csvText = await altResponse.text();
-                break;
-              }
-            } catch (altError) {
-              continue;
-            }
-          }
-
-          if (!csvText) {
-            throw new Error(`All URL attempts failed. Please check:
-1. Sheet permissions: Visit ${PUBLIC_SHEET_URL}
-2. Make sure sheet is publicly viewable
-3. Verify the "data" sheet exists
-4. Check if you're using the correct sheet ID`);
-          }
+        // Fetch projects data from the API service
+        const result = await fetchSheetData(SHEET_TYPES.PROJECTS);
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to fetch projects data');
         }
-
+        
+        const csvText = result.data || '';
+        
         if (!csvText || csvText.trim() === "") {
           throw new Error(
-            "Empty CSV response - check if sheet exists and is accessible"
-          );
-        }
-
-        if (csvText.includes("<!DOCTYPE html")) {
-          throw new Error(
-            "Received HTML instead of CSV - sheet may not be publicly accessible. Please visit: " +
-              PUBLIC_SHEET_URL
-          );
-        }
-
-        if (csvText.includes("400. That's an error")) {
-          throw new Error(
-            "Sheet access denied. Please make sure the sheet is publicly viewable"
+            "Empty data response - check if data exists and is accessible"
           );
         }
 
@@ -339,14 +181,6 @@ const LocationProjects: React.FC = () => {
           errorMessage += "Unknown error";
         }
 
-        if (
-          errorMessage.includes("400") ||
-          errorMessage.includes("HTTP error")
-        ) {
-          errorMessage +=
-            "\n\n🔧 Fix this by:\n1. Open your Google Sheet\n2. Click 'Share' button\n3. Change to 'Anyone with the link can view'\n4. Make sure the 'data' sheet tab exists";
-        }
-
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -372,7 +206,7 @@ const LocationProjects: React.FC = () => {
         <div className={styles.loadingSpinner}>
           <div className={styles.spinner}></div>
           <div style={{ marginTop: "16px", color: "#666" }}>
-            Loading projects from data sheet...
+            Loading projects...
           </div>
         </div>
       </div>
@@ -400,20 +234,20 @@ const LocationProjects: React.FC = () => {
             >
               Try Again
             </button>
-            <a
-              href={PUBLIC_SHEET_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => window.history.back()}
               style={{
                 padding: "8px 16px",
                 backgroundColor: "#28a745",
                 color: "white",
                 textDecoration: "none",
                 borderRadius: "4px",
+                border: "none",
+                cursor: "pointer",
               }}
             >
-              Check Sheet Access
-            </a>
+              Go Back
+            </button>
           </div>
         </div>
       </div>
