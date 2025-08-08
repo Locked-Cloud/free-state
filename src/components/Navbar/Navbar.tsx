@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import { useAuth } from "../../contexts/AuthContext";
 import NetworkStatus from "../NetworkStatus/NetworkStatus";
-import SyncManager from "../SyncManager/SyncManager";
 import DarkModeToggle from "../DarkModeToggle/DarkModeToggle";
 
 const links = [
