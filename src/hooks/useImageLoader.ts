@@ -31,12 +31,14 @@ const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
     setIsLoading(true);
     setHasError(false);
 
+    const transformedUrl = transformGoogleDriveUrl(url);
+
     // Implement a delay to stagger image loading
     const timer = setTimeout(() => {
       const img = new Image();
 
       img.onload = () => {
-        setImageUrl(url);
+        setImageUrl(transformedUrl);
         setIsLoading(false);
       };
 
@@ -46,7 +48,7 @@ const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
         setHasError(true);
       };
 
-      img.src = url;
+      img.src = transformedUrl;
     }, loadingDelay);
 
     return () => clearTimeout(timer);
@@ -56,3 +58,30 @@ const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
 };
 
 export default useImageLoader;
+
+
+const addCacheBuster = (url: string): string => {
+  const cacheParam = `cb=${Date.now() % 100000}`;
+  return url.includes("?") ? `${url}&${cacheParam}` : `${url}?${cacheParam}`;
+};
+
+// Transform Google Drive links (or already transformed lh3 links) to a direct-download endpoint
+const transformGoogleDriveUrl = (rawUrl: string): string => {
+  if (!rawUrl) return rawUrl;
+
+  // If already using lh3.googleusercontent.com or uc?export, just append cache-buster
+  if (rawUrl.includes("lh3.googleusercontent.com/d/")) {
+    return addCacheBuster(rawUrl);
+  }
+
+  let fileId = "";
+  if (rawUrl.includes("/file/d/")) {
+    fileId = rawUrl.split("/file/d/")[1].split("/")[0];
+  } else if (rawUrl.includes("id=")) {
+    fileId = rawUrl.split("id=")[1].split("&")[0];
+  }
+
+  if (!fileId) return rawUrl;
+
+  return addCacheBuster(`https://drive.google.com/uc?export=download&id=${fileId}`);
+};

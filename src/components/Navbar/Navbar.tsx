@@ -69,7 +69,6 @@ const Navbar: React.FC = () => {
             <span className={styles.username}>Welcome, {username}</span>
             <div className={styles.navbarControls}>
               <NetworkStatus showDetails={false} />
-              <SyncManager onSyncComplete={() => console.log('Sync completed')} />
               <DarkModeToggle className={styles.darkModeToggle} />
             </div>
             <button onClick={handleLogout} className={styles.logoutButton}>

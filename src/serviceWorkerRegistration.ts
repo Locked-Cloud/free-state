@@ -67,9 +67,11 @@ function registerValidSW(swUrl: string, config?: Config): void {
               );
 
               // Execute callback
-              if (config && config.onUpdate) {
-                config.onUpdate(registration);
-              }
+              // Clear reload flag after successful update
+                sessionStorage.removeItem('sw-reload');
+                if (config && config.onUpdate) {
+                  config.onUpdate(registration);
+                }
             } else {
               // At this point, everything has been precached.
               // It's the perfect time to display a
@@ -77,9 +79,11 @@ function registerValidSW(swUrl: string, config?: Config): void {
               console.log('Content is cached for offline use.');
 
               // Execute callback
-              if (config && config.onSuccess) {
-                config.onSuccess(registration);
-              }
+              // Clear reload flag after first successful caching
+                sessionStorage.removeItem('sw-reload');
+                if (config && config.onSuccess) {
+                  config.onSuccess(registration);
+                }
             }
           }
         };
@@ -105,7 +109,11 @@ function checkValidServiceWorker(swUrl: string, config?: Config): void {
         // No service worker found. Probably a different app. Reload the page.
         navigator.serviceWorker.ready.then((registration) => {
           registration.unregister().then(() => {
-            window.location.reload();
+            // Avoid infinite reload loop if service worker not found
+            if (!sessionStorage.getItem('sw-reload')) {
+              sessionStorage.setItem('sw-reload', 'true');
+              window.location.reload();
+            }
           });
         });
       } else {

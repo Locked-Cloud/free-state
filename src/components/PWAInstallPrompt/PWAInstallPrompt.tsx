@@ -50,11 +50,7 @@ const PWAInstallPrompt: React.FC = () => {
     // Wait for the user to respond to the prompt
     const choiceResult = await installPrompt.userChoice;
     
-    if (choiceResult.outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
-    }
+   
 
     // Clear the saved prompt since it can't be used twice
     setInstallPrompt(null);
