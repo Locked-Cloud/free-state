@@ -1,0 +1,101 @@
+.toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+  padding: 0;
+  outline: none;
+}
+
+.toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.toggle:focus-visible {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.iconContainer {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.sunIcon {
+  color: #f39c12;
+  opacity: 0;
+  transform: scale(0.5) rotate(-45deg);
+}
+
+.moonIcon {
+  color: #3498db;
+  opacity: 0;
+  transform: scale(0.5) rotate(45deg);
+}
+
+/* Light mode styles */
+.light .sunIcon {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+.light .moonIcon {
+  opacity: 0;
+  transform: scale(0.5) rotate(45deg);
+}
+
+/* Dark mode styles */
+.dark .moonIcon {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+.dark .sunIcon {
+  opacity: 0;
+  transform: scale(0.5) rotate(-45deg);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .toggle:focus-visible {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .toggle {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .iconContainer {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}

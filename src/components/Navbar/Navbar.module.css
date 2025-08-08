@@ -126,6 +126,18 @@
   font-weight: 500;
 }
 
+.navbarControls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-right: 1rem;
+}
+
+.darkModeToggle {
+  margin: 0;
+  padding: 0;
+}
+
 .loginButton {
   background-color: #339af0;
   color: white !important;

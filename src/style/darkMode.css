@@ -1,0 +1,211 @@
+/* Dark Mode Styles */
+
+/* Apply dark mode styles when .dark-mode class is present on body */
+body.dark-mode {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2d2d2d;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #909090;
+  --border-color: #333;
+  --accent-color: #3f51b5;
+  --accent-light: #5c6bc0;
+  --accent-dark: #303f9f;
+  --error-color: #cf6679;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --info-color: #2196f3;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* App container */
+body.dark-mode .App {
+  background-color: var(--bg-primary);
+}
+
+/* Cards and containers */
+body.dark-mode .card,
+body.dark-mode .container,
+body.dark-mode .paper {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Form elements */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode button {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+  border-color: var(--accent-color);
+  outline-color: var(--accent-color);
+}
+
+/* Buttons */
+body.dark-mode button.primary {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+body.dark-mode button.primary:hover {
+  background-color: var(--accent-light);
+}
+
+body.dark-mode button.secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode button.secondary:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Links */
+body.dark-mode a {
+  color: var(--accent-light);
+}
+
+body.dark-mode a:hover {
+  color: var(--accent-light);
+  text-decoration: underline;
+}
+
+/* Tables */
+body.dark-mode table {
+  border-color: var(--border-color);
+}
+
+body.dark-mode th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode td {
+  border-color: var(--border-color);
+}
+
+body.dark-mode tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Navbar */
+body.dark-mode nav {
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Footer */
+body.dark-mode footer {
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* Scrollbar */
+body.dark-mode ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 5px;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color);
+}
+
+/* Modals and dialogs */
+body.dark-mode .modal,
+body.dark-mode .dialog {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 20px var(--shadow-color);
+}
+
+/* Alerts and notifications */
+body.dark-mode .alert.error {
+  background-color: rgba(207, 102, 121, 0.1);
+  color: var(--error-color);
+  border-color: var(--error-color);
+}
+
+body.dark-mode .alert.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+body.dark-mode .alert.warning {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: var(--warning-color);
+  border-color: var(--warning-color);
+}
+
+body.dark-mode .alert.info {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: var(--info-color);
+  border-color: var(--info-color);
+}
+
+/* Placeholders */
+body.dark-mode ::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Selection */
+body.dark-mode ::selection {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+/* Tooltips */
+body.dark-mode .tooltip {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 10px var(--shadow-color);
+}
+
+/* Disabled elements */
+body.dark-mode button:disabled,
+body.dark-mode input:disabled,
+body.dark-mode select:disabled,
+body.dark-mode textarea:disabled {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+/* Loading indicators */
+body.dark-mode .loading {
+  color: var(--text-secondary);
+}
+
+/* Code blocks */
+body.dark-mode code,
+body.dark-mode pre {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}

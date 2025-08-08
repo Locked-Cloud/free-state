@@ -1,0 +1,75 @@
+.imageContainer {
+  position: relative;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.image {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.loaded {
+  opacity: 1;
+}
+
+.errorContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f8f8f8;
+  color: #666;
+  padding: 20px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.errorText {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Animation for placeholder */
+.imageContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 1.5s infinite;
+  transform: translateX(-100%);
+  display: none;
+}
+
+.imageContainer:not(:has(.loaded))::before {
+  display: block;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .imageContainer {
+    background-color: #333;
+  }
+  
+  .errorContainer {
+    background-color: #333;
+    color: #bbb;
+  }
+}

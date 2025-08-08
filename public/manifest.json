@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Free State",
+  "name": "Free State - Property Listings",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,16 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#1a73e8",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "categories": ["real estate", "property", "listings"],
+  "description": "Browse property listings and projects in Free State",
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "type": "image/png",
+      "sizes": "540x720"
+    }
+  ]
 }

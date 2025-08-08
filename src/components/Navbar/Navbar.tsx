@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import { useAuth } from "../../contexts/AuthContext";
+import NetworkStatus from "../NetworkStatus/NetworkStatus";
+import SyncManager from "../SyncManager/SyncManager";
+import DarkModeToggle from "../DarkModeToggle/DarkModeToggle";
 
 const links = [
   { to: "/", label: "Home" },
@@ -64,6 +67,11 @@ const Navbar: React.FC = () => {
             ))}
 
             <span className={styles.username}>Welcome, {username}</span>
+            <div className={styles.navbarControls}>
+              <NetworkStatus showDetails={false} />
+              <SyncManager onSyncComplete={() => console.log('Sync completed')} />
+              <DarkModeToggle className={styles.darkModeToggle} />
+            </div>
             <button onClick={handleLogout} className={styles.logoutButton}>
               Logout
             </button>
