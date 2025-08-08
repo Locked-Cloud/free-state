@@ -53,11 +53,12 @@ const getDirectImageUrl = (url: string): string => {
       }
 
       if (fileId) {
+        // Use CORS proxy for Google Drive URLs
         const driveUrls = [
-          `https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600`,
-          `https://drive.google.com/uc?id=${fileId}&export=view`,
+          `${CORS_PROXY}https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600`,
+          `${CORS_PROXY}https://drive.google.com/uc?id=${fileId}&export=view`,
           `https://lh3.googleusercontent.com/d/${fileId}=w800-h600`,
-          `https://drive.google.com/uc?export=view&id=${fileId}`,
+          `${CORS_PROXY}https://drive.google.com/uc?export=view&id=${fileId}`,
         ];
 
         return driveUrls[0];

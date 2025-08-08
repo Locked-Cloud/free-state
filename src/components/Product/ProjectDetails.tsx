@@ -72,6 +72,7 @@ const getDirectImageUrl = (url: string): string => {
 
       if (fileId) {
         const cacheBuster = Date.now() % 1000
+        // lh3.googleusercontent.com doesn't need a CORS proxy
         return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`
       }
     }

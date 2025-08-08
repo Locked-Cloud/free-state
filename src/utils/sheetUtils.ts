@@ -248,7 +248,8 @@ export function getDirectImageUrl(url: string): string {
       if (fileId) {
         // Add cache buster to prevent caching issues
         const cacheBuster = Date.now() % 1000;
-        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600&cb=${cacheBuster}`;
+        // Use CORS proxy for Google Drive URLs
+        return `${CORS_PROXY}https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600&cb=${cacheBuster}`;
       }
     }
 

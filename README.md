@@ -1,6 +1,6 @@
 # Free State Real Estate Platform
 
-A React application for browsing real estate properties and developers in Egypt. Features include user authentication, property listings, and detailed project information.
+A React application for browsing real estate properties and developers in Egypt. Features include user authentication, property listings, and detailed project information. This application is also a Progressive Web App (PWA) with offline capabilities.
 
 ## Features
 
@@ -9,6 +9,11 @@ A React application for browsing real estate properties and developers in Egypt.
 - Detailed project information with images and specifications
 - Responsive design for mobile and desktop
 - Protected routes requiring authentication
+- Progressive Web App (PWA) capabilities:
+  - Installable on desktop and mobile devices
+  - Offline functionality
+  - App-like experience with full-screen mode
+  - Fast loading with service worker caching
 
 ## Getting Started
 
@@ -16,6 +21,32 @@ A React application for browsing real estate properties and developers in Egypt.
 
 - Node.js (v14.0.0 or later)
 - npm (v6.0.0 or later)
+
+### Development Tools
+
+#### React DevTools
+
+For a better development experience, install React DevTools browser extension:
+
+- [Chrome Extension](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi)
+- [Firefox Extension](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/)
+- [Edge Extension](https://microsoftedge.microsoft.com/addons/detail/react-developer-tools/gpphkfbcpidddadnkolkpfckpihlkkil)
+
+For Safari or other browsers, install the standalone version:
+
+```bash
+# Using npm
+npm install -g react-devtools
+
+# Using yarn
+yarn global add react-devtools
+```
+
+Then run the DevTools from the terminal:
+
+```bash
+react-devtools
+```
 
 ### Installation
 
@@ -37,6 +68,27 @@ npm install
 ```bash
 npm start
 ```
+
+### Installing as a PWA
+
+This application can be installed as a Progressive Web App on compatible devices:
+
+1. **Desktop (Chrome, Edge, or other Chromium-based browsers)**:
+   - Navigate to the deployed application
+   - Look for the install icon (⊕) in the address bar or menu
+   - Click "Install" when prompted
+
+2. **Android**:
+   - Open the application in Chrome
+   - Tap the menu button (⋮)
+   - Select "Add to Home screen"
+
+3. **iOS (Safari)**:
+   - Open the application in Safari
+   - Tap the Share button
+   - Scroll down and tap "Add to Home Screen"
+
+Once installed, the application will run like a native app with offline capabilities.
 
 ## Deployment
 

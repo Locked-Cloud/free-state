@@ -23,18 +23,18 @@ const PWAInstallPrompt: React.FC = () => {
 
     // Store the install prompt event for later use
     const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
+      // Don't prevent default here to allow the browser to show its own UI if needed
+      // Instead, we'll capture the event for later use
       setInstallPrompt(e as BeforeInstallPromptEvent);
-      setShowPrompt(true);
+      
+      // Only show our custom prompt if the user hasn't dismissed it before
+      const hasUserDismissedPrompt = localStorage.getItem('pwaPromptDismissed');
+      if (!hasUserDismissedPrompt) {
+        setShowPrompt(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // Check if the user has previously dismissed the prompt
-    const hasUserDismissedPrompt = localStorage.getItem('pwaPromptDismissed');
-    if (hasUserDismissedPrompt) {
-      setShowPrompt(false);
-    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -44,17 +44,30 @@ const PWAInstallPrompt: React.FC = () => {
   const handleInstallClick = async () => {
     if (!installPrompt) return;
 
-    // Show the install prompt
-    await installPrompt.prompt();
+    try {
+      // Show the install prompt
+      await installPrompt.prompt();
 
-    // Wait for the user to respond to the prompt
-    const choiceResult = await installPrompt.userChoice;
-    
-   
-
-    // Clear the saved prompt since it can't be used twice
-    setInstallPrompt(null);
-    setShowPrompt(false);
+      // Wait for the user to respond to the prompt
+      const choiceResult = await installPrompt.userChoice;
+      
+      // Log the user's choice (for analytics purposes)
+      console.log(`User ${choiceResult.outcome === 'accepted' ? 'accepted' : 'dismissed'} the install prompt`);
+      
+      // If the user accepted, we can hide our custom UI
+      if (choiceResult.outcome === 'accepted') {
+        console.log('PWA was installed successfully');
+      } else {
+        // If dismissed, remember this choice to avoid showing again too soon
+        localStorage.setItem('pwaPromptDismissed', 'true');
+      }
+    } catch (error) {
+      console.error('Error during PWA installation:', error);
+    } finally {
+      // Clear the saved prompt since it can't be used twice
+      setInstallPrompt(null);
+      setShowPrompt(false);
+    }
   };
 
   const handleDismiss = () => {

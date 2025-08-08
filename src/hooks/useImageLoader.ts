@@ -65,6 +65,9 @@ const addCacheBuster = (url: string): string => {
   return url.includes("?") ? `${url}&${cacheParam}` : `${url}?${cacheParam}`;
 };
 
+// CORS proxy for Google Drive URLs
+const CORS_PROXY = "https://corsproxy.io/?";
+
 // Transform Google Drive links (or already transformed lh3 links) to a direct-download endpoint
 const transformGoogleDriveUrl = (rawUrl: string): string => {
   if (!rawUrl) return rawUrl;
@@ -83,5 +86,6 @@ const transformGoogleDriveUrl = (rawUrl: string): string => {
 
   if (!fileId) return rawUrl;
 
-  return addCacheBuster(`https://drive.google.com/uc?export=download&id=${fileId}`);
+  // Use CORS proxy for Google Drive URLs
+  return addCacheBuster(`${CORS_PROXY}https://drive.google.com/uc?export=download&id=${fileId}`);
 };
