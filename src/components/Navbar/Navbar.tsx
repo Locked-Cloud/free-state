@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className={styles.navbar}>
       <Link to="/" className={styles.logo} onClick={closeMenu}>
-        Free v2.0
+        Free v2.1
       </Link>
 
       {isAuthenticated && (
