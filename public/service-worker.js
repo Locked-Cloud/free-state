@@ -44,11 +44,6 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
-  // Skip API requests and external resources from caching
-  if (event.request.url.includes('/api/') || 
-      !event.request.url.startsWith(self.location.origin)) {
-    return fetch(event.request);
-  }
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -73,27 +68,10 @@ self.addEventListener('fetch', (event) => {
             caches.open(CACHE_NAME)
               .then((cache) => {
                 // Don't cache API requests or external resources
-                // Skip real-time API calls (POST/PUT/DELETE) but cache successful GET requests
-                if (event.request.method !== 'GET') {
+                if (event.request.url.includes('/api/') || 
+                    !event.request.url.startsWith(self.location.origin)) {
                   return;
                 }
-
-                // Allow runtime caching for same-origin assets **and** common external CDNs / image hosts
-                const allowedExternal = [
-                  'drive.google.com',
-                  'lh3.googleusercontent.com',
-                  'fonts.googleapis.com',
-                  'fonts.gstatic.com'
-                ];
-
-                const { hostname } = new URL(event.request.url);
-                const isSameOrigin = event.request.url.startsWith(self.location.origin);
-                const isAllowedExternal = allowedExternal.includes(hostname);
-
-                if (!isSameOrigin && !isAllowedExternal) {
-                  return;
-                }
-
                 cache.put(event.request, responseToCache);
               });
 
