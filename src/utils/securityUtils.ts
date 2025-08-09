@@ -3,21 +3,15 @@
  * Includes rate limiting, input validation, and security helpers
  */
 
-// Rate limiting configuration for various security features
-type SecurityFeature = 'login' | 'otp' | 'otp_resend';
-
+// Rate limiting configuration
 interface RateLimitConfig {
   maxAttempts: number;  // Maximum number of attempts allowed
   timeWindow: number;   // Time window in milliseconds
   blockDuration: number; // Duration to block in milliseconds after max attempts
 }
 
-type RateLimitConfigs = {
-  [key in SecurityFeature]: RateLimitConfig;
-}
-
 // Default configurations for different security features
-const DEFAULT_CONFIGS: RateLimitConfigs = {
+const DEFAULT_CONFIGS = {
   login: {
     maxAttempts: 5,
     timeWindow: 5 * 60 * 1000, // 5 minutes

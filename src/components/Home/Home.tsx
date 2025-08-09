@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Home.module.css";
 import OptimizedImage from "../common/OptimizedImage";
-import { fetchSheetData, parseCSV, getDirectImageUrl, SHEET_TYPES } from "../../utils/sheetUtils";
 
 interface Company {
   id: number;
@@ -14,12 +13,39 @@ interface Company {
 }
 
 const DEFAULT_LOGO = "https://placehold.co/800x600?text=Image+Not+Found";
+// Use a more reliable CORS proxy
+const CORS_PROXY = "https://corsproxy.io/?";
+const COMPANIES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM/export?format=csv`
+    : `https://docs.google.com/spreadsheets/d/1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM/export?format=csv`;
 
-// LocalStorage cache configuration
-const COMPANIES_CACHE_KEY = "companiesCache";
-const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const getDirectImageUrl = (url: string): string => {
+  if (!url) return DEFAULT_LOGO;
 
-// getDirectImageUrl is now imported from sheetUtils
+  try {
+    if (url.includes("drive.google.com")) {
+      let fileId = "";
+      if (url.includes("/file/d/")) {
+        fileId = url.split("/file/d/")[1].split("/")[0];
+      } else if (url.includes("id=")) {
+        fileId = url.split("id=")[1].split("&")[0];
+      }
+      if (fileId) {
+        // Add a cache-busting parameter to prevent 429 errors
+        const cacheBuster = Date.now() % 1000;
+        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
+      }
+    }
+    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+      return url;
+    }
+  } catch (error) {
+    // Replace detailed error logging with generic message
+    console.error("Image processing error");
+  }
+  return DEFAULT_LOGO;
+};
 
 const LoadingSkeleton = () => (
   <div className={styles.skeletonGrid}>
@@ -43,84 +69,43 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Load cached companies quickly for better perceived performance
-  useEffect(() => {
-    const cacheJson = localStorage.getItem(COMPANIES_CACHE_KEY);
-    if (!cacheJson) return;
-    try {
-      const cache = JSON.parse(cacheJson);
-      if (Array.isArray(cache.data)) {
-        setCompanies(cache.data);
-        setFilteredCompanies(cache.data);
-        setLoading(false);
-      }
-    } catch (e) {
-      console.warn("Invalid companies cache", e);
-    }
-  }, []);
   const [sortBy, setSortBy] = useState<"name" | "none">("none");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Skip fetch if cache is fresh
-        const cacheJson = localStorage.getItem(COMPANIES_CACHE_KEY);
-        if (cacheJson) {
-          try {
-            const { timestamp } = JSON.parse(cacheJson);
-            if (Date.now() - timestamp < CACHE_DURATION_MS) {
-              return; // cache still valid; data already loaded by previous effect
-            }
-          } catch {}
-        }
+        const response = await fetch(COMPANIES_SHEET_URL);
+        const csvText = await response.text();
 
-        setLoading(true);
-        setError(null);
-        
-        // Fetch companies data using the API service
-        const result = await fetchSheetData(SHEET_TYPES.COMPANIES, 0);
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to fetch companies data');
-        }
-        
-        if (!result.data || result.data.trim() === '') {
-          throw new Error('No companies data found');
-        }
-        
-        // Parse the CSV data
-        const rows = parseCSV(result.data);
-        
-        if (rows.length < 2) { // At least header row and one data row
-          throw new Error('Invalid data format - no company data found');
-        }
-        
+        // Split into rows
+        const allRows = csvText.split("\n");
+
         // Parse the header row to find column indices
-        const headerRow = rows[0].map(col => col.toLowerCase());
-        
+        const headerRow = allRows[0]
+          .split(",")
+          .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
+
         // Find the index of the "active" column
         const activeColumnIndex = headerRow.findIndex(
           (col) => col === "active" || col === "status"
         );
-        
-        // Process the data rows
-        const parsedCompanies = rows.slice(1)
-          .map(columns => {
+
+        // Skip header row for data processing
+        const dataRows = allRows.slice(1);
+
+        const parsedCompanies = dataRows
+          .map((row) => {
+            const matches = row.match(/("([^"]*)"|([^,]+))(,|$)/g) || [];
+            const columns = matches.map((column) =>
+              column
+                .replace(/(^,)|(,$)/g, "")
+                .replace(/^"|"$/g, "")
+                .trim()
+            );
+
             if (columns[0] && columns[1]) {
-              // Find image path column index (Image_Path in the real data)
-              const logoColumnIndex = headerRow.findIndex(
-                (col) => col === "logo" || col === "image_path"
-              );
-              
-              // Find website column index (may not exist in the real data)
-              const websiteColumnIndex = headerRow.findIndex(
-                (col) => col === "website"
-              );
-              
-              // Use the correct column for image URL
-              const imageUrl = getDirectImageUrl(columns[logoColumnIndex] || '');
-              
+              const imageUrl = getDirectImageUrl(columns[4]);
+
               // Get the active value from the correct column index
               let activeValue = "1"; // Default to active
               if (
@@ -129,12 +114,12 @@ const Home: React.FC = () => {
               ) {
                 activeValue = columns[activeColumnIndex];
               }
-              
+
               return {
                 id: parseInt(columns[0], 10),
                 name: columns[1],
                 description: columns[2] || "",
-                website: websiteColumnIndex !== -1 ? columns[websiteColumnIndex] || "" : "",
+                website: columns[3] || "",
                 imageUrl,
                 active: parseInt(activeValue || "1"), // Use the found active value
               };
@@ -142,23 +127,19 @@ const Home: React.FC = () => {
             return null;
           })
           .filter((company): company is Company => company !== null);
-        
+        // Remove the filter for active companies to show all companies
+
         setCompanies(parsedCompanies);
         setFilteredCompanies(parsedCompanies);
         setLoading(false);
-
-        // Save to localStorage cache
-        localStorage.setItem(
-          COMPANIES_CACHE_KEY,
-          JSON.stringify({ timestamp: Date.now(), data: parsedCompanies })
-        );
       } catch (err) {
+        // Replace detailed error logging with generic message
         console.error("Data fetching error");
         setError("Failed to load company data. Please try again later.");
         setLoading(false);
       }
     };
-    
+
     fetchData();
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);

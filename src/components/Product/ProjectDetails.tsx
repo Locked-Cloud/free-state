@@ -6,10 +6,14 @@ import { useParams, useNavigate } from "react-router-dom"
 import styles from "./ProjectDetails.module.css"
 import useTitle from "../../hooks/useTitle"
 import OptimizedImage from "../common/OptimizedImage"
-import { fetchSheetData, parseCSV, getDirectImageUrl } from "../../utils/sheetUtils"
-import { SHEET_TYPES } from "../../utils/sheetUtils"
 
-// Project details interface
+// Google Sheet constants
+const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM"
+const CORS_PROXY = "https://corsproxy.io/?"
+const PLACES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`
 
 interface ProjectDetail {
   id: string
@@ -49,7 +53,104 @@ interface ProjectDetail {
   }
 }
 
-// parseCSV and getDirectImageUrl are now imported from sheetUtils
+// Enhanced image URL processing
+const getDirectImageUrl = (url: string): string => {
+  if (!url || url.trim() === "") {
+    return ""
+  }
+
+  try {
+    const cleanUrl = url.replace(/[""]/g, "").trim()
+
+    if (cleanUrl.includes("drive.google.com")) {
+      let fileId = ""
+      if (cleanUrl.includes("/file/d/")) {
+        fileId = cleanUrl.split("/file/d/")[1].split("/")[0]
+      } else if (cleanUrl.includes("id=")) {
+        fileId = cleanUrl.split("id=")[1].split("&")[0]
+      }
+
+      if (fileId) {
+        const cacheBuster = Date.now() % 1000
+        // lh3.googleusercontent.com doesn't need a CORS proxy
+        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`
+      }
+    }
+
+    return cleanUrl
+  } catch (error) {
+    return ""
+  }
+}
+
+// Robust CSV parser for Google Sheets format
+const parseCSV = (text: string): string[][] => {
+  const result: string[][] = []
+  let row: string[] = []
+  let cell = ""
+  let inQuotes = false
+  let i = 0
+
+  while (i < text.length) {
+    const char = text[i]
+    const nextChar = text[i + 1]
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote
+        cell += '"'
+        i += 2
+        continue
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes
+        i++
+        continue
+      }
+    }
+
+    if (!inQuotes) {
+      if (char === ",") {
+        // End of cell
+        row.push(cell.trim())
+        cell = ""
+        i++
+        continue
+      } else if (char === "\n" || char === "\r") {
+        // End of row
+        if (cell || row.length > 0) {
+          row.push(cell.trim())
+          if (row.some((c) => c.trim())) {
+            // Only add non-empty rows
+            result.push(row)
+          }
+          row = []
+          cell = ""
+        }
+        // Skip \r\n combinations
+        if (char === "\r" && nextChar === "\n") {
+          i += 2
+        } else {
+          i++
+        }
+        continue
+      }
+    }
+
+    cell += char
+    i++
+  }
+
+  // Add final cell and row if they exist
+  if (cell || row.length > 0) {
+    row.push(cell.trim())
+    if (row.some((c) => c.trim())) {
+      result.push(row)
+    }
+  }
+
+  return result
+}
 
 // Standardized data cleaning function
 const cleanData = (data: string): string => {
@@ -289,17 +390,15 @@ const ProjectDetails: React.FC = () => {
         setLoading(true)
         setError(null)
 
-        // Fetch projects data from the API service
-        const result = await fetchSheetData(SHEET_TYPES.PROJECTS)
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to fetch project data')
+        const response = await fetch(PLACES_SHEET_URL)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
-        
-        const csvText = result.data
-        
-        if (!csvText || csvText.trim() === "") {
-          throw new Error("No data received from the server")
+
+        const csvText = await response.text()
+
+        if (!csvText.trim()) {
+          throw new Error("No data received from the sheet")
         }
 
         const rows = parseCSV(csvText)
@@ -374,7 +473,7 @@ const ProjectDetails: React.FC = () => {
         }
 
         if (!projectData) {
-          throw new Error("Project not found in the database")
+          throw new Error("Project not found in Google Sheets")
         }
 
         setProject(projectData)
@@ -449,7 +548,7 @@ const ProjectDetails: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.loadingSpinner}>
           <div className={styles.spinner}></div>
-          <p>Loading project details...</p>
+          <p>Loading project details from Google Sheets...</p>
         </div>
       </div>
     )

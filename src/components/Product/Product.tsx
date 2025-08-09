@@ -4,9 +4,19 @@ import styles from "./Product.module.css";
 import useTitle from "../../hooks/useTitle";
 import OutOfStock from "../OutOfStock/OutOfStock";
 import OptimizedImage from "../common/OptimizedImage";
-import { fetchSheetData, parseCSV, getDirectImageUrl, SHEET_TYPES } from "../../utils/sheetUtils";
 
-// Company and Project interfaces
+// Google Sheet constants
+const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
+// Use a more reliable CORS proxy
+const CORS_PROXY = "https://corsproxy.io/?";
+const COMPANIES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+const PLACES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`;
 
 // Remove the inline OutOfStock component since we now have a standalone one
 
@@ -27,7 +37,84 @@ interface Project {
   features: string[];
 }
 
-// getDirectImageUrl and parseCSV functions are now imported from sheetUtils
+const getDirectImageUrl = (url: string): string => {
+  if (!url) return "https://placehold.co/800x600?text=Image+Not+Found";
+
+  try {
+    if (url.includes("drive.google.com")) {
+      let fileId = "";
+
+      if (url.includes("/file/d/")) {
+        fileId = url.split("/file/d/")[1].split("/")[0];
+      } else if (url.includes("id=")) {
+        fileId = url.split("id=")[1].split("&")[0];
+      }
+
+      if (fileId) {
+        // Add a small random delay to stagger requests and add cache parameter
+        const cacheBuster = Date.now() % 1000;
+        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
+      }
+    }
+
+    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+      return url;
+    }
+  } catch (error) {
+    // Replace detailed error logging with generic message
+    console.error("Image processing error");
+  }
+
+  return "https://placehold.co/800x600?text=Image+Not+Found";
+};
+
+const parseCSV = (text: string): string[][] => {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentCell = "";
+  let insideQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && nextChar === '"') {
+        // Handle escaped quotes
+        currentCell += '"';
+        i++; // Skip next quote
+      } else {
+        // Toggle quote state
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === "," && !insideQuotes) {
+      // End of cell
+      currentRow.push(currentCell.trim());
+      currentCell = "";
+    } else if (char === "\n" && !insideQuotes) {
+      // End of row
+      currentRow.push(currentCell.trim());
+      if (currentRow.some((cell) => cell)) {
+        // Only add non-empty rows
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentCell = "";
+    } else {
+      currentCell += char;
+    }
+  }
+
+  // Add the last cell and row if they exist
+  if (currentCell) {
+    currentRow.push(currentCell.trim());
+  }
+  if (currentRow.length > 0) {
+    rows.push(currentRow);
+  }
+
+  return rows;
+};
 
 const parseKeyFeatures = (keyFeaturesStr: string): string[] => {
   if (!keyFeaturesStr) return [];
@@ -51,39 +138,36 @@ const Product: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch company data using the API service
-        const companiesResult = await fetchSheetData(SHEET_TYPES.COMPANIES);
-        
-        if (!companiesResult.success) {
-          throw new Error(companiesResult.error || 'Failed to fetch companies data');
-        }
-        
-        if (!companiesResult.data || companiesResult.data.trim() === '') {
-          throw new Error('No companies data found');
-        }
-        
-        // Parse the CSV data
-        const companyRows = parseCSV(companiesResult.data);
-        
-        if (companyRows.length < 2) { // At least header row and one data row
-          throw new Error('Invalid data format - no company data found');
-        }
+        // Fetch company data
+        const companyResponse = await fetch(COMPANIES_SHEET_URL);
+        const companyText = await companyResponse.text();
+        const companyRows = companyText.split("\n");
 
         // Parse the header row to find column indices
-        const headerRow = companyRows[0].map(col => col.toLowerCase());
+        const headerRow = companyRows[0]
+          .split(",")
+          .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
 
         // Find the index of the "active" column
         const activeColumnIndex = headerRow.findIndex(
           (col) => col === "active" || col === "status"
         );
 
+        // Skip header row for data processing
+        const dataRows = companyRows.slice(1);
+
         let company: Company | null = null;
 
-        // Skip header row for data processing
-        for (let i = 1; i < companyRows.length; i++) {
-          const columns = companyRows[i];
+        for (const row of dataRows) {
+          const matches = row.match(/("([^"]*)"|([^,]+))(,|$)/g) || [];
+          const columns = matches.map((column) =>
+            column
+              .replace(/(^,)|(,$)/g, "")
+              .replace(/^"|"$/g, "")
+              .trim()
+          );
 
-          if (columns[0] === companyId) {
+          if (columns[0] && columns[0] === companyId) {
             const imageUrl = columns[4]
               ? getDirectImageUrl(columns[4])
               : "https://placehold.co/800x600?text=Image+Not+Found";
@@ -117,19 +201,18 @@ const Product: React.FC = () => {
 
         // Only fetch projects if company is active
         if (company.active === 1) {
-          // Fetch projects data using the API service
-          const projectsResult = await fetchSheetData(SHEET_TYPES.PROJECTS);
-          
-          if (!projectsResult.success) {
-            throw new Error(projectsResult.error || 'Failed to fetch projects data');
+          // Fetch projects data
+          const projectsResponse = await fetch(PLACES_SHEET_URL);
+          if (!projectsResponse.ok) {
+            throw new Error(`HTTP error! status: ${projectsResponse.status}`);
           }
-          
-          if (!projectsResult.data || projectsResult.data.trim() === '') {
-            throw new Error('No projects data found');
+
+          const csvText = await projectsResponse.text();
+          if (!csvText.trim()) {
+            throw new Error("No data received from the sheet");
           }
-          
-          // Parse the CSV data
-          const rows = parseCSV(projectsResult.data);
+
+          const rows = parseCSV(csvText);
           const projectsList: Project[] = [];
 
           // Find the header row to determine column indices

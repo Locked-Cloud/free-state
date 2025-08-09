@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Places.module.css";
 import OptimizedImage from "../common/OptimizedImage";
-import { fetchSheetData, parseCSV, getDirectImageUrl } from "../../utils/sheetUtils";
-import { SHEET_TYPES } from "../../utils/sheetUtils";
 
 interface Place {
   id: string;
@@ -12,7 +10,36 @@ interface Place {
   image: string;
 }
 
-// getDirectImageUrl is now imported from sheetUtils
+const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
+const CORS_PROXY = "https://corsproxy.io/?";
+const PLACES_SHEET_URL =
+  process.env.NODE_ENV === "production"
+    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=658730705`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=658730705`;
+
+const getDirectImageUrl = (url: string): string => {
+  if (!url) return "https://placehold.co/800x600?text=Image+Not+Found";
+  try {
+    if (url.includes("drive.google.com")) {
+      let fileId = "";
+      if (url.includes("/file/d/")) {
+        fileId = url.split("/file/d/")[1].split("/")[0];
+      } else if (url.includes("id=")) {
+        fileId = url.split("id=")[1].split("&")[0];
+      }
+      if (fileId) {
+        const cacheBuster = Date.now() % 1000;
+        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
+      }
+    }
+    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+      return url;
+    }
+  } catch (error) {
+    // Ignore
+  }
+  return "https://placehold.co/800x600?text=Image+Not+Found";
+};
 
 const Places: React.FC = () => {
   const navigate = useNavigate();
@@ -23,45 +50,42 @@ const Places: React.FC = () => {
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
-        // Fetch places data from the API service
-        const result = await fetchSheetData(SHEET_TYPES.PLACES);
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to fetch places data');
-        }
-        
-        const csvText = result.data || '';
-        
-        // Parse the CSV data
-        const rows = parseCSV(csvText);
-        
-        if (rows.length === 0) {
-          throw new Error('No places data found');
-        }
-        
-        const header = rows[0].map(col => col.toLowerCase().trim());
-        
+        const response = await fetch(PLACES_SHEET_URL);
+        const csvText = await response.text();
+        const rows = csvText.split("\n");
+        const header = rows[0]
+          .split(",")
+          .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
         const idIndex = header.findIndex(
           (col) => col === "id_loc" || col === "id"
         );
         const nameIndex = header.findIndex((col) => col === "name");
         const descIndex = header.findIndex((col) => col === "description");
         const imageIndex = header.findIndex((col) => col === "image_url");
-        
         const dataRows = rows.slice(1);
         const parsedPlaces: Place[] = dataRows
-          .filter(columns => columns.length > 0 && columns[idIndex] && columns[nameIndex])
-          .map(columns => ({
-            id: columns[idIndex],
-            name: columns[nameIndex],
-            description: descIndex !== -1 ? columns[descIndex] : "",
-            image: getDirectImageUrl(columns[imageIndex]),
-          }));
-          
+          .map((row) => {
+            const matches = row.match(/("([^"]*)"|([^,]+))(,|$)/g) || [];
+            const columns = matches.map((column) =>
+              column
+                .replace(/(^,)|(,$)/g, "")
+                .replace(/^"|"$/g, "")
+                .trim()
+            );
+            if (columns[idIndex] && columns[nameIndex]) {
+              return {
+                id: columns[idIndex],
+                name: columns[nameIndex],
+                description: descIndex !== -1 ? columns[descIndex] : "",
+                image: getDirectImageUrl(columns[imageIndex]),
+              };
+            }
+            return null;
+          })
+          .filter((place): place is Place => place !== null);
         setPlaces(parsedPlaces);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching places:', err);
         setError("Failed to load places data. Please try again later.");
         setLoading(false);
       }
@@ -77,12 +101,7 @@ const Places: React.FC = () => {
     return (
       <div className={styles.container}>
         <h1 className={styles.title}>Places</h1>
-        <div className={styles.loadingSpinner}>
-          <div className={styles.spinner}></div>
-          <div style={{ marginTop: "16px", color: "#666" }}>
-            Loading places...
-          </div>
-        </div>
+        <div>Loading...</div>
       </div>
     );
   }
