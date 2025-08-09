@@ -22,6 +22,52 @@ A React application for browsing real estate properties and developers in Egypt.
 - Node.js (v14.0.0 or later)
 - npm (v6.0.0 or later)
 
+### Environment Variables
+
+This project uses environment variables for configuration. Create a `.env` file in the root directory with the following variables:
+
+```
+REACT_APP_SHEET_ID=1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM
+REACT_APP_CORS_PROXY=https://corsproxy.io/?
+REACT_APP_API_URL=https://my-real-backend.pages.dev/api
+```
+
+For the server, create a `.env` file in the `server` directory with:
+
+```
+SHEET_ID=1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM
+PORT=3001
+```
+
+You can customize these values as needed for your environment.
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies for the frontend:
+
+```bash
+npm install
+```
+
+3. Install dependencies for the server:
+
+```bash
+cd server
+npm install
+```
+
+4. Start the development server:
+
+```bash
+# In the root directory
+npm start
+
+# In a separate terminal, start the backend server
+cd server
+npm run dev
+```
+
 ### Development Tools
 
 #### React DevTools

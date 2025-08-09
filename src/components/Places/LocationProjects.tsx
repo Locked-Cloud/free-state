@@ -12,8 +12,8 @@ interface Project {
   companyId: string;
 }
 
-const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const CORS_PROXY = "https://corsproxy.io/?";
+const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
+const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
 
 const DATA_SHEET_GID = "1884577336";
 

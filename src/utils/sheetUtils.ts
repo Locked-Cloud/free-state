@@ -5,8 +5,8 @@
 import { getFromCache, saveToCache, CACHE_DURATIONS } from './cacheUtils';
 
 // Constants
-export const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-export const CORS_PROXY = "https://corsproxy.io/?";
+export const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
+export const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
 
 // Sheet GIDs
 export const SHEET_GIDS = {

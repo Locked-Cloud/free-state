@@ -10,8 +10,8 @@ interface Place {
   image: string;
 }
 
-const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const CORS_PROXY = "https://corsproxy.io/?";
+const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
+const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
 const PLACES_SHEET_URL =
   process.env.NODE_ENV === "production"
     ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=658730705`

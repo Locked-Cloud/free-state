@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const path = require('path');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 // Constants - Hidden from client-side code
-const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
+const SHEET_ID = process.env.SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 
 // Sheet GIDs - Hidden from client-side code
 const SHEET_GIDS = {
