@@ -1,216 +1,302 @@
+/* 
+  Professional Real Estate UI
+  - Sophisticated, trustworthy design
+  - Premium feel with subtle luxury touches
+  - Optimized for property listings and locations
+*/
+
+:root {
+  /* Real Estate Brand Colors */
+  --primary: #1e40af; /* Professional blue */
+  --primary-light: #3b82f6;
+  --primary-dark: #1e3a8a;
+
+  --surface: #ffffff;
+  --background: #f8fafc;
+  --background-alt: #f1f5f9;
+
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --border-focus: #3b82f6;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  --accent-gold: #f59e0b;
+  --accent-green: #059669;
+  --accent-red: #dc2626;
+
+  /* Shadows for depth and professionalism */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Layout */
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: clamp(1rem, 3vw, 3rem) clamp(1rem, 2vw, 2rem);
   min-height: calc(100vh - 60px);
-  background: linear-gradient(135deg, #f8fafc 0%, #e3e9f7 100%);
+  background: var(--background);
 }
 
+/* Professional Typography */
 .title {
-  font-size: 2.8rem;
-  font-weight: 800;
-  color: #22223b;
-  margin-bottom: 2.5rem;
-  background: linear-gradient(90deg, #4f8cff 0%, #6dd5ed 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: clamp(2rem, 3vw + 0.5rem, 3.5rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: clamp(1.5rem, 3vw, 3rem);
   text-align: center;
-  letter-spacing: 1px;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
 }
 
+/* Property Grid */
 .placesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 2.5rem;
-  animation: fadeIn 0.5s ease-out;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: clamp(1.5rem, 2.5vw, 2rem);
+  animation: fadeIn 300ms ease-out both;
 }
 
-.viewMoreButton {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6em;
-  font-size: 1.12rem;
-  font-weight: 700;
-  padding: 0.9rem 0;
-  margin-top: 1.3rem;
-  background: linear-gradient(90deg, #4f8cff 0%, #6dd5ed 100%);
-  color: #fff;
-  border: none;
-  border-radius: 2.2rem;
-  box-shadow: 0 2px 8px rgba(80, 120, 255, 0.13);
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-  outline: none;
-  letter-spacing: 0.5px;
-  text-align: center;
-}
-.viewMoreButton span {
-  display: inline-block;
-  font-size: 1.25em;
-  margin-left: 0.2em;
-  transition: transform 0.2s;
-}
-.viewMoreButton:hover,
-.viewMoreButton:focus {
-  background: linear-gradient(90deg, #6dd5ed 0%, #4f8cff 100%);
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 6px 20px 0 rgba(31, 38, 135, 0.18);
-}
-.viewMoreButton:hover span,
-.viewMoreButton:focus span {
-  transform: translateX(4px);
-}
-
-.loadingSpinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 120px;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 5px solid #e3e9f7;
-  border-top: 5px solid #4f8cff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
+/* Property Card */
 .placeCard {
-  border: 1.5px solid #e3e9f7;
-  border-top: 4px solid #4f8cff;
-  background: linear-gradient(135deg, #f8fafc 0%, #e3e9f7 100%);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18),
-    0 1.5px 8px 0 rgba(80, 120, 255, 0.08);
-  transition: transform 0.22s cubic-bezier(0.4, 2, 0.3, 1), box-shadow 0.22s,
-    border-color 0.22s;
-  margin-bottom: 2.2rem;
-  border-radius: 1.7rem;
-  padding: 2.2rem 1.7rem 1.7rem 1.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+  cursor: pointer;
+  outline: none;
   position: relative;
 }
-.placeCard:hover {
-  transform: translateY(-12px) scale(1.05);
-  box-shadow: 0 24px 56px 0 rgba(31, 38, 135, 0.28),
-    0 2px 12px 0 rgba(80, 120, 255, 0.15);
-  border-top: 4px solid #6dd5ed;
-  background: linear-gradient(135deg, #f8fafc 0%, #e3e9f7 80%, #e0f7fa 100%);
+
+.placeCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  opacity: 0;
+  transition: opacity var(--transition);
 }
+
+.placeCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--border-focus);
+}
+
+.placeCard:hover::before {
+  opacity: 1;
+}
+
+.placeCard:focus-visible {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--primary), var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Property Image */
 .imageContainer {
   width: 100%;
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.2rem;
-  border-radius: 1.2rem;
+  aspect-ratio: 4 / 3;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(80, 120, 255, 0.08);
-  background: linear-gradient(120deg, #e0e7ff 0%, #f8fafc 100%);
-  transition: box-shadow 0.2s;
+  background: var(--background-alt);
 }
-.placeCard:hover .imageContainer {
-  box-shadow: 0 8px 32px rgba(80, 120, 255, 0.16);
-}
+
 .placeImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 1.2rem;
-  box-shadow: 0 2px 8px rgba(80, 120, 255, 0.07);
-  transition: filter 0.2s, transform 0.25s;
-}
-.placeCard:hover .placeImage {
-  filter: brightness(1.08) saturate(1.15);
-  transform: scale(1.07);
+  transition: transform var(--transition), filter var(--transition);
 }
 
+.placeCard:hover .placeImage {
+  transform: scale(1.05);
+  filter: brightness(1.02) contrast(1.05);
+}
+
+/* Property Content */
 .contentContainer {
-  width: 100%;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0.5rem 0 0 0;
+  gap: 0.75rem;
 }
 
 .placeHeader {
-  width: 100%;
-  text-align: center;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.5rem;
 }
 
 .placeHeader h2 {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #22223b;
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .description {
-  font-size: 1.05rem;
-  color: #4a5568;
-  text-align: center;
-  margin: 0.5rem 0 0.2rem 0;
-  line-height: 1.5;
-  min-height: 2.2em;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 4.8em;
 }
 
-.error {
-  color: #e63946;
-  text-align: center;
-  margin-top: 2rem;
-  font-size: 1.2rem;
+/* Professional CTA Button */
+.viewMoreButton {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.875rem 1.25rem;
+  margin-top: 0.5rem;
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
+.viewMoreButton:hover,
+.viewMoreButton:focus-visible {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.viewMoreButton:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.viewMoreButton span {
+  display: inline-block;
+  transition: transform var(--transition);
+  font-size: 1.1em;
+}
+
+.viewMoreButton:hover span,
+.viewMoreButton:focus-visible span {
+  transform: translateX(3px);
+}
+
+/* Loading States */
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Premium Loading Shimmer */
+.imageLoading {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--background-alt) 25%, #e2e8f0 37%, var(--background-alt) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Empty State */
 .noProjects {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 180px;
-  background: linear-gradient(120deg, #e0e7ff 0%, #f8fafc 100%);
-  border-radius: 1.5rem;
-  box-shadow: 0 4px 24px 0 rgba(80, 120, 255, 0.13),
-    0 1.5px 8px 0 rgba(80, 120, 255, 0.08);
-  border: 1.5px solid #e3e9f7;
-  color: #4a5568;
-  font-size: 1.18rem;
+  min-height: 300px;
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-xl);
+  color: var(--text-muted);
+  font-size: 1.1rem;
   font-weight: 500;
-  margin: 2.5rem 0;
-  padding: 2.8rem 1.7rem 2.2rem 1.7rem;
+  margin: 2rem 0;
+  padding: 3rem 2rem;
   text-align: center;
-  gap: 0.8rem;
-  animation: fadeIn 0.7s cubic-bezier(0.4, 2, 0.3, 1);
+  gap: 1rem;
 }
 
 .noProjectsIcon {
-  font-size: 3.2rem;
-  color: #6dd5ed;
-  margin-bottom: 0.3rem;
-  filter: drop-shadow(0 2px 8px #4f8cff33);
-  transition: color 0.2s;
+  font-size: 3rem;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
 }
 
 .noProjects .noProjectsSecondary {
-  color: #7b8bb7;
-  font-size: 1.01rem;
-  margin-top: 0.2rem;
+  color: var(--text-light);
+  font-size: 1rem;
   font-weight: 400;
-  letter-spacing: 0.1px;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+/* Error State */
+.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--accent-red);
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Centered Grid Helper */
+.placesGrid--centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+/* Animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeIn {
@@ -224,89 +310,125 @@
   }
 }
 
-.placesGrid--centered {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 320px;
+@keyframes shimmer {
+  0% {
+    background-position: -400% 0;
+  }
+  100% {
+    background-position: 400% 0;
+  }
 }
 
-@media (max-width: 900px) {
-  .container {
-    padding: 1.2rem;
-  }
+/* Responsive Design */
+@media (max-width: 1024px) {
   .placesGrid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
   }
-  .placeCard {
-    max-width: 100%;
-    padding: 1.2rem 0.8rem 1rem 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem 1rem;
   }
-  .imageContainer {
-    height: 150px;
+
+  .placesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
   }
-  .placeHeader h2 {
-    font-size: 1.1rem;
+
+  .contentContainer {
+    padding: 1.25rem;
   }
-  .description {
-    font-size: 0.98rem;
-  }
+
   .viewMoreButton {
-    font-size: 0.95rem;
-    padding: 0.6rem 1.2rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
   }
 }
 
-@media (max-width: 600px) {
-  .container {
-    padding: 0.5rem;
-  }
+@media (max-width: 640px) {
   .placesGrid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  .placeCard {
-    padding: 1rem 0.5rem 0.7rem 0.5rem;
-    border-radius: 1rem;
+
+  .contentContainer {
+    padding: 1rem;
   }
+
   .imageContainer {
-    height: 110px;
-    border-radius: 0.8rem;
-  }
-  .placeImage {
-    border-radius: 0.8rem;
-  }
-  .placeHeader h2 {
-    font-size: 1rem;
-  }
-  .description {
-    font-size: 0.93rem;
-    min-height: 1.5em;
-  }
-  .viewMoreButton {
-    font-size: 0.92rem;
-    padding: 0.5rem 1rem;
-    border-radius: 1.2rem;
+    aspect-ratio: 16 / 10;
   }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .container {
-    padding: 0.2rem;
+    padding: 1rem 0.75rem;
   }
-  .placeCard {
-    padding: 0.7rem 0.2rem 0.5rem 0.2rem;
+
+  .contentContainer {
+    padding: 0.875rem;
   }
-  .imageContainer {
-    height: 70px;
-  }
+
   .placeHeader h2 {
-    font-size: 0.92rem;
+    font-size: 1.125rem;
   }
+
+  .description {
+    font-size: 0.9rem;
+  }
+
   .viewMoreButton {
-    font-size: 0.88rem;
-    padding: 0.4rem 0.7rem;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* High-end devices */
+@media (min-width: 1400px) {
+  .placesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2.5rem;
+  }
+
+  .contentContainer {
+    padding: 2rem;
+  }
+}
+
+/* Accessibility & Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .placeCard:hover {
+    transform: none;
+  }
+
+  .placeCard:hover .placeImage {
+    transform: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .container {
+    background: white;
+  }
+
+  .placeCard {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  .viewMoreButton {
+    display: none;
   }
 }
