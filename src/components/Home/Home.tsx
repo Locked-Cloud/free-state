@@ -224,9 +224,13 @@ const Home: React.FC = () => {
                   src={company.imageUrl}
                   alt={`${company.name} logo`}
                   className={styles.companyImage}
-                  loadingDelay={index * 200} // Stagger loading by 200ms per item
+                  loadingDelay={index * 100} // Reduced stagger time for faster loading
                   loadingClassName={styles.imageLoading}
                   fallbackSrc={DEFAULT_LOGO}
+                  priority={index < 4} // Prioritize loading first 4 images
+                  width={300}
+                  height={200}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 {company.active === 0 && (
                   <div className={styles.unavailableBadge}>

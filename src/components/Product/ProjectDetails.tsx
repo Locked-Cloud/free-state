@@ -586,6 +586,10 @@ const ProjectDetails: React.FC = () => {
             alt={project.name}
             className={styles.heroImg}
             loadingClassName={styles.imageLoading}
+            priority={true}
+            width={1200}
+            height={600}
+            sizes="100vw"
           />
           <div className={styles.heroOverlay}>
             <div className={styles.heroContent}>

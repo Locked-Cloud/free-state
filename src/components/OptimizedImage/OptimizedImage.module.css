@@ -6,6 +6,10 @@
   justify-content: center;
   align-items: center;
   transition: background-color 0.3s ease;
+  width: 100%;
+  height: auto;
+  contain: content;
+  will-change: transform;
 }
 
 .image {
@@ -14,6 +18,10 @@
   max-width: 100%;
   height: auto;
   display: block;
+  object-fit: contain;
+  object-position: center;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .loaded {
@@ -50,10 +58,22 @@
   animation: shimmer 1.5s infinite;
   transform: translateX(-100%);
   display: none;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.imageContainer:not(:has(.loaded))::before {
+.imageContainer:not([data-loaded="true"])::before {
   display: block;
+}
+
+/* Add blur-up effect */
+.imageContainer .image {
+  filter: blur(10px);
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+.imageContainer .loaded {
+  filter: blur(0);
 }
 
 @keyframes shimmer {

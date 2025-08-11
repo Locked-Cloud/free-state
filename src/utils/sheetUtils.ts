@@ -6,7 +6,7 @@ import { getFromCache, saveToCache, CACHE_DURATIONS } from './cacheUtils';
 
 // Constants
 export const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-export const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
+export const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://api.allorigins.win/raw?url=";
 
 // Sheet GIDs
 export const SHEET_GIDS = {
@@ -33,17 +33,11 @@ const ERROR_MESSAGES = {
  * @returns The sheet URL
  */
 export function getSheetUrl(gid: string, format: 'csv' | 'tq' = 'csv'): string {
-  let baseUrl = '';
+  // Use a more reliable approach for accessing Google Sheets
+  const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
   
-  if (format === 'tq') {
-    baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
-  } else {
-    baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
-  }
-  
-  return process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}${baseUrl}`
-    : baseUrl;
+  // Always use CORS proxy in development and production to avoid CORS issues
+  return `${CORS_PROXY}${encodeURIComponent(baseUrl)}`;
 }
 
 /**
@@ -110,25 +104,6 @@ export async function fetchSheetData(
   format: 'csv' | 'tq' = 'csv',
   maxRetries = 3
 ): Promise<{ success: boolean; data?: string; error?: string }> {
-  // Map sheet type to GID
-  let gid: string;
-  switch (sheetType) {
-    case 'companies':
-      gid = SHEET_GIDS.COMPANIES;
-      break;
-    case 'projects':
-      gid = SHEET_GIDS.PROJECTS;
-      break;
-    case 'users':
-      gid = SHEET_GIDS.USERS;
-      break;
-    case 'places':
-      gid = SHEET_GIDS.PLACES;
-      break;
-    default:
-      return { success: false, error: 'Invalid sheet type' };
-  }
-  
   const cacheKey = `sheet_${sheetType}`;
   
   // Try to get from cache first
@@ -137,49 +112,110 @@ export async function fetchSheetData(
     return { success: true, data: cachedData };
   }
 
-  // If not in cache, fetch from API
+  // If not in cache, try server API first, then fall back to direct access if server is not available
   let retries = 0;
   let lastError: Error | null = null;
 
   while (retries < maxRetries) {
     try {
-      const url = getSheetUrl(gid, format);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      // First try the server API endpoint
+      let url = `/api/sheets/${sheetType}?format=${format}`;
+      let controller = new AbortController();
+      let timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for server API
+      let useDirectAccess = false;
 
       try {
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
 
-        if (!response.ok) {
-          const errorMessage = response.status === 403
-            ? ERROR_MESSAGES.ACCESS_DENIED
-            : `${ERROR_MESSAGES.SERVER} (Status: ${response.status})`;
-          throw new Error(errorMessage);
+        if (response.ok) {
+          const csvText = await response.text();
+          
+          // Validate the response
+          if (!csvText || csvText.trim() === "") {
+            throw new Error(ERROR_MESSAGES.EMPTY);
+          }
+
+          if (csvText.includes("<!DOCTYPE html")) {
+            throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
+          }
+
+          if (csvText.includes("400. That's an error")) {
+            throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
+          }
+
+          // Cache the successful result
+          saveToCache(cacheKey, csvText, cacheDuration);
+          return { success: true, data: csvText };
+        } else {
+          // If server returns an error, try direct access
+          useDirectAccess = true;
         }
-
-        const csvText = await response.text();
-
-        // Validate the response
-        if (!csvText || csvText.trim() === "") {
-          throw new Error(ERROR_MESSAGES.EMPTY);
-        }
-
-        if (csvText.includes("<!DOCTYPE html")) {
-          throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
-        }
-
-        if (csvText.includes("400. That's an error")) {
-          throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
-        }
-
-        // Cache the successful result
-        saveToCache(cacheKey, csvText, cacheDuration);
-
-        return { success: true, data: csvText };
       } catch (error) {
         clearTimeout(timeoutId);
-        throw error;
+        // If server is not available (ECONNREFUSED), try direct access
+        useDirectAccess = true;
+      }
+
+      // Fall back to direct Google Sheets access if server API failed
+      if (useDirectAccess) {
+        // Map sheet type to GID
+        let gid: string;
+        switch (sheetType) {
+          case 'companies':
+            gid = SHEET_GIDS.COMPANIES;
+            break;
+          case 'projects':
+            gid = SHEET_GIDS.PROJECTS;
+            break;
+          case 'users':
+            gid = SHEET_GIDS.USERS;
+            break;
+          case 'places':
+            gid = SHEET_GIDS.PLACES;
+            break;
+          default:
+            return { success: false, error: 'Invalid sheet type' };
+        }
+
+        url = getSheetUrl(gid, format);
+        controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for direct access
+
+        try {
+          const response = await fetch(url, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            const errorMessage = response.status === 403
+              ? ERROR_MESSAGES.ACCESS_DENIED
+              : `${ERROR_MESSAGES.SERVER} (Status: ${response.status})`;
+            throw new Error(errorMessage);
+          }
+
+          const csvText = await response.text();
+
+          // Validate the response
+          if (!csvText || csvText.trim() === "") {
+            throw new Error(ERROR_MESSAGES.EMPTY);
+          }
+
+          if (csvText.includes("<!DOCTYPE html")) {
+            throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
+          }
+
+          if (csvText.includes("400. That's an error")) {
+            throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
+          }
+
+          // Cache the successful result
+          saveToCache(cacheKey, csvText, cacheDuration);
+
+          return { success: true, data: csvText };
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
       }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
@@ -187,6 +223,7 @@ export async function fetchSheetData(
 
       // Add exponential backoff between retries
       if (retries < maxRetries) {
+        // eslint-disable-next-line no-loop-func
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries - 1)));
       }
     }
@@ -220,8 +257,9 @@ export function findColumnIndex(headerRow: string[], columnNames: string[]): num
 
 /**
  * Get a direct image URL from a Google Drive link or other image URL
+ * Uses a proxy endpoint to hide the original source
  * @param url The original image URL
- * @returns A direct image URL
+ * @returns A proxied image URL
  */
 export function getDirectImageUrl(url: string): string {
   if (!url || url.trim() === "") {
@@ -231,7 +269,13 @@ export function getDirectImageUrl(url: string): string {
   try {
     const cleanUrl = url.trim();
 
-    if (cleanUrl.includes("drive.google.com")) {
+    // If already using our proxy format, return as is
+    if (cleanUrl.includes("/image-proxy/")) {
+      return cleanUrl;
+    }
+
+    // Handle Google Drive URLs
+    if (cleanUrl.includes("drive.google.com") || cleanUrl.includes("lh3.googleusercontent.com")) {
       let fileId = "";
 
       if (cleanUrl.includes("/file/d/")) {
@@ -246,15 +290,19 @@ export function getDirectImageUrl(url: string): string {
       }
 
       if (fileId) {
-        // Use lh3.googleusercontent.com for more reliable access
-        return `https://lh3.googleusercontent.com/d/${fileId}`;
+        // Use our proxy endpoint to hide Google Drive as the source
+        // Add cache buster to prevent caching issues
+        const cacheBuster = Date.now() % 1000;
+        return `/image-proxy/${fileId}?v=${cacheBuster}`;
       }
     }
 
+    // Handle standard image URLs
     if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl)) {
       return cleanUrl;
     }
 
+    // Handle known image hosting services
     if (
       cleanUrl.includes("imgur.com") ||
       cleanUrl.includes("cloudinary.com") ||
@@ -266,11 +314,13 @@ export function getDirectImageUrl(url: string): string {
       return cleanUrl;
     }
 
+    // Handle any other URLs that start with http
     if (cleanUrl.startsWith("http")) {
       return cleanUrl;
     }
   } catch (error) {
     // Silent error handling to prevent crashes
+    console.error("Error processing image URL", error);
   }
 
   return "https://placehold.co/800x600?text=Invalid+URL";

@@ -326,8 +326,12 @@ const Product: React.FC = () => {
                       src={project.image}
                       alt={project.title}
                       className={styles.projectImage}
-                      loadingDelay={index * 150} // Stagger loading by 150ms per item
+                      loadingDelay={index * 100} // Stagger loading by 100ms per item
                       loadingClassName={styles.imageLoading}
+                      priority={index < 3}
+                      width={400}
+                      height={300}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
                   <div className={styles.projectInfo}>
@@ -433,6 +437,10 @@ const Product: React.FC = () => {
             alt={companyData?.name || "Company"}
             className={styles.companyImage}
             loadingClassName={styles.imageLoading}
+            priority={true}
+            width={600}
+            height={400}
+            sizes="(max-width: 768px) 100vw, 600px"
           />
         </div>
         <div className={styles.infoSection}>

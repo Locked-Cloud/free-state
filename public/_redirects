@@ -1,1 +1,2 @@
-/* /index.html 200 
+/image-proxy/* https://free-state-server.herokuapp.com/image-proxy/:splat 200
+/* /index.html 200

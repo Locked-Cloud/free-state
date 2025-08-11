@@ -129,8 +129,12 @@ const Places: React.FC = () => {
                 src={place.image}
                 alt={place.name}
                 className={styles.placeImage}
-                loadingDelay={index * 150}
+                loadingDelay={index * 100} // Reduced delay for faster loading
                 loadingClassName={styles.imageLoading}
+                priority={index < 3} // Prioritize first 3 images
+                width={300}
+                height={200}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             </div>
             <div className={styles.contentContainer}>

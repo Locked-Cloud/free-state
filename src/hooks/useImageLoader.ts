@@ -86,24 +86,31 @@ export default useImageLoader;
 
 
 
-// Transform Google Drive links (or already transformed lh3 links) to a direct-download endpoint
+// Transform Google Drive links to a proxy URL that hides the original source
 const transformGoogleDriveUrl = (rawUrl: string): string => {
   if (!rawUrl) return rawUrl;
 
-  // If already using lh3.googleusercontent.com, return as is to allow browser caching
-  if (rawUrl.includes("lh3.googleusercontent.com/d/")) {
+  // If already using our proxy format, return as is to allow browser caching
+  if (rawUrl.includes("/image-proxy/")) {
     return rawUrl;
   }
 
+  // Extract file ID from Google Drive URL
   let fileId = "";
   if (rawUrl.includes("/file/d/")) {
     fileId = rawUrl.split("/file/d/")[1].split("/")[0];
   } else if (rawUrl.includes("id=")) {
     fileId = rawUrl.split("id=")[1].split("&")[0];
+  } else if (rawUrl.includes("lh3.googleusercontent.com/d/")) {
+    fileId = rawUrl.split("/d/")[1].split("?")[0];
   }
 
-  if (!fileId) return rawUrl;
+  if (fileId) {
+    // Use a proxy URL format that doesn't reveal Google Drive as the source
+    // This URL doesn't actually exist yet - we'll create a proxy service
+    const cacheBuster = Date.now() % 1000;
+    return `/image-proxy/${fileId}?v=${cacheBuster}`;
+  }
 
-  // Use lh3.googleusercontent.com for direct image access
-  return `https://lh3.googleusercontent.com/d/${fileId}`;
+  return rawUrl;
 };

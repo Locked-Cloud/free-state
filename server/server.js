@@ -187,6 +187,45 @@ app.get('/api/image', async (req, res) => {
 });
 
 /**
+ * API endpoint for the image proxy that hides Google Drive as the source
+ * This endpoint serves images without revealing the original source
+ */
+app.get('/image-proxy/:fileId', async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    
+    if (!fileId) {
+      return res.status(400).json({ success: false, error: 'File ID is required' });
+    }
+    
+    // Set cache control headers for better performance
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    
+    // Use lh3.googleusercontent.com for direct image access (more reliable than thumbnail API)
+    const imageUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+    
+    const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`);
+    }
+    
+    // Get the content type from the response
+    const contentType = response.headers.get('content-type');
+    
+    // Set the appropriate content type for the response
+    res.setHeader('Content-Type', contentType || 'image/jpeg');
+    
+    // Pipe the image data to the response
+    response.body.pipe(res);
+  } catch (error) {
+    console.error('Error fetching image:', error.message);
+    // Send a placeholder image instead of an error
+    res.redirect('https://placehold.co/800x600?text=Image+Not+Found');
+  }
+});
+
+/**
  * API endpoint to proxy any image URL
  */
 app.get('/api/proxy-image', async (req, res) => {
