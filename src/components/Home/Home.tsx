@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Home.module.css";
 import OptimizedImage from "../common/OptimizedImage";
+import { fetchSheetData, getDirectImageUrl } from "../../utils/sheetUtils";
 
 interface Company {
   id: number;
@@ -13,39 +14,6 @@ interface Company {
 }
 
 const DEFAULT_LOGO = "https://placehold.co/800x600?text=Image+Not+Found";
-// Use a more reliable CORS proxy
-const CORS_PROXY = "https://corsproxy.io/?";
-const COMPANIES_SHEET_URL =
-  process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM/export?format=csv`
-    : `https://docs.google.com/spreadsheets/d/1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM/export?format=csv`;
-
-const getDirectImageUrl = (url: string): string => {
-  if (!url) return DEFAULT_LOGO;
-
-  try {
-    if (url.includes("drive.google.com")) {
-      let fileId = "";
-      if (url.includes("/file/d/")) {
-        fileId = url.split("/file/d/")[1].split("/")[0];
-      } else if (url.includes("id=")) {
-        fileId = url.split("id=")[1].split("&")[0];
-      }
-      if (fileId) {
-        // Add a cache-busting parameter to prevent 429 errors
-        const cacheBuster = Date.now() % 1000;
-        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
-      }
-    }
-    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-      return url;
-    }
-  } catch (error) {
-    // Replace detailed error logging with generic message
-    console.error("Image processing error");
-  }
-  return DEFAULT_LOGO;
-};
 
 const LoadingSkeleton = () => (
   <div className={styles.skeletonGrid}>
@@ -74,10 +42,13 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(COMPANIES_SHEET_URL);
-        const csvText = await response.text();
+        const result = await fetchSheetData('companies');
+        
+        if (!result.success || !result.data) {
+          throw new Error(result.error || 'Failed to fetch data');
+        }
 
-        // Split into rows
+        const csvText = result.data;
         const allRows = csvText.split("\n");
 
         // Parse the header row to find column indices
@@ -127,15 +98,13 @@ const Home: React.FC = () => {
             return null;
           })
           .filter((company): company is Company => company !== null);
-        // Remove the filter for active companies to show all companies
 
         setCompanies(parsedCompanies);
         setFilteredCompanies(parsedCompanies);
         setLoading(false);
       } catch (err) {
-        // Replace detailed error logging with generic message
         console.error("Data fetching error");
-        setError("Failed to load company data. Please try again later.");
+        setError(err instanceof Error ? err.message : "Failed to load company data. Please try again later.");
         setLoading(false);
       }
     };

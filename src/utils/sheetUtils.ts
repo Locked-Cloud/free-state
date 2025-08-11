@@ -38,7 +38,7 @@ export function getSheetUrl(gid: string, format: 'csv' | 'tq' = 'csv'): string {
   if (format === 'tq') {
     baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
   } else {
-    baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+    baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
   }
   
   return process.env.NODE_ENV === "production"
@@ -246,10 +246,8 @@ export function getDirectImageUrl(url: string): string {
       }
 
       if (fileId) {
-        // Add cache buster to prevent caching issues
-        const cacheBuster = Date.now() % 1000;
-        // Use CORS proxy for Google Drive URLs
-        return `${CORS_PROXY}https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600&cb=${cacheBuster}`;
+        // Use lh3.googleusercontent.com for more reliable access
+        return `https://lh3.googleusercontent.com/d/${fileId}`;
       }
     }
 

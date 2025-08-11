@@ -19,22 +19,21 @@ const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
   const [imageUrl, setImageUrl] = useState<string>(url);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
-
+  
+  // Create IntersectionObserver to load images only when they become visible
   useEffect(() => {
-    if (!url) {
-      setImageUrl(fallbackImage);
-      setIsLoading(false);
-      setHasError(true);
-      return;
-    }
+    let observer: IntersectionObserver;
+    let timer: NodeJS.Timeout;
 
-    setIsLoading(true);
-    setHasError(false);
+    const loadImage = () => {
+      if (!url) {
+        setImageUrl(fallbackImage);
+        setIsLoading(false);
+        setHasError(true);
+        return;
+      }
 
-    const transformedUrl = transformGoogleDriveUrl(url);
-
-    // Implement a delay to stagger image loading
-    const timer = setTimeout(() => {
+      const transformedUrl = transformGoogleDriveUrl(url);
       const img = new Image();
 
       img.onload = () => {
@@ -49,10 +48,35 @@ const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
       };
 
       img.src = transformedUrl;
-    }, loadingDelay);
+    };
 
-    return () => clearTimeout(timer);
+    // Create observer to detect when image enters viewport
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          timer = setTimeout(loadImage, loadingDelay);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '50px' } // Start loading when image is 50px from viewport
+    );
+
+    // Start observing the image element
+    const imageElement = document.querySelector(`img[src="${url}"]`);
+    if (imageElement) {
+      observer.observe(imageElement);
+    } else {
+      // If element not found, load immediately (e.g., for preloading)
+      timer = setTimeout(loadImage, loadingDelay);
+    }
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+    };
   }, [url, fallbackImage, loadingDelay]);
+
+
 
   return { imageUrl, isLoading, hasError };
 };
@@ -60,21 +84,15 @@ const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
 export default useImageLoader;
 
 
-const addCacheBuster = (url: string): string => {
-  const cacheParam = `cb=${Date.now() % 100000}`;
-  return url.includes("?") ? `${url}&${cacheParam}` : `${url}?${cacheParam}`;
-};
 
-// CORS proxy for Google Drive URLs
-const CORS_PROXY = "https://corsproxy.io/?";
 
 // Transform Google Drive links (or already transformed lh3 links) to a direct-download endpoint
 const transformGoogleDriveUrl = (rawUrl: string): string => {
   if (!rawUrl) return rawUrl;
 
-  // If already using lh3.googleusercontent.com or uc?export, just append cache-buster
+  // If already using lh3.googleusercontent.com, return as is to allow browser caching
   if (rawUrl.includes("lh3.googleusercontent.com/d/")) {
-    return addCacheBuster(rawUrl);
+    return rawUrl;
   }
 
   let fileId = "";
@@ -86,6 +104,6 @@ const transformGoogleDriveUrl = (rawUrl: string): string => {
 
   if (!fileId) return rawUrl;
 
-  // Use CORS proxy for Google Drive URLs
-  return addCacheBuster(`${CORS_PROXY}https://drive.google.com/uc?export=download&id=${fileId}`);
+  // Use lh3.googleusercontent.com for direct image access
+  return `https://lh3.googleusercontent.com/d/${fileId}`;
 };
