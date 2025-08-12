@@ -10,6 +10,15 @@ body.dark-mode {
   --text-secondary: #b0b0b0;
   --text-tertiary: #909090;
   --border-color: #333;
+  /* Component surface variables */
+  --surface: #1e293b;
+  --background: #0f172a;
+  --background-alt: #334155;
+  --border: #475569;
+  --border-focus: #60a5fa;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
   
   /* Accent colors - using a more vibrant blue palette */
   --accent-color: #4a6bff;

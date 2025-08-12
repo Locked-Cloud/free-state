@@ -51,7 +51,7 @@
 .statsSection {
   margin: 4rem 0;
   padding: 3rem 0;
-  background: white;
+  background: var(--surface);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
 }
@@ -93,7 +93,7 @@
 }
 
 .feature {
-  background: white;
+  background: var(--surface);
   padding: 2rem;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
@@ -135,7 +135,7 @@
 .processStep {
   text-align: center;
   padding: 2rem;
-  background: white;
+  background: var(--surface);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
   position: relative;
@@ -170,7 +170,7 @@
 }
 
 .teamMember {
-  background: white;
+  background: var(--surface);
   padding: 2rem;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
@@ -241,7 +241,7 @@
 }
 
 .value {
-  background: white;
+  background: var(--surface);
   padding: 2rem;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
@@ -276,7 +276,7 @@
 .ctaSection {
   text-align: center;
   padding: 4rem 2rem;
-  background: white;
+  background: var(--surface);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
   margin-top: 4rem;

@@ -11,6 +11,15 @@
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 8px 15px rgba(0, 0, 0, 0.15);
+  /* Surface variables for component theming */
+  --surface: #ffffff;
+  --background: #f8f9fa;
+  --background-alt: #f1f5f9;
+  --border: var(--border-color);
+  --border-focus: var(--primary-color);
+  --text-primary: var(--text-color);
+  --text-secondary: var(--text-light);
+  --text-muted: #94a3b8;
   --gradient: linear-gradient(
     135deg,
     var(--primary-color),

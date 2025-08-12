@@ -4,13 +4,13 @@
   align-items: center;
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--background);
 }
 
 .loginCard {
   width: 100%;
   max-width: 450px;
-  background-color: #fff;
+  background-color: var(--surface);
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   padding: 2.5rem;
@@ -23,7 +23,7 @@
 
 .loginTitle {
   font-size: 2rem;
-  color: #333;
+  color: var(--text-color);
   margin-bottom: 1.5rem;
   text-align: center;
   font-weight: 600;
@@ -44,12 +44,12 @@
 .formGroup label {
   font-size: 0.9rem;
   font-weight: 500;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .input {
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -62,7 +62,7 @@
 }
 
 .input::placeholder {
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 .loginButton {
@@ -111,9 +111,9 @@
 .securityNote {
   margin-top: 1.5rem;
   text-align: center;
-  color: #868e96;
+  color: var(--text-secondary);
   font-size: 0.85rem;
-  background-color: #f8f9fa;
+  background-color: var(--background-alt);
   padding: 0.75rem;
   border-radius: 8px;
   border-left: 4px solid #339af0;
