@@ -1,0 +1,119 @@
+.promptContainer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out;
+}
+
+.promptContent {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.promptIcon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.promptText h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.promptText p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.promptActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.installButton {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.installButton:hover {
+  background-color: #1557b0;
+}
+
+.dismissButton {
+  background-color: transparent;
+  color: #666;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dismissButton:hover {
+  background-color: #f1f1f1;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .promptContent {
+    background-color: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .promptText h3 {
+    color: #e0e0e0;
+  }
+
+  .promptText p {
+    color: #b0b0b0;
+  }
+
+  .installButton {
+    background-color: #4dabf7;
+  }
+
+  .installButton:hover {
+    background-color: #3793dd;
+  }
+
+  .dismissButton {
+    color: #b0b0b0;
+  }
+
+  .dismissButton:hover {
+    background-color: #2a2a2a;
+  }
+}
