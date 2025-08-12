@@ -7,6 +7,8 @@ import { getFromCache, saveToCache, CACHE_DURATIONS } from './cacheUtils';
 // Constants
 export const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 export const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://api.allorigins.win/raw?url=";
+// Optional backend base URL (e.g., https://my-real-backend.pages.dev/api)
+export const API_URL = (process.env.REACT_APP_API_URL || "").replace(/\/+\$/, ""); // trim trailing slashes
 
 // Sheet GIDs
 export const SHEET_GIDS = {
@@ -36,7 +38,12 @@ export function getSheetUrl(gid: string, format: 'csv' | 'tq' = 'csv'): string {
   // Use a more reliable approach for accessing Google Sheets
   const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
   
-  // Always use CORS proxy in development and production to avoid CORS issues
+    // Choose encoding strategy based on proxy service
+  if (CORS_PROXY.includes("corsproxy.io")) {
+    // corsproxy.io expects the raw URL directly after the '?' without encoding
+    return `${CORS_PROXY}${baseUrl}`;
+  }
+  // Default: encode URL for proxies like api.allorigins.win
   return `${CORS_PROXY}${encodeURIComponent(baseUrl)}`;
 }
 
@@ -119,7 +126,9 @@ export async function fetchSheetData(
   while (retries < maxRetries) {
     try {
       // First try the server API endpoint
-      let url = `/api/sheets/${sheetType}?format=${format}`;
+      let url = API_URL
+        ? `${API_URL}/sheets/${sheetType}?format=${format}`
+        : `/api/sheets/${sheetType}?format=${format}`;
       let controller = new AbortController();
       let timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for server API
       let useDirectAccess = false;
