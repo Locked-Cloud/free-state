@@ -302,7 +302,8 @@ export function getDirectImageUrl(url: string): string {
         // Use our proxy endpoint to hide Google Drive as the source
         // Add cache buster to prevent caching issues
         const cacheBuster = Date.now() % 1000;
-        return `/image-proxy/${fileId}?v=${cacheBuster}`;
+        const proxyBase = API_URL ? `${API_URL}/image-proxy` : '/image-proxy';
+        return `${proxyBase}/${fileId}?v=${cacheBuster}`;
       }
     }
 
