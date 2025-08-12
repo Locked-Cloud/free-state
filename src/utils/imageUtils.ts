@@ -52,9 +52,15 @@ export function getDirectImageUrl(url: string): string {
 
       if (fileId) {
         // Route through backend API via universal proxy to handle permissions and CORS
-        const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
         const directUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
-        return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(directUrl)}`;
+        // Decide whether to route through the backend image proxy.
+        // When the frontend is hosted on a static platform such as Cloudflare Pages,
+        // the Express backend is not available, so we return the direct URL instead.
+        const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
+        if (API_BASE_URL && !API_BASE_URL.includes('.pages.dev')) {
+          return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(directUrl)}`;
+        }
+        return directUrl;
       }
     }
 

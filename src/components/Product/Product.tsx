@@ -5,6 +5,7 @@ import useTitle from "../../hooks/useTitle";
 import OutOfStock from "../OutOfStock/OutOfStock";
 import OptimizedImage from "../common/OptimizedImage";
 import { getDirectImageUrl } from "../../utils/imageUtils";
+import { getSheetUrl, SHEET_GIDS } from "../../utils/sheetUtils";
 
 // Backend API base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
@@ -103,9 +104,19 @@ const Product: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch company data
-        const companyResponse = await fetch(COMPANIES_ENDPOINT);
-        const companyText = await companyResponse.text();
+        // Fetch company data with fallback to Google Sheets if backend is unavailable
+        let companyText = "";
+        try {
+          const companyResponse = await fetch(COMPANIES_ENDPOINT);
+          if (!companyResponse.ok) throw new Error("Backend companies 404");
+          companyText = await companyResponse.text();
+        } catch (e) {
+          console.warn("Companies endpoint failed, using Google Sheets fallback", e);
+          const fallbackUrl = getSheetUrl(SHEET_GIDS.COMPANIES, "csv");
+          const fallbackResp = await fetch(fallbackUrl);
+          if (!fallbackResp.ok) throw new Error("Failed to fetch companies sheet");
+          companyText = await fallbackResp.text();
+        }
         const companyRows = companyText.split("\n");
 
         // Parse the header row to find column indices
@@ -166,13 +177,19 @@ const Product: React.FC = () => {
 
         // Only fetch projects if company is active
         if (company.active === 1) {
-          // Fetch projects data
-          const projectsResponse = await fetch(PROJECTS_ENDPOINT);
-          if (!projectsResponse.ok) {
-            throw new Error(`HTTP error! status: ${projectsResponse.status}`);
+          // Fetch projects data with fallback
+          let csvText = "";
+          try {
+            const projectsResponse = await fetch(PROJECTS_ENDPOINT);
+            if (!projectsResponse.ok) throw new Error("Backend projects 404");
+            csvText = await projectsResponse.text();
+          } catch (e) {
+            console.warn("Projects endpoint failed, using Google Sheets fallback", e);
+            const fallbackUrl = getSheetUrl(SHEET_GIDS.PROJECTS, "csv");
+            const fallbackResp = await fetch(fallbackUrl);
+            if (!fallbackResp.ok) throw new Error("Failed to fetch projects sheet");
+            csvText = await fallbackResp.text();
           }
-
-          const csvText = await projectsResponse.text();
           if (!csvText.trim()) {
             throw new Error("No data received from the sheet");
           }
