@@ -21,7 +21,7 @@ export const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy
 
 // Sheet GIDs
 export const SHEET_GIDS = {
-  COMPANIES: "0",
+  COMPANIES: "1065798889",
   PROJECTS: "1884577336",
   USERS: "1815551767",
   PLACES: "658730705",

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Places.module.css";
 import OptimizedImage from "../common/OptimizedImage";
 import { getDirectImageUrl } from "../../utils/imageUtils";
+import { getSheetUrl, SHEET_GIDS } from "../../utils/sheetUtils";
 
 interface Place {
   id: string;
@@ -26,8 +27,23 @@ const Places: React.FC = () => {
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
-        const response = await fetch(PLACES_ENDPOINT);
-        const csvText = await response.text();
+        let csvText = "";
+        try {
+          const backendResponse = await fetch(PLACES_ENDPOINT);
+          if (backendResponse.ok) {
+            csvText = await backendResponse.text();
+          } else {
+            throw new Error(`Backend responded with status: ${backendResponse.status}`);
+          }
+        } catch (backendError) {
+          console.warn("Backend fetch for places failed, falling back to direct Google Sheets fetch", backendError);
+          const fallbackUrl = getSheetUrl(SHEET_GIDS.PLACES, 'csv');
+          const fallbackResponse = await fetch(fallbackUrl);
+          if (!fallbackResponse.ok) {
+            throw new Error(`Fallback Google Sheets responded with status: ${fallbackResponse.status}`);
+          }
+          csvText = await fallbackResponse.text();
+        }
         const rows = csvText.split("\n");
         const header = rows[0]
           .split(",")
