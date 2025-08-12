@@ -12,11 +12,6 @@ interface OptimizedImageProps {
   fallbackSrc?: string;
   onLoad?: () => void;
   onError?: () => void;
-  loadingDelay?: number;
-  loadingClassName?: string;
-  priority?: boolean;
-  sizes?: string;
-  quality?: number;
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -29,41 +24,17 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   lazyLoad = true,
   fallbackSrc,
   onLoad,
-  onError,
-  loadingDelay = 0,
-  loadingClassName = '',
-  priority = false,
-  sizes = '100vw',
-  quality = 85
+  onError
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(priority);
   const imageRef = useRef<HTMLImageElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to handle image loading
   const loadImage = () => {
-    // If there's a loading delay, set a timer
-    if (loadingDelay > 0) {
-      timerRef.current = setTimeout(() => {
-        startImageLoad();
-      }, loadingDelay);
-    } else {
-      startImageLoad();
-    }
-  };
-
-  // Actual image loading function
-  const startImageLoad = () => {
     const img = new Image();
-    
-    // Add width and height if available to help browser calculate aspect ratio
-    if (width) img.width = width;
-    if (height) img.height = height;
-    
     img.src = src;
     img.onload = () => {
       setImageSrc(src);
@@ -81,8 +52,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   // Set up intersection observer for lazy loading
   useEffect(() => {
-    // If priority is true or lazyLoad is false, load immediately
-    if (priority || !lazyLoad) {
+    if (!lazyLoad) {
       loadImage();
       return;
     }
@@ -91,13 +61,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     setIsLoaded(false);
     setError(false);
     setImageSrc(null);
-    setIsVisible(false);
-
-    // Clear any existing timers
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
 
     if ('IntersectionObserver' in window) {
       if (observerRef.current) {
@@ -106,7 +69,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
       observerRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
-          setIsVisible(true);
           loadImage();
           if (observerRef.current && imageRef.current) {
             observerRef.current.unobserve(imageRef.current);
@@ -122,7 +84,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       }
     } else {
       // Fallback for browsers that don't support IntersectionObserver
-      setIsVisible(true);
       loadImage();
     }
 
@@ -130,14 +91,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
-      
-      // Clear any existing timers on cleanup
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
     };
-  }, [src, lazyLoad, priority, loadingDelay]);
+  }, [src, lazyLoad]);
 
   // Generate a placeholder with the correct aspect ratio
   const placeholderStyle = {
@@ -147,35 +102,13 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     aspectRatio: width && height ? `${width} / ${height}` : undefined
   };
 
-  // Generate srcset for responsive images if width is provided
-  const generateSrcSet = () => {
-    if (!width || src.includes('placehold.co') || (fallbackSrc && error)) {
-      return undefined;
-    }
-    
-    // For Google Drive images (now using our proxy), we don't generate srcset
-    if (src.includes('/image-proxy/')) {
-      return undefined;
-    }
-    
-    // For standard image URLs that support width parameters
-    if (src.includes('unsplash.com') || src.includes('picsum.photos')) {
-      const widths = [width/2, width, width*2].map(Math.floor);
-      return widths.map(w => `${src.includes('?') ? `${src}&w=${w}` : `${src}?w=${w}`} ${w}w`).join(', ');
-    }
-    
-    return undefined;
-  };
-
   return (
     <div 
-      className={`${styles.imageContainer} ${className} ${loadingClassName && !isLoaded ? loadingClassName : ''}`} 
+      className={`${styles.imageContainer} ${className}`} 
       style={!isLoaded ? placeholderStyle : undefined}
       ref={imageRef}
-      data-loaded={isLoaded}
-      data-error={error}
     >
-      {(imageSrc && isVisible) && (
+      {imageSrc && (
         <img
           src={imageSrc}
           alt={alt}
@@ -184,10 +117,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           className={`${styles.image} ${isLoaded ? styles.loaded : ''}`}
           onLoad={() => setIsLoaded(true)}
           onError={() => setError(true)}
-          loading={lazyLoad && !priority ? 'lazy' : undefined}
-          srcSet={generateSrcSet()}
-          sizes={sizes}
-          decoding={priority ? 'sync' : 'async'}
+          loading={lazyLoad ? 'lazy' : undefined}
         />
       )}
       {error && !fallbackSrc && (

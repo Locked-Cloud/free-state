@@ -16,15 +16,6 @@ app.use(cors());
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Request timeout middleware
-app.use((req, res, next) => {
-  res.setTimeout(30000, () => {
-    console.log('Request has timed out.');
-    res.status(408).send('Request timeout');
-  });
-  next();
-});
-
 // Constants - Hidden from client-side code
 const SHEET_ID = process.env.SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 
@@ -35,10 +26,6 @@ const SHEET_GIDS = {
   USERS: "1815551767",
   PLACES: "658730705",
 };
-
-// Cache for storing fetched data temporarily
-const cache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Mock data for companies since the sheet is inaccessible
 const MOCK_COMPANIES_DATA = `ID,Name,Description,NULL,Image_Path,Active
@@ -67,24 +54,6 @@ const MOCK_COMPANIES_DATA = `ID,Name,Description,NULL,Image_Path,Active
 23,Tharaa Real Estate,An emerging player in Egypt's market, Tharaa focuses on residential and commercial development with an emphasis on quality and modern design.,NULL,https://drive.google.com/file/d/1JlPhywY_eUZPmrRaMFPqEQn6HsEWCSCm/view?usp=sharing,1`;
 
 /**
- * Simple cache helper functions
- */
-const getCachedData = (key) => {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data;
-  }
-  return null;
-};
-
-const setCachedData = (key, data) => {
-  cache.set(key, {
-    data,
-    timestamp: Date.now()
-  });
-};
-
-/**
  * Get the URL for a Google Sheet
  * @param {string} gid The sheet GID
  * @param {string} format The export format (default: csv)
@@ -99,28 +68,6 @@ function getSheetUrl(gid, format = 'csv') {
 }
 
 /**
- * Fetch data from Google Sheets with timeout and error handling
- */
-async function fetchWithTimeout(url, timeoutMs = 10000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  
-  try {
-    const response = await fetch(url, { 
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
-}
-
-/**
  * API endpoint to fetch data from a specific sheet
  */
 app.get('/api/sheets/:sheetType', async (req, res) => {
@@ -128,43 +75,29 @@ app.get('/api/sheets/:sheetType', async (req, res) => {
     const { sheetType } = req.params;
     const { format = 'csv' } = req.query;
     
-    // Check cache first
-    const cacheKey = `${sheetType}_${format}`;
-    const cachedData = getCachedData(cacheKey);
-    if (cachedData) {
-      console.log(`Serving cached data for ${sheetType}`);
-      return res.send(cachedData);
-    }
-    
-    // Special handling for companies sheet with fallback to mock data
+    // Try to fetch real data for companies sheet, fall back to mock data if it fails
     if (sheetType === 'companies') {
       try {
         console.log('Attempting to fetch real data for companies sheet');
-        const url = getSheetUrl(SHEET_GIDS.COMPANIES, format);
-        const response = await fetchWithTimeout(url);
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GIDS.COMPANIES}`;
+        const response = await fetch(url);
         
         if (response.ok) {
           const data = await response.text();
-          
-          // Validate the response
-          if (data && data.trim() !== "" && !data.includes("<!DOCTYPE html") && !data.includes("400. That's an error")) {
-            console.log('Successfully fetched real company data');
-            setCachedData(cacheKey, data);
-            return res.send(data);
-          }
+          console.log('Successfully fetched real company data');
+          return res.send(data);
+        } else {
+          console.log(`Failed to fetch real data: ${response.status}. Using mock data.`);
+          return res.send(MOCK_COMPANIES_DATA);
         }
-        
-        console.log(`Failed to fetch valid real data: ${response.status}. Using mock data.`);
       } catch (error) {
-        console.error('Error fetching real company data:', error.message);
+        console.error('Error fetching real company data:', error);
+        console.log('Falling back to mock data for companies sheet');
+        return res.send(MOCK_COMPANIES_DATA);
       }
-      
-      console.log('Falling back to mock data for companies sheet');
-      setCachedData(cacheKey, MOCK_COMPANIES_DATA);
-      return res.send(MOCK_COMPANIES_DATA);
     }
     
-    // Map sheet type to GID for other sheets
+    // Map sheet type to GID
     let gid;
     switch (sheetType) {
       case 'projects':
@@ -183,7 +116,7 @@ app.get('/api/sheets/:sheetType', async (req, res) => {
     const url = getSheetUrl(gid, format);
     console.log(`Fetching data from URL: ${url}`);
     
-    const response = await fetchWithTimeout(url);
+    const response = await fetch(url);
     console.log(`Response status: ${response.status}`);
     
     if (!response.ok) {
@@ -211,68 +144,32 @@ app.get('/api/sheets/:sheetType', async (req, res) => {
       throw new Error('Access denied. Please make sure the sheet is publicly accessible.');
     }
     
-    // Cache successful response
-    setCachedData(cacheKey, csvText);
     res.send(csvText);
   } catch (error) {
     console.error('Error fetching sheet data:', error.message);
-    
-    // If it's a timeout error, provide a more specific message
-    if (error.name === 'AbortError') {
-      return res.status(408).json({ success: false, error: 'Request timed out. Please try again.' });
-    }
-    
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 /**
- * API endpoint for the image proxy that hides Google Drive as the source
- * This endpoint serves images without revealing the original source
+ * API endpoint to fetch an image from Google Drive
  */
-app.get('/image-proxy/:fileId', async (req, res) => {
+app.get('/api/image', async (req, res) => {
   try {
-    const { fileId } = req.params;
-    const { v } = req.query; // Cache buster parameter
+    const { fileId } = req.query;
     
     if (!fileId) {
       return res.status(400).json({ success: false, error: 'File ID is required' });
     }
     
-    // Validate file ID format (basic security check)
-    if (!/^[a-zA-Z0-9_-]+$/.test(fileId)) {
-      return res.status(400).json({ success: false, error: 'Invalid file ID format' });
-    }
+    // Add cache buster to prevent caching issues
+    const cacheBuster = Date.now() % 1000;
+    const imageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600&cb=${cacheBuster}`;
     
-    // Set cache control headers for better performance
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow CORS for images
+    const response = await fetch(imageUrl);
     
-    // Try multiple Google Drive image URLs for better reliability
-    const imageUrls = [
-      `https://lh3.googleusercontent.com/d/${fileId}`,
-      `https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600`,
-      `https://drive.google.com/uc?id=${fileId}&export=view`
-    ];
-    
-    let response;
-    let lastError;
-    
-    for (const imageUrl of imageUrls) {
-      try {
-        response = await fetchWithTimeout(imageUrl, 15000);
-        if (response.ok) {
-          break; // Success, stop trying other URLs
-        }
-        lastError = new Error(`HTTP ${response.status}`);
-      } catch (error) {
-        lastError = error;
-        continue; // Try next URL
-      }
-    }
-    
-    if (!response || !response.ok) {
-      throw lastError || new Error('Failed to fetch image from all sources');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`);
     }
     
     // Get the content type from the response
@@ -285,8 +182,7 @@ app.get('/image-proxy/:fileId', async (req, res) => {
     response.body.pipe(res);
   } catch (error) {
     console.error('Error fetching image:', error.message);
-    // Send a placeholder image instead of an error
-    res.redirect('https://placehold.co/800x600?text=Image+Not+Found');
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -301,18 +197,7 @@ app.get('/api/proxy-image', async (req, res) => {
       return res.status(400).json({ success: false, error: 'URL is required' });
     }
     
-    // Basic URL validation
-    try {
-      new URL(url);
-    } catch {
-      return res.status(400).json({ success: false, error: 'Invalid URL format' });
-    }
-    
-    // Set cache control headers
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    
-    const response = await fetchWithTimeout(url, 15000);
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status}`);
@@ -320,11 +205,6 @@ app.get('/api/proxy-image', async (req, res) => {
     
     // Get the content type from the response
     const contentType = response.headers.get('content-type');
-    
-    // Verify it's actually an image
-    if (contentType && !contentType.startsWith('image/')) {
-      throw new Error('URL does not point to an image');
-    }
     
     // Set the appropriate content type for the response
     res.setHeader('Content-Type', contentType || 'image/jpeg');
@@ -337,38 +217,6 @@ app.get('/api/proxy-image', async (req, res) => {
   }
 });
 
-/**
- * Health check endpoint
- */
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'Server is running', 
-    timestamp: new Date().toISOString(),
-    cache_size: cache.size
-  });
-});
-
-/**
- * Cache stats endpoint (for debugging)
- */
-app.get('/api/cache-stats', (req, res) => {
-  const stats = {
-    size: cache.size,
-    keys: Array.from(cache.keys()),
-    cache_duration_ms: CACHE_DURATION
-  };
-  res.json(stats);
-});
-
-/**
- * Clear cache endpoint (for development)
- */
-app.post('/api/clear-cache', (req, res) => {
-  cache.clear();
-  res.json({ success: true, message: 'Cache cleared' });
-});
-
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
   // Set static folder
@@ -379,19 +227,6 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ success: false, error: 'Internal server error' });
-});
-
-// Handle 404s
-app.use((req, res) => {
-  res.status(404).json({ success: false, error: 'Endpoint not found' });
-});
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Sheet ID: ${SHEET_ID}`);
 });

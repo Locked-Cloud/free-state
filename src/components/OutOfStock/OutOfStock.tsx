@@ -30,10 +30,6 @@ const OutOfStock: React.FC<OutOfStockProps> = ({
               src={companyImage}
               alt={companyName}
               className={styles.outOfStockImage}
-              priority={true} // Always prioritize this image since it's the main content
-              width={400}
-              height={300}
-              sizes="(max-width: 768px) 100vw, 400px"
             />
           </div>
           <div className={styles.outOfStockMessage}>

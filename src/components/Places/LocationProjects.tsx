@@ -454,17 +454,13 @@ const LocationProjects: React.FC = () => {
                   src={project.image}
                   alt={project.name}
                   className={styles.placeImage}
-                  loadingDelay={index * 100}
+                  loadingDelay={index * 150}
                   loadingClassName={styles.imageLoading}
-                  priority={index < 3}
-                  width={400}
-                  height={300}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   onError={(e) => {
                     // Failed to load image
                   }}
                 />
-                </div>
+              </div>
               <div className={styles.contentContainer}>
                 <div className={styles.placeHeader}>
                   <h2>{project.name}</h2>
