@@ -52,7 +52,7 @@ export function getDirectImageUrl(url: string): string {
 
       if (fileId) {
         // Route through backend API via universal proxy to handle permissions and CORS
-        const API_BASE_URL = process.env.REACT_APP_API_URL || "https://my-real-backend.pages.dev/api";
+        const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
         const directUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
         return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(directUrl)}`;
       }

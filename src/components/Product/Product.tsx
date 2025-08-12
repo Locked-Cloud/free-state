@@ -7,11 +7,12 @@ import OptimizedImage from "../common/OptimizedImage";
 import { getDirectImageUrl } from "../../utils/imageUtils";
 
 // Backend API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
+const API_URL = API_BASE_URL.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`;
 
 // Endpoints for sheet data
-const COMPANIES_ENDPOINT = `${API_BASE_URL}/api/sheets/companies`;
-const PROJECTS_ENDPOINT = `${API_BASE_URL}/api/sheets/projects`; 
+const COMPANIES_ENDPOINT = `${API_URL}/sheets/companies`;
+const PROJECTS_ENDPOINT = `${API_URL}/sheets/projects`;
 
 // Remove the inline OutOfStock component since we now have a standalone one
 

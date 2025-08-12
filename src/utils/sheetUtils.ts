@@ -120,7 +120,7 @@ export function parseCSV(text: string): string[][] {
  * @returns Promise with array of Company objects
  */
 export async function fetchCompanies(): Promise<Company[]> {
-  const API_BASE_URL = process.env.REACT_APP_API_URL || "https://my-real-backend.pages.dev/api";
+  const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
   const cacheKey = 'companies_data';
   
   // Try to get from cache first
@@ -332,14 +332,14 @@ function getDirectImageUrlDeprecated(url: string): string {
 
       if (fileId) {
         // Use the server API to proxy Google Drive images
-        const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+        const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
         return `${API_BASE_URL}/api/image?fileId=${fileId}`;
       }
     }
 
     if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl)) {
       // Use the server API to proxy image URLs
-      const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+      const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
       return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(cleanUrl)}`;
     }
 
@@ -352,7 +352,7 @@ function getDirectImageUrlDeprecated(url: string): string {
       cleanUrl.includes("via.placeholder.com")
     ) {
       // Use the server API to proxy image URLs
-      const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+      const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
       return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(cleanUrl)}`;
     }
 
