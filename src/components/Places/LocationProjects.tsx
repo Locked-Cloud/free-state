@@ -193,7 +193,6 @@ const LocationProjects: React.FC = () => {
           const errorMsg = `Missing required columns! Found headers: ${header.join(
             ", "
           )}. Need 'name' and 'id_loc' columns.`;
-          console.error("❌", errorMsg);
           throw new Error(errorMsg);
         }
 
@@ -271,7 +270,6 @@ const LocationProjects: React.FC = () => {
 
         setProjects(filteredProjects);
       } catch (err) {
-        console.error("💥 Error fetching projects:", err);
 
         let errorMessage = "Failed to load projects: ";
         if (err instanceof Error) {

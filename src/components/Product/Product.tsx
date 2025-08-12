@@ -111,7 +111,6 @@ const Product: React.FC = () => {
           if (!companyResponse.ok) throw new Error("Backend companies 404");
           companyText = await companyResponse.text();
         } catch (e) {
-          console.warn("Companies endpoint failed, using Google Sheets fallback", e);
           const fallbackUrl = getSheetUrl(SHEET_GIDS.COMPANIES, "csv");
           const fallbackResp = await fetch(fallbackUrl);
           if (!fallbackResp.ok) throw new Error("Failed to fetch companies sheet");
@@ -184,7 +183,6 @@ const Product: React.FC = () => {
             if (!projectsResponse.ok) throw new Error("Backend projects 404");
             csvText = await projectsResponse.text();
           } catch (e) {
-            console.warn("Projects endpoint failed, using Google Sheets fallback", e);
             const fallbackUrl = getSheetUrl(SHEET_GIDS.PROJECTS, "csv");
             const fallbackResp = await fetch(fallbackUrl);
             if (!fallbackResp.ok) throw new Error("Failed to fetch projects sheet");
@@ -269,7 +267,6 @@ const Product: React.FC = () => {
         setLoading(false);
       } catch (err) {
         // Replace detailed error logging with generic message
-        console.error("Data fetching error");
         setError(
           err instanceof Error
             ? err.message

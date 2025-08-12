@@ -173,7 +173,6 @@ const Login: React.FC = () => {
         // Redirect will happen in the useEffect hook
       }
     } catch (err) {
-      console.error("Authentication error:", err);
       setError(
         err instanceof Error ? err.message : "An error occurred during login"
       );

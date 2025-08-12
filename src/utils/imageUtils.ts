@@ -85,7 +85,6 @@ export function getDirectImageUrl(url: string): string {
     }
   } catch (error) {
     // Silent error handling to prevent crashes
-    console.error("Image URL processing error:", error);
   }
 
   return "https://placehold.co/800x600?text=Invalid+URL";

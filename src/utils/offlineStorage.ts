@@ -20,7 +20,6 @@ const openDB = (): Promise<IDBDatabase> => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = (event) => {
-      console.error('IndexedDB error:', (event.target as IDBRequest).error);
       reject((event.target as IDBRequest).error);
     };
 
@@ -83,12 +82,10 @@ export const saveToIndexedDB = async <T>(storeName: string, data: T | T[]): Prom
       };
 
       tx.onerror = (event) => {
-        console.error('Transaction error:', tx.error);
         reject(tx.error);
       };
     });
   } catch (error) {
-    console.error('Error saving to IndexedDB:', error);
     throw error;
   }
 };
@@ -111,12 +108,10 @@ export const getAllFromIndexedDB = async <T>(storeName: string): Promise<T[]> =>
       };
 
       request.onerror = () => {
-        console.error('Error getting data:', request.error);
         reject(request.error);
       };
     });
   } catch (error) {
-    console.error('Error retrieving from IndexedDB:', error);
     return [];
   }
 };
@@ -140,12 +135,10 @@ export const getByIdFromIndexedDB = async <T>(storeName: string, id: string | nu
       };
 
       request.onerror = () => {
-        console.error('Error getting item:', request.error);
         reject(request.error);
       };
     });
   } catch (error) {
-    console.error('Error retrieving item from IndexedDB:', error);
     return null;
   }
 };
@@ -169,12 +162,10 @@ export const deleteFromIndexedDB = async (storeName: string, id: string | number
       };
 
       tx.onerror = () => {
-        console.error('Error deleting item:', tx.error);
         reject(tx.error);
       };
     });
   } catch (error) {
-    console.error('Error deleting from IndexedDB:', error);
     throw error;
   }
 };
@@ -197,12 +188,10 @@ export const clearIndexedDBStore = async (storeName: string): Promise<void> => {
       };
 
       tx.onerror = () => {
-        console.error('Error clearing store:', tx.error);
         reject(tx.error);
       };
     });
   } catch (error) {
-    console.error('Error clearing IndexedDB store:', error);
     throw error;
   }
 };
@@ -260,12 +249,10 @@ export const markPendingActionProcessed = async (id: number): Promise<void> => {
       };
 
       tx.onerror = () => {
-        console.error('Error marking action as processed:', tx.error);
         reject(tx.error);
       };
     });
   } catch (error) {
-    console.error('Error updating pending action:', error);
     throw error;
   }
 };

@@ -140,7 +140,6 @@ export async function fetchCompanies(): Promise<Company[]> {
         throw new Error(`Backend responded with status: ${backendResponse.status}`);
       }
     } catch (backendError) {
-      console.warn("Backend fetch failed, falling back to direct Google Sheets fetch", backendError);
       const fallbackUrl = getSheetUrl(SHEET_GIDS.COMPANIES, 'csv');
       const fallbackResponse = await fetch(fallbackUrl);
       if (!fallbackResponse.ok) {
@@ -183,7 +182,6 @@ export async function fetchCompanies(): Promise<Company[]> {
             active: parseInt(activeValue || '1'),
           };
         } catch (error) {
-          console.error('Error parsing company data', error);
           return null;
         }
       })
@@ -194,7 +192,6 @@ export async function fetchCompanies(): Promise<Company[]> {
     
     return companies;
   } catch (error) {
-    console.error('Error fetching companies data', error);
     throw error;
   }
 }

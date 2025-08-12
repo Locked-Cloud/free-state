@@ -37,7 +37,6 @@ export function getFromCache<T>(key: string): T | null {
 
     return cacheItem.data;
   } catch (error) {
-    console.error('Cache retrieval error:', error);
     return null;
   }
 }
@@ -58,7 +57,6 @@ export function saveToCache<T>(key: string, data: T, duration: number): void {
 
     localStorage.setItem(`cache_${key}`, JSON.stringify(cacheItem));
   } catch (error) {
-    console.error('Cache save error:', error);
     // If storage is full, clear older caches
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {
       clearOldestCache();
@@ -71,7 +69,6 @@ export function saveToCache<T>(key: string, data: T, duration: number): void {
         };
         localStorage.setItem(`cache_${key}`, JSON.stringify(cacheItem));
       } catch (retryError) {
-        console.error('Cache retry failed:', retryError);
       }
     }
   }
@@ -111,7 +108,6 @@ export function clearExpiredCache(): void {
           }
         }
       } catch (error) {
-        console.error('Error checking cache expiry:', error);
         cacheKeys.push(key); // Remove invalid cache items
       }
     }
@@ -140,7 +136,6 @@ function clearOldestCache(): void {
           }
         }
       } catch (error) {
-        console.error('Error finding oldest cache:', error);
       }
     }
   }

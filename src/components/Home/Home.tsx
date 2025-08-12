@@ -104,7 +104,6 @@ const Home: React.FC = () => {
           clearTimeout(fetchTimeoutRef.current);
         }
 
-        console.log(`Fetch attempt ${attempt + 1}/${maxRetries + 1}`);
         
         // Check if we're online
         if (!navigator.onLine) {
@@ -127,7 +126,6 @@ const Home: React.FC = () => {
           fetchTimeoutRef.current = null;
         }
 
-        console.log(`Successfully fetched ${companiesData?.length || 0} companies`);
         
         if (!Array.isArray(companiesData)) {
           throw new Error("Invalid data format received from server");
@@ -140,7 +138,6 @@ const Home: React.FC = () => {
         return; // Success, exit retry loop
         
       } catch (err) {
-        console.error(`Fetch attempt ${attempt + 1} failed:`, err);
         
         // Clear timeout on error
         if (fetchTimeoutRef.current) {
@@ -166,7 +163,6 @@ const Home: React.FC = () => {
         
         // Wait before retrying (exponential backoff)
         const waitTime = delay * Math.pow(2, attempt);
-        console.log(`Waiting ${waitTime}ms before retry...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
@@ -197,7 +193,6 @@ const Home: React.FC = () => {
   // Retry when coming back online
   useEffect(() => {
     if (isOnline && error && companies.length === 0) {
-      console.log("Back online, retrying fetch...");
       fetchDataWithRetry();
     }
   }, [isOnline]);
@@ -399,26 +394,11 @@ const Home: React.FC = () => {
           </h2>
           <div className={styles.controls}>
             <div className={styles.searchBox}>
-              <input
-                ref={mainSearchInputRef}
-                type="text"
-                placeholder="Search companies..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={styles.searchInput}
-              />
-              <Search size={18} className={styles.searchIcon} />
+              
+              
             </div>
             <div className={styles.sortSelectContainer}>
-              <Filter size={16} className={styles.filterIcon} />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "name" | "none")}
-                className={styles.sortSelect}
-              >
-                <option value="none">Sort by...</option>
-                <option value="name">Company Name</option>
-              </select>
+              
             </div>
           </div>
         </div>

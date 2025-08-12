@@ -36,7 +36,6 @@ const Places: React.FC = () => {
             throw new Error(`Backend responded with status: ${backendResponse.status}`);
           }
         } catch (backendError) {
-          console.warn("Backend fetch for places failed, falling back to direct Google Sheets fetch", backendError);
           const fallbackUrl = getSheetUrl(SHEET_GIDS.PLACES, 'csv');
           const fallbackResponse = await fetch(fallbackUrl);
           if (!fallbackResponse.ok) {
@@ -124,15 +123,14 @@ const Places: React.FC = () => {
                 loadingDelay={index * 150}
                 loadingClassName={styles.imageLoading}
               />
-            </div>
-            <div className={styles.contentContainer}>
-              <div className={styles.placeHeader}>
-                <h2>{place.name}</h2>
+              <div className={styles.overlay}>
+                <h2 className={styles.overlayTitle}>{place.name}</h2>
+                {place.description && (
+                  <p className={styles.overlayDesc}>{place.description}</p>
+                )}
               </div>
-              {place.description && (
-                <p className={styles.description}>{place.description}</p>
-              )}
             </div>
+
           </div>
         ))}
       </div>
