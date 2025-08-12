@@ -7,12 +7,18 @@ import { getFromCache, saveToCache, CACHE_DURATIONS } from './cacheUtils';
 // Constants
 export const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 export const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://api.allorigins.win/raw?url=";
-// Optional backend base URL (e.g., https://my-real-backend.pages.dev/api)
-export const API_URL = (process.env.REACT_APP_API_URL || "").replace(/\/+\$/, ""); // trim trailing slashes
+// Fallback proxy list (first item is preferred, others are backups)
+export const PROXY_LIST = Array.from(new Set([
+  "https://api.allorigins.win/raw?url=",
+  "https://thingproxy.freeboard.io/fetch/",
+  "https://cors-anywhere.herokuapp.com/",
+])).filter(Boolean);
+// Optional backend base URL - set to empty to disable backend API calls
+export const API_URL = ""; // Disabled since my-real-backend.pages.dev is not accessible
 
-// Sheet GIDs
+// Sheet GIDs - Updated with correct GID for companies
 export const SHEET_GIDS = {
-  COMPANIES: "0",
+  COMPANIES: "1065798889", // Updated to correct GID
   PROJECTS: "1884577336",
   USERS: "1815551767",
   PLACES: "658730705",
@@ -32,19 +38,23 @@ const ERROR_MESSAGES = {
  * Get the URL for a Google Sheet
  * @param gid The sheet GID
  * @param format The export format (default: csv)
+ * @param proxy The proxy to use
  * @returns The sheet URL
  */
-export function getSheetUrl(gid: string, format: 'csv' | 'tq' = 'csv'): string {
+export function getSheetUrl(gid: string, format: 'csv' | 'tq' = 'csv', proxy: string = CORS_PROXY): string {
   // Use a more reliable approach for accessing Google Sheets
   const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
   
-    // Choose encoding strategy based on proxy service
-  if (CORS_PROXY.includes("corsproxy.io")) {
-    // corsproxy.io expects the raw URL directly after the '?' without encoding
-    return `${CORS_PROXY}${baseUrl}`;
+  // Choose encoding strategy based on proxy service
+  if (proxy.includes("corsproxy.io")) {
+    // corsproxy.io expects a different format: https://corsproxy.io/?url=...
+    return `https://corsproxy.io/?${encodeURIComponent(baseUrl)}`;
+  } else if (proxy.includes("cors-anywhere.herokuapp.com")) {
+    // cors-anywhere expects direct URL append
+    return `${proxy}${baseUrl}`;
   }
-  // Default: encode URL for proxies like api.allorigins.win
-  return `${CORS_PROXY}${encodeURIComponent(baseUrl)}`;
+  // Default: encode URL for proxies like api.allorigins.win and thingproxy
+  return `${proxy}${encodeURIComponent(baseUrl)}`;
 }
 
 /**
@@ -119,120 +129,110 @@ export async function fetchSheetData(
     return { success: true, data: cachedData };
   }
 
+  // Map sheet type to GID
+  let gid: string;
+  switch (sheetType) {
+    case 'companies':
+      gid = SHEET_GIDS.COMPANIES;
+      break;
+    case 'projects':
+      gid = SHEET_GIDS.PROJECTS;
+      break;
+    case 'users':
+      gid = SHEET_GIDS.USERS;
+      break;
+    case 'places':
+      gid = SHEET_GIDS.PLACES;
+      break;
+    default:
+      return { success: false, error: 'Invalid sheet type' };
+  }
+
   // If not in cache, try server API first, then fall back to direct access if server is not available
   let retries = 0;
   let lastError: Error | null = null;
 
   while (retries < maxRetries) {
     try {
-      // First try the server API endpoint
-      let url = API_URL
-        ? `${API_URL}/sheets/${sheetType}?format=${format}`
-        : `/api/sheets/${sheetType}?format=${format}`;
-      let controller = new AbortController();
-      let timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for server API
-      let useDirectAccess = false;
+      let csvData = "";
+      let dataFetched = false;
 
-      try {
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const csvText = await response.text();
-          
-          // Validate the response
-          if (!csvText || csvText.trim() === "") {
-            throw new Error(ERROR_MESSAGES.EMPTY);
-          }
-
-          if (csvText.includes("<!DOCTYPE html")) {
-            throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
-          }
-
-          if (csvText.includes("400. That's an error")) {
-            throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
-          }
-
-          // Cache the successful result
-          saveToCache(cacheKey, csvText, cacheDuration);
-          return { success: true, data: csvText };
-        } else {
-          // If server returns an error, try direct access
-          useDirectAccess = true;
-        }
-      } catch (error) {
-        clearTimeout(timeoutId);
-        // If server is not available (ECONNREFUSED), try direct access
-        useDirectAccess = true;
-      }
-
-      // Fall back to direct Google Sheets access if server API failed
-      if (useDirectAccess) {
-        // Map sheet type to GID
-        let gid: string;
-        switch (sheetType) {
-          case 'companies':
-            gid = SHEET_GIDS.COMPANIES;
-            break;
-          case 'projects':
-            gid = SHEET_GIDS.PROJECTS;
-            break;
-          case 'users':
-            gid = SHEET_GIDS.USERS;
-            break;
-          case 'places':
-            gid = SHEET_GIDS.PLACES;
-            break;
-          default:
-            return { success: false, error: 'Invalid sheet type' };
-        }
-
-        url = getSheetUrl(gid, format);
-        controller = new AbortController();
-        timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for direct access
+      // First try the server API endpoint (only if API_URL is configured)
+      if (API_URL) {
+        const url = `${API_URL}/sheets/${sheetType}?format=${format}`;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for server API
 
         try {
           const response = await fetch(url, { signal: controller.signal });
           clearTimeout(timeoutId);
 
-          if (!response.ok) {
-            const errorMessage = response.status === 403
-              ? ERROR_MESSAGES.ACCESS_DENIED
-              : `${ERROR_MESSAGES.SERVER} (Status: ${response.status})`;
-            throw new Error(errorMessage);
+          if (response.ok) {
+            csvData = await response.text();
+            dataFetched = true;
+          } else {
+            console.warn(`Server API returned ${response.status}, falling back to direct access`);
           }
-
-          const csvText = await response.text();
-
-          // Validate the response
-          if (!csvText || csvText.trim() === "") {
-            throw new Error(ERROR_MESSAGES.EMPTY);
-          }
-
-          if (csvText.includes("<!DOCTYPE html")) {
-            throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
-          }
-
-          if (csvText.includes("400. That's an error")) {
-            throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
-          }
-
-          // Cache the successful result
-          saveToCache(cacheKey, csvText, cacheDuration);
-
-          return { success: true, data: csvText };
         } catch (error) {
           clearTimeout(timeoutId);
-          throw error;
+          // If server API fails, fall through to direct access
+          console.warn('Server API failed, falling back to direct access:', error);
         }
       }
+
+      // Fall back to direct Google Sheets access if server API didn't work
+      if (!dataFetched) {
+        let success = false;
+        
+        // Try each proxy until one works
+        for (const proxy of PROXY_LIST) {
+          const url = getSheetUrl(gid, format, proxy);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          
+          try {
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+              continue; // try next proxy
+            }
+            
+            csvData = await response.text();
+            success = true;
+            break;
+          } catch (error) {
+            clearTimeout(timeoutId);
+            // Continue to next proxy
+            continue;
+          }
+        }
+        
+        if (!success) {
+          throw new Error(ERROR_MESSAGES.NETWORK);
+        }
+      }
+
+      // Validate the response
+      if (!csvData || csvData.trim() === "") {
+        throw new Error(ERROR_MESSAGES.EMPTY);
+      }
+      
+      if (csvData.includes("<!DOCTYPE html") || csvData.includes("400. That's an error")) {
+        throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
+      }
+
+      // Cache and return successful result
+      saveToCache(cacheKey, csvData, cacheDuration);
+      return { success: true, data: csvData };
+
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       retries++;
 
       // Add exponential backoff between retries
       if (retries < maxRetries) {
-        // eslint-disable-next-line no-loop-func
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries - 1)));
       }
     }
