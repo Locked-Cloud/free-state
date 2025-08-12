@@ -4,19 +4,14 @@ import styles from "./Product.module.css";
 import useTitle from "../../hooks/useTitle";
 import OutOfStock from "../OutOfStock/OutOfStock";
 import OptimizedImage from "../common/OptimizedImage";
+import { getDirectImageUrl } from "../../utils/imageUtils";
 
-// Google Sheet constants
-const SHEET_ID = "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-// Use a more reliable CORS proxy
-const CORS_PROXY = "https://corsproxy.io/?";
-const COMPANIES_SHEET_URL =
-  process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`
-    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-const PLACES_SHEET_URL =
-  process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`
-    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`;
+// Backend API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+
+// Endpoints for sheet data
+const COMPANIES_ENDPOINT = `${API_BASE_URL}/api/sheets/companies`;
+const PROJECTS_ENDPOINT = `${API_BASE_URL}/api/sheets/projects`; 
 
 // Remove the inline OutOfStock component since we now have a standalone one
 
@@ -36,37 +31,6 @@ interface Project {
   image: string;
   features: string[];
 }
-
-const getDirectImageUrl = (url: string): string => {
-  if (!url) return "https://placehold.co/800x600?text=Image+Not+Found";
-
-  try {
-    if (url.includes("drive.google.com")) {
-      let fileId = "";
-
-      if (url.includes("/file/d/")) {
-        fileId = url.split("/file/d/")[1].split("/")[0];
-      } else if (url.includes("id=")) {
-        fileId = url.split("id=")[1].split("&")[0];
-      }
-
-      if (fileId) {
-        // Add a small random delay to stagger requests and add cache parameter
-        const cacheBuster = Date.now() % 1000;
-        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
-      }
-    }
-
-    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-      return url;
-    }
-  } catch (error) {
-    // Replace detailed error logging with generic message
-    console.error("Image processing error");
-  }
-
-  return "https://placehold.co/800x600?text=Image+Not+Found";
-};
 
 const parseCSV = (text: string): string[][] => {
   const rows: string[][] = [];
@@ -139,7 +103,7 @@ const Product: React.FC = () => {
         setError(null);
 
         // Fetch company data
-        const companyResponse = await fetch(COMPANIES_SHEET_URL);
+        const companyResponse = await fetch(COMPANIES_ENDPOINT);
         const companyText = await companyResponse.text();
         const companyRows = companyText.split("\n");
 
@@ -202,7 +166,7 @@ const Product: React.FC = () => {
         // Only fetch projects if company is active
         if (company.active === 1) {
           // Fetch projects data
-          const projectsResponse = await fetch(PLACES_SHEET_URL);
+          const projectsResponse = await fetch(PROJECTS_ENDPOINT);
           if (!projectsResponse.ok) {
             throw new Error(`HTTP error! status: ${projectsResponse.status}`);
           }

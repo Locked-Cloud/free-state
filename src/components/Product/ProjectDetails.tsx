@@ -6,6 +6,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import styles from "./ProjectDetails.module.css"
 import useTitle from "../../hooks/useTitle"
 import OptimizedImage from "../common/OptimizedImage"
+import { getDirectImageUrl } from "../../utils/imageUtils"
 
 // Google Sheet constants
 const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM"
@@ -50,36 +51,6 @@ interface ProjectDetail {
     hasRange: boolean
     formattedMin: string
     formattedMax: string
-  }
-}
-
-// Enhanced image URL processing
-const getDirectImageUrl = (url: string): string => {
-  if (!url || url.trim() === "") {
-    return ""
-  }
-
-  try {
-    const cleanUrl = url.replace(/[""]/g, "").trim()
-
-    if (cleanUrl.includes("drive.google.com")) {
-      let fileId = ""
-      if (cleanUrl.includes("/file/d/")) {
-        fileId = cleanUrl.split("/file/d/")[1].split("/")[0]
-      } else if (cleanUrl.includes("id=")) {
-        fileId = cleanUrl.split("id=")[1].split("&")[0]
-      }
-
-      if (fileId) {
-        const cacheBuster = Date.now() % 1000
-        // lh3.googleusercontent.com doesn't need a CORS proxy
-        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`
-      }
-    }
-
-    return cleanUrl
-  } catch (error) {
-    return ""
   }
 }
 

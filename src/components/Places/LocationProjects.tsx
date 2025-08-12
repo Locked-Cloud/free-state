@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import styles from "./Places.module.css";
 import OptimizedImage from "../common/OptimizedImage";
+import { getDirectImageUrl } from "../../utils/imageUtils";
 
 interface Project {
   id: string;
@@ -29,66 +30,6 @@ const PROJECTS_SHEET_URL = getProjectsSheetURL(DATA_SHEET_GID);
 const ALTERNATIVE_GIDS = ["0", "1977229403", "658730705", "123456789"];
 
 const PUBLIC_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing`;
-
-const getDirectImageUrl = (url: string): string => {
-  if (!url || url.trim() === "") {
-    return "https://placehold.co/800x600?text=No+Image";
-  }
-
-  try {
-    const cleanUrl = url.trim();
-
-    if (cleanUrl.includes("drive.google.com")) {
-      let fileId = "";
-
-      if (cleanUrl.includes("/file/d/")) {
-        const match = cleanUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      } else if (cleanUrl.includes("id=")) {
-        const match = cleanUrl.match(/id=([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      } else if (cleanUrl.includes("/d/")) {
-        const match = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      }
-
-      if (fileId) {
-        // Use CORS proxy for Google Drive URLs
-        const driveUrls = [
-          `${CORS_PROXY}https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600`,
-          `${CORS_PROXY}https://drive.google.com/uc?id=${fileId}&export=view`,
-          `https://lh3.googleusercontent.com/d/${fileId}=w800-h600`,
-          `${CORS_PROXY}https://drive.google.com/uc?export=view&id=${fileId}`,
-        ];
-
-        return driveUrls[0];
-      }
-    }
-
-    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl)) {
-      return cleanUrl;
-    }
-
-    if (
-      cleanUrl.includes("imgur.com") ||
-      cleanUrl.includes("cloudinary.com") ||
-      cleanUrl.includes("amazonaws.com") ||
-      cleanUrl.includes("unsplash.com") ||
-      cleanUrl.includes("picsum.photos") ||
-      cleanUrl.includes("via.placeholder.com")
-    ) {
-      return cleanUrl;
-    }
-
-    if (cleanUrl.startsWith("http")) {
-      return cleanUrl;
-    }
-  } catch (error) {
-    // Error processing image URL
-  }
-
-  return "https://placehold.co/800x600?text=Invalid+URL";
-};
 
 const parseCSV = (text: string): string[][] => {
   const rows: string[][] = [];

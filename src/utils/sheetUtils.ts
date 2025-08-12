@@ -3,6 +3,7 @@
  */
 
 import { getFromCache, saveToCache, CACHE_DURATIONS } from './cacheUtils';
+import { getDirectImageUrl } from './imageUtils';
 
 // Define the Company interface
 export interface Company {
@@ -119,7 +120,7 @@ export function parseCSV(text: string): string[][] {
  * @returns Promise with array of Company objects
  */
 export async function fetchCompanies(): Promise<Company[]> {
-  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "https://my-real-backend.pages.dev/api";
   const cacheKey = 'companies_data';
   
   // Try to get from cache first
@@ -307,7 +308,7 @@ export function findColumnIndex(headerRow: string[], columnNames: string[]): num
  * @param url The original image URL
  * @returns A direct image URL
  */
-export function getDirectImageUrl(url: string): string {
+function getDirectImageUrlDeprecated(url: string): string {
   if (!url || url.trim() === "") {
     return "https://placehold.co/800x600?text=No+Image";
   }

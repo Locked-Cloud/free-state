@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Places.module.css";
 import OptimizedImage from "../common/OptimizedImage";
+import { getDirectImageUrl } from "../../utils/imageUtils";
 
 interface Place {
   id: string;
@@ -10,36 +11,11 @@ interface Place {
   image: string;
 }
 
-const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
-const PLACES_SHEET_URL =
-  process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=658730705`
-    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=658730705`;
+// Backend API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
-const getDirectImageUrl = (url: string): string => {
-  if (!url) return "https://placehold.co/800x600?text=Image+Not+Found";
-  try {
-    if (url.includes("drive.google.com")) {
-      let fileId = "";
-      if (url.includes("/file/d/")) {
-        fileId = url.split("/file/d/")[1].split("/")[0];
-      } else if (url.includes("id=")) {
-        fileId = url.split("id=")[1].split("&")[0];
-      }
-      if (fileId) {
-        const cacheBuster = Date.now() % 1000;
-        return `https://lh3.googleusercontent.com/d/${fileId}?cache=${cacheBuster}`;
-      }
-    }
-    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-      return url;
-    }
-  } catch (error) {
-    // Ignore
-  }
-  return "https://placehold.co/800x600?text=Image+Not+Found";
-};
+// Endpoint for places sheet data
+const PLACES_ENDPOINT = `${API_BASE_URL}/api/sheets/places`;
 
 const Places: React.FC = () => {
   const navigate = useNavigate();
@@ -50,7 +26,7 @@ const Places: React.FC = () => {
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
-        const response = await fetch(PLACES_SHEET_URL);
+        const response = await fetch(PLACES_ENDPOINT);
         const csvText = await response.text();
         const rows = csvText.split("\n");
         const header = rows[0]
