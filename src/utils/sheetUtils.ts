@@ -130,14 +130,24 @@ export async function fetchCompanies(): Promise<Company[]> {
   }
   
   try {
-    // Fetch from server API
-    const response = await fetch(`${API_BASE_URL}/api/sheets/companies`);
-    
-    if (!response.ok) {
-      throw new Error(`Server responded with status: ${response.status}`);
+    // Attempt to fetch from backend API first
+    let csvText = "";
+    try {
+      const backendResponse = await fetch(`${API_BASE_URL}/api/sheets/companies`);
+      if (backendResponse.ok) {
+        csvText = await backendResponse.text();
+      } else {
+        throw new Error(`Backend responded with status: ${backendResponse.status}`);
+      }
+    } catch (backendError) {
+      console.warn("Backend fetch failed, falling back to direct Google Sheets fetch", backendError);
+      const fallbackUrl = getSheetUrl(SHEET_GIDS.COMPANIES, 'csv');
+      const fallbackResponse = await fetch(fallbackUrl);
+      if (!fallbackResponse.ok) {
+        throw new Error(`Fallback Google Sheets responded with status: ${fallbackResponse.status}`);
+      }
+      csvText = await fallbackResponse.text();
     }
-    
-    const csvText = await response.text();
     
     // Parse CSV data
     const rows = parseCSV(csvText);
