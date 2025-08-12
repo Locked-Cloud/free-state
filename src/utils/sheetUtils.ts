@@ -4,6 +4,16 @@
 
 import { getFromCache, saveToCache, CACHE_DURATIONS } from './cacheUtils';
 
+// Define the Company interface
+export interface Company {
+  id: number;
+  name: string;
+  description: string;
+  website: string;
+  imageUrl: string;
+  active: number; // 1 for active, 0 for inactive
+}
+
 // Constants
 export const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
 export const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
@@ -104,6 +114,80 @@ export function parseCSV(text: string): string[][] {
  * @param maxRetries Maximum number of retry attempts
  * @returns Object with success flag, data (if successful), and error message (if failed)
  */
+/**
+ * Fetch companies data from the server API
+ * @returns Promise with array of Company objects
+ */
+export async function fetchCompanies(): Promise<Company[]> {
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+  const cacheKey = 'companies_data';
+  
+  // Try to get from cache first
+  const cachedData = getFromCache<Company[]>(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+  
+  try {
+    // Fetch from server API
+    const response = await fetch(`${API_BASE_URL}/api/sheets/companies`);
+    
+    if (!response.ok) {
+      throw new Error(`Server responded with status: ${response.status}`);
+    }
+    
+    const csvText = await response.text();
+    
+    // Parse CSV data
+    const rows = parseCSV(csvText);
+    
+    if (rows.length < 2) {
+      throw new Error('Invalid data format');
+    }
+    
+    // Get header row and find column indices
+    const headerRow = rows[0].map(col => col.toLowerCase().trim());
+    const activeColumnIndex = findColumnIndex(headerRow, ['active', 'status']);
+    
+    // Parse companies data
+    const companies = rows.slice(1)
+      .map(columns => {
+        if (columns.length < 5) return null;
+        
+        try {
+          const imageUrl = getDirectImageUrl(columns[4]);
+          
+          // Get active status
+          let activeValue = '1'; // Default to active
+          if (activeColumnIndex !== -1 && columns[activeColumnIndex]) {
+            activeValue = columns[activeColumnIndex];
+          }
+          
+          return {
+            id: parseInt(columns[0], 10),
+            name: columns[1],
+            description: columns[2] || '',
+            website: columns[3] || '',
+            imageUrl,
+            active: parseInt(activeValue || '1'),
+          };
+        } catch (error) {
+          console.error('Error parsing company data', error);
+          return null;
+        }
+      })
+      .filter((company): company is Company => company !== null);
+    
+    // Cache the results
+    saveToCache(cacheKey, companies, CACHE_DURATIONS.MEDIUM);
+    
+    return companies;
+  } catch (error) {
+    console.error('Error fetching companies data', error);
+    throw error;
+  }
+}
+
 export async function fetchSheetData(
   sheetType: 'companies' | 'projects' | 'users' | 'places',
   cacheDuration = CACHE_DURATIONS.MEDIUM,
@@ -246,15 +330,16 @@ export function getDirectImageUrl(url: string): string {
       }
 
       if (fileId) {
-        // Add cache buster to prevent caching issues
-        const cacheBuster = Date.now() % 1000;
-        // Use CORS proxy for Google Drive URLs
-        return `${CORS_PROXY}https://drive.google.com/thumbnail?id=${fileId}&sz=w800-h600&cb=${cacheBuster}`;
+        // Use the server API to proxy Google Drive images
+        const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+        return `${API_BASE_URL}/api/image?fileId=${fileId}`;
       }
     }
 
     if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl)) {
-      return cleanUrl;
+      // Use the server API to proxy image URLs
+      const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+      return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(cleanUrl)}`;
     }
 
     if (
@@ -265,7 +350,9 @@ export function getDirectImageUrl(url: string): string {
       cleanUrl.includes("picsum.photos") ||
       cleanUrl.includes("via.placeholder.com")
     ) {
-      return cleanUrl;
+      // Use the server API to proxy image URLs
+      const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+      return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(cleanUrl)}`;
     }
 
     if (cleanUrl.startsWith("http")) {
