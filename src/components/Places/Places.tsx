@@ -30,11 +30,12 @@ const Places: React.FC = () => {
         let csvText = "";
         try {
           // Use backend API whenever available, otherwise fall back to direct Google Sheets
-          const shouldUseBackend = Boolean(API_BASE_URL);
-          
-          if (!shouldUseBackend) {
-            throw new Error('Backend API URL not configured');
-          }
+          const isPagesDev = window.location.hostname.endsWith('pages.dev');
+           const shouldUseBackend = Boolean(API_BASE_URL) && !isPagesDev;
+           
+           if (!shouldUseBackend) {
+             throw new Error('Skip backend fetch in pages.dev or backend URL not configured');
+           }
           
           const backendResponse = await fetch(PLACES_ENDPOINT);
           if (backendResponse.ok) {

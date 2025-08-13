@@ -107,9 +107,10 @@ const Product: React.FC = () => {
         // Fetch company data with fallback to Google Sheets if backend is unavailable
         let companyText = "";
         try {
-          const shouldUseBackend = Boolean(API_URL);
-          if (!shouldUseBackend) {
-            throw new Error("Backend API URL not configured");
+          const isPagesDev = typeof window !== 'undefined' && window.location.hostname.endsWith('pages.dev');
+           const shouldUseBackend = Boolean(API_URL) && !isPagesDev;
+           if (!shouldUseBackend) {
+             throw new Error("Skip backend fetch in pages.dev or backend URL not configured");
           }
           const companyResponse = await fetch(COMPANIES_ENDPOINT);
           if (!companyResponse.ok) throw new Error("Backend companies 404");
@@ -183,9 +184,10 @@ const Product: React.FC = () => {
           // Fetch projects data with fallback
           let csvText = "";
           try {
-            const shouldUseBackend = Boolean(API_URL);
-            if (!shouldUseBackend) {
-              throw new Error("Backend API URL not configured");
+            const isPagesDev = typeof window !== 'undefined' && window.location.hostname.endsWith('pages.dev');
+             const shouldUseBackend = Boolean(API_URL) && !isPagesDev;
+             if (!shouldUseBackend) {
+               throw new Error("Skip backend fetch in pages.dev or backend URL not configured");
             }
             const projectsResponse = await fetch(PROJECTS_ENDPOINT);
             if (!projectsResponse.ok) throw new Error("Backend projects 404");
