@@ -270,7 +270,7 @@
 .imageLoading {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, var(--background-alt) 25%, #e2e8f0 37%, var(--background-alt) 63%);
+  background: linear-gradient(90deg, var(--background-alt) 25%, var(--border) 37%, var(--background-alt) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -310,8 +310,8 @@
 
 /* Error State */
 .error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--background-alt);
+  border: 1px solid var(--border);
   color: var(--accent-red);
   text-align: center;
   margin: 2rem 0;

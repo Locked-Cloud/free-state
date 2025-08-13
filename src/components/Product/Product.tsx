@@ -107,6 +107,10 @@ const Product: React.FC = () => {
         // Fetch company data with fallback to Google Sheets if backend is unavailable
         let companyText = "";
         try {
+          const shouldUseBackend = API_URL.includes("localhost") || API_URL.includes("127.0.0.1") || process.env.REACT_APP_API_URL;
+          if (!shouldUseBackend) {
+            throw new Error("Skip backend fetch");
+          }
           const companyResponse = await fetch(COMPANIES_ENDPOINT);
           if (!companyResponse.ok) throw new Error("Backend companies 404");
           companyText = await companyResponse.text();
@@ -179,6 +183,10 @@ const Product: React.FC = () => {
           // Fetch projects data with fallback
           let csvText = "";
           try {
+            const shouldUseBackend = API_URL.includes("localhost") || API_URL.includes("127.0.0.1") || process.env.REACT_APP_API_URL;
+            if (!shouldUseBackend) {
+              throw new Error("Skip backend fetch");
+            }
             const projectsResponse = await fetch(PROJECTS_ENDPOINT);
             if (!projectsResponse.ok) throw new Error("Backend projects 404");
             csvText = await projectsResponse.text();

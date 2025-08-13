@@ -133,6 +133,11 @@ export async function fetchCompanies(): Promise<Company[]> {
     // Attempt to fetch from backend API first
     let csvText = "";
     try {
+      // Only use backend API in local or explicitly configured environments
+      const shouldUseBackend = API_BASE_URL && (API_BASE_URL.includes("localhost") || API_BASE_URL.includes("127.0.0.1") || process.env.REACT_APP_API_URL);
+      if (!shouldUseBackend) {
+        throw new Error("Skip backend fetch in production");
+      }
       const backendResponse = await fetch(`${API_BASE_URL}/api/sheets/companies`);
       if (backendResponse.ok) {
         csvText = await backendResponse.text();
