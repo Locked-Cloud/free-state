@@ -107,12 +107,9 @@ const Product: React.FC = () => {
         // Fetch company data with fallback to Google Sheets if backend is unavailable
         let companyText = "";
         try {
-          // Check if we're in production at pages.dev domain
-          const isPagesDev = typeof window !== 'undefined' && window.location.hostname.includes('pages.dev');
-          
-          const shouldUseBackend = API_URL.includes("localhost") || API_URL.includes("127.0.0.1") || process.env.REACT_APP_API_URL;
-          if (!shouldUseBackend || isPagesDev) {
-            throw new Error("Skip backend fetch in production or pages.dev environment");
+          const shouldUseBackend = Boolean(API_URL);
+          if (!shouldUseBackend) {
+            throw new Error("Backend API URL not configured");
           }
           const companyResponse = await fetch(COMPANIES_ENDPOINT);
           if (!companyResponse.ok) throw new Error("Backend companies 404");
@@ -186,12 +183,9 @@ const Product: React.FC = () => {
           // Fetch projects data with fallback
           let csvText = "";
           try {
-            // Check if we're in production at pages.dev domain
-            const isPagesDev = typeof window !== 'undefined' && window.location.hostname.includes('pages.dev');
-            
-            const shouldUseBackend = API_URL.includes("localhost") || API_URL.includes("127.0.0.1") || process.env.REACT_APP_API_URL;
-            if (!shouldUseBackend || isPagesDev) {
-              throw new Error("Skip backend fetch in production or pages.dev environment");
+            const shouldUseBackend = Boolean(API_URL);
+            if (!shouldUseBackend) {
+              throw new Error("Backend API URL not configured");
             }
             const projectsResponse = await fetch(PROJECTS_ENDPOINT);
             if (!projectsResponse.ok) throw new Error("Backend projects 404");

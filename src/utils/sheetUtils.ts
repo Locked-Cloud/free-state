@@ -134,14 +134,8 @@ export async function fetchCompanies(): Promise<Company[]> {
     let csvText = "";
     try {
       // Check if we're in production at pages.dev domain
-      const isPagesDev = typeof window !== 'undefined' && window.location.hostname.includes('pages.dev');
-      
-      // Only use backend API in local or explicitly configured environments
-      const shouldUseBackend = API_BASE_URL && 
-        (API_BASE_URL.includes("localhost") || 
-         API_BASE_URL.includes("127.0.0.1") || 
-         process.env.REACT_APP_API_URL) && 
-        !isPagesDev;
+      // Use backend API whenever a base URL is provided via environment variables
+      const shouldUseBackend = Boolean(API_BASE_URL);
       
       if (!shouldUseBackend) {
         throw new Error("Skip backend fetch in production or pages.dev environment");
@@ -243,8 +237,21 @@ export async function fetchSheetData(
     return { success: true, data: cachedData };
   }
   
-  // Check if we're in production at pages.dev domain and skip API call
-  const isPagesDev = typeof window !== 'undefined' && window.location.hostname.includes('pages.dev');
+  // Attempt to fetch from backend API first if available
+  const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
+  if (API_BASE_URL) {
+    try {
+      const backendResponse = await fetch(`${API_BASE_URL}/api/sheets/${sheetType}?format=${format}`);
+      if (backendResponse.ok) {
+        const csvText = await backendResponse.text();
+        // Cache and return immediately on success
+        saveToCache(cacheKey, csvText, cacheDuration);
+        return { success: true, data: csvText };
+      }
+    } catch (_) {
+      // Silent failover to direct sheet fetch below
+    }
+  }
 
   // If not in cache, fetch from API
   let retries = 0;

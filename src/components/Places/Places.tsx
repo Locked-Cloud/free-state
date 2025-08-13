@@ -29,12 +29,11 @@ const Places: React.FC = () => {
       try {
         let csvText = "";
         try {
-          // Check if we're in production at pages.dev domain
-          const isPagesDev = window.location.hostname.includes('pages.dev');
+          // Use backend API whenever available, otherwise fall back to direct Google Sheets
+          const shouldUseBackend = Boolean(API_BASE_URL);
           
-          // If we're in pages.dev, skip the API call and go straight to fallback
-          if (isPagesDev) {
-            throw new Error('Skip API call in pages.dev environment');
+          if (!shouldUseBackend) {
+            throw new Error('Backend API URL not configured');
           }
           
           const backendResponse = await fetch(PLACES_ENDPOINT);
