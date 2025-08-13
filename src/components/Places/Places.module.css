@@ -50,6 +50,11 @@
   background: var(--background);
 }
 
+body.dark-mode .container {
+  background: var(--dark-background);
+  color: var(--dark-text-primary);
+}
+
 /* Professional Typography */
 .title {
   font-size: clamp(2rem, 3vw + 0.5rem, 3.5rem);
@@ -59,6 +64,10 @@
   text-align: center;
   letter-spacing: -0.025em;
   line-height: 1.1;
+}
+
+body.dark-mode .title {
+  color: var(--dark-text-primary);
 }
 
 /* Property Grid */
@@ -82,6 +91,12 @@
   position: relative;
 }
 
+body.dark-mode .placeCard {
+  background: var(--dark-surface-color);
+  border-color: var(--dark-border-color);
+  box-shadow: var(--dark-shadow-sm);
+}
+
 .placeCard::before {
   content: "";
   position: absolute;
@@ -98,6 +113,11 @@
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
   border-color: var(--border-focus);
+}
+
+body.dark-mode .placeCard:hover {
+  box-shadow: var(--dark-shadow-xl);
+  border-color: var(--primary-light);
 }
 
 .placeCard:hover::before {

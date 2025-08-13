@@ -22,10 +22,21 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+:global(body.dark-mode) .backButton {
+  background-color: #2d2d2d;
+  color: #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .backButton:hover {
   background-color: #e9ecef;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+:global(body.dark-mode) .backButton:hover {
+  background-color: #3d3d3d;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .tabs {
@@ -39,6 +50,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+:global(body.dark-mode) .tabs {
+  background: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 .tab {
   padding: 0.75rem 1.5rem;
   background: transparent;
@@ -50,6 +66,10 @@
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+}
+
+:global(body.dark-mode) .tab {
+  color: #b0b0b0;
 }
 
 .tab::before {
@@ -68,13 +88,23 @@
   width: 80%;
 }
 
-.tab.active {
+/* Active tab standalone class to support React class assignment */
+.active {
   color: #228be6;
   background-color: rgba(233, 245, 255, 0.5);
 }
 
+:global(body.dark-mode) .active {
+  color: #60a5fa;
+  background-color: rgba(30, 64, 175, 0.3);
+}
+
 .tab.active::before {
   width: 80%;
+}
+
+:global(body.dark-mode) .tab.active::before {
+  background-color: #60a5fa;
 }
 
 .fadeIn {
@@ -101,6 +131,11 @@
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
+}
+
+:global(body.dark-mode) .companyDetails {
+  background: #1e1e1e;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .imageSection {
@@ -139,6 +174,10 @@
   padding-bottom: 0.5rem;
 }
 
+:global(body.dark-mode) .companyName {
+  color: #e0e0e0;
+}
+
 .companyName::after {
   content: "";
   position: absolute;
@@ -155,6 +194,10 @@
   line-height: 1.7;
   margin-bottom: 2rem;
   flex-grow: 1;
+}
+
+:global(body.dark-mode) .description {
+  color: #b0b0b0;
 }
 
 .actions {
@@ -197,6 +240,10 @@
   padding-bottom: 0.5rem;
 }
 
+:global(body.dark-mode) .projectsSection h2 {
+  color: #e0e0e0;
+}
+
 .projectsSection h2::after {
   content: "";
   position: absolute;
@@ -227,6 +274,11 @@
   position: relative;
 }
 
+:global(body.dark-mode) .projectCard {
+  background: #1e1e1e;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
 .projectCard::before {
   content: "";
   position: absolute;
@@ -247,6 +299,10 @@
 .projectCard:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+:global(body.dark-mode) .projectCard:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
 }
 
 .projectCard:hover::before {
@@ -343,17 +399,38 @@
   transform: translateY(-2px);
 }
 
+:global(body.dark-mode) .viewButton {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+:global(body.dark-mode) .viewButton:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 .noProjects {
   text-align: center;
   padding: 3rem;
   background: white;
+}
+
+:global(body.dark-mode) .noProjects {
+  background: #1e1e1e;
   border-radius: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+:global(body.dark-mode) .noProjects {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .noProjects p {
   color: #868e96;
   font-size: 1.1rem;
+}
+
+:global(body.dark-mode) .noProjects p {
+  color: #b0b0b0;
 }
 
 .error {
@@ -362,6 +439,11 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+:global(body.dark-mode) .error {
+  background: #1e1e1e;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .error p {
@@ -393,6 +475,11 @@
   margin-bottom: 2rem;
 }
 
+:global(body.dark-mode) .skeleton {
+  background: #1e1e1e;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
 .skeletonImage {
   width: 100%;
   height: 300px;
@@ -400,6 +487,10 @@
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
   border-radius: 8px;
+}
+
+:global(body.dark-mode) .skeletonImage {
+  background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
 }
 
 .skeletonContent {
@@ -416,6 +507,10 @@
   margin-bottom: 1rem;
 }
 
+:global(body.dark-mode) .skeletonTitle {
+  background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
+}
+
 .skeletonText {
   width: 100%;
   height: 20px;
@@ -426,6 +521,10 @@
   margin-bottom: 0.5rem;
 }
 
+:global(body.dark-mode) .skeletonText {
+  background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
+}
+
 .skeletonButton {
   width: 120px;
   height: 40px;
@@ -434,6 +533,10 @@
   animation: loading 1.5s infinite;
   border-radius: 8px;
   margin-top: 1rem;
+}
+
+:global(body.dark-mode) .skeletonButton {
+  background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
 }
 
 @keyframes loading {
@@ -493,6 +596,11 @@
   text-align: center;
 }
 
+:global(body.dark-mode) .outOfStockContainer {
+  background: #1e1e1e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .outOfStockContent {
   max-width: 800px;
   margin: 0 auto;
@@ -505,6 +613,10 @@
   position: relative;
   padding-bottom: 0.75rem;
   display: inline-block;
+}
+
+:global(body.dark-mode) .outOfStockTitle {
+  color: #e0e0e0;
 }
 
 .outOfStockTitle::after {
@@ -526,6 +638,11 @@
   border-radius: 12px;
   overflow: hidden;
   position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+:global(body.dark-mode) .outOfStockImageContainer {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .outOfStockImageContainer::after {
@@ -542,6 +659,12 @@
   border-radius: 4px;
   letter-spacing: 2px;
   z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+:global(body.dark-mode) .outOfStockImageContainer::after {
+  background-color: rgba(224, 49, 49, 0.9);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .outOfStockImage {
@@ -549,12 +672,21 @@
   height: 100%;
   object-fit: cover;
   filter: grayscale(80%);
+  transition: filter 0.3s ease;
+}
+
+:global(body.dark-mode) .outOfStockImage {
+  filter: grayscale(80%) brightness(0.8);
 }
 
 .outOfStockMessage {
   margin: 2rem 0;
   color: #495057;
   line-height: 1.7;
+}
+
+:global(body.dark-mode) .outOfStockMessage {
+  color: #b0b0b0;
 }
 
 .outOfStockMessage p {
@@ -579,6 +711,10 @@
   background: #228be6;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+:global(body.dark-mode) .returnHomeButton:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Add responsive styles for Out of Stock page */

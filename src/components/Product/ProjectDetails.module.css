@@ -23,6 +23,22 @@
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
   --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  
+  /* Dark mode variables */
+  --dark-primary-color: #3b82f6;
+  --dark-primary-dark: #2563eb;
+  --dark-secondary-color: #94a3b8;
+  --dark-accent-color: #f59e0b;
+  --dark-accent-dark: #d97706;
+  --dark-background-color: #0f172a;
+  --dark-surface-color: #1e293b;
+  --dark-text-primary: #f1f5f9;
+  --dark-text-secondary: #cbd5e1;
+  --dark-border-color: #334155;
+  --dark-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --dark-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --dark-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --dark-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
 }
 
 /* Base Container */
@@ -32,6 +48,11 @@
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.6;
   color: var(--text-primary);
+}
+
+:global(body.dark-mode) .container {
+  background: var(--dark-background-color);
+  color: var(--dark-text-primary);
 }
 
 /* Navigation */
@@ -57,12 +78,25 @@
   box-shadow: var(--shadow-sm);
 }
 
+:global(body.dark-mode) .backButton {
+  background: var(--dark-surface-color);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border-color);
+  box-shadow: var(--dark-shadow-sm);
+}
+
 .backButton:hover {
   background: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+:global(body.dark-mode) .backButton:hover {
+  background: var(--dark-primary-color);
+  border-color: var(--dark-primary-color);
+  box-shadow: var(--dark-shadow-md);
 }
 
 .backIcon {
@@ -87,6 +121,10 @@
   border-radius: 20px;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
+}
+
+:global(body.dark-mode) .heroImage {
+  box-shadow: var(--dark-shadow-xl);
 }
 
 .heroImg {
@@ -160,6 +198,10 @@
   box-shadow: var(--shadow-md);
 }
 
+:global(body.dark-mode) .premiumBadge {
+  box-shadow: var(--dark-shadow-md);
+}
+
 .sectionBadge {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
@@ -187,9 +229,18 @@
   white-space: nowrap;
 }
 
+:global(body.dark-mode) .shareButton {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .shareButton:hover {
   background: rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
+}
+
+:global(body.dark-mode) .shareButton:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .shareIcon {
@@ -206,11 +257,18 @@
   gap: 3rem;
 }
 
+:global(body.dark-mode) .mainContent {
+  color: var(--dark-text-primary);
+}
+
 /* Section Titles */
 .sectionTitle {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
+}
+
+:global(body.dark-mode) .sectionTitle {
+  color: var(--dark-text-primary);
   margin-bottom: 2rem;
   position: relative;
   padding-bottom: 1rem;
@@ -250,9 +308,20 @@
   box-shadow: var(--shadow-sm);
 }
 
+:global(body.dark-mode) .summaryCard {
+  background: var(--dark-surface-color);
+  border-color: var(--dark-border-color);
+  box-shadow: var(--dark-shadow-sm);
+}
+
 .summaryCard:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+:global(body.dark-mode) .summaryCard:hover {
+  box-shadow: var(--dark-shadow-lg);
   border-color: var(--primary-color);
 }
 
@@ -277,11 +346,19 @@
   letter-spacing: 0.05em;
 }
 
+:global(body.dark-mode) .summaryContent h3 {
+  color: var(--dark-text-secondary);
+}
+
 .summaryContent p {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+}
+
+:global(body.dark-mode) .summaryContent p {
+  color: var(--dark-text-primary);
 }
 
 /* Category Sections */
@@ -300,6 +377,11 @@
   border-radius: 0 8px 8px 0;
 }
 
+:global(body.dark-mode) .categoryTitle {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary-color);
+}
+
 /* Professional Tables */
 .tableContainer {
   background: var(--surface-color);
@@ -309,6 +391,13 @@
   border: 1px solid var(--border-color);
   margin-bottom: 1rem;
 }
+
+:global(body.dark-mode) .tableContainer {
+  background: var(--dark-surface-color);
+  box-shadow: var(--dark-shadow-md);
+  border-color: var(--dark-border-color);
+}
+
 
 .dataTable {
   width: 100%;
@@ -336,8 +425,16 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+:global(body.dark-mode) .dataTable tbody tr {
+  border-bottom: 1px solid var(--dark-border-color);
+}
+
 .dataTable tbody tr:hover {
   background: rgba(37, 99, 235, 0.02);
+}
+
+:global(body.dark-mode) .dataTable tbody tr:hover {
+  background: rgba(59, 130, 246, 0.05);
 }
 
 .dataTable tbody tr:last-child {
@@ -354,11 +451,21 @@
   vertical-align: top;
 }
 
+:global(body.dark-mode) .tableLabel {
+  color: var(--dark-text-primary);
+  background: rgba(59, 130, 246, 0.08);
+  border-right: 1px solid var(--dark-border-color);
+}
+
 .tableValue {
   padding: 1rem 1.5rem;
   color: var(--text-primary);
   line-height: 1.6;
   word-break: break-word;
+}
+
+:global(body.dark-mode) .tableValue {
+  color: var(--dark-text-primary);
 }
 
 .tableNumber {
@@ -368,6 +475,10 @@
   text-align: center;
   background: rgba(37, 99, 235, 0.05);
   width: 60px;
+}
+
+:global(body.dark-mode) .tableNumber {
+  background: rgba(59, 130, 246, 0.1);
 }
 
 /* Enhanced Cell Styles */
@@ -403,6 +514,10 @@
   font-size: 1.1rem;
 }
 
+:global(body.dark-mode) .priceValue {
+  color: var(--primary-color);
+}
+
 .priceHighlight {
   font-weight: 700;
   color: var(--success-color);
@@ -416,6 +531,10 @@
   font-weight: 500;
   color: var(--text-secondary);
   font-style: italic;
+}
+
+:global(body.dark-mode) .facilitySize {
+  color: var(--dark-text-secondary);
 }
 
 .linkValue {
@@ -446,6 +565,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+:global(body.dark-mode) .linkButton {
+  box-shadow: var(--dark-shadow-sm);
 }
 
 .linkButton:hover {
@@ -504,9 +627,18 @@
   gap: 0.5rem;
 }
 
+:global(body.dark-mode) .primaryButton {
+  background: var(--dark-surface-color);
+  box-shadow: var(--dark-shadow-md);
+}
+
 .primaryButton:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+:global(body.dark-mode) .primaryButton:hover {
+  box-shadow: var(--dark-shadow-lg);
 }
 
 .secondaryButton {
@@ -554,6 +686,11 @@
   box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
+}
+
+:global(body.dark-mode) .pdfContent {
+  background: var(--dark-surface-color);
+  box-shadow: var(--dark-shadow-xl);
 }
 
 .pdfHeader {
@@ -609,12 +746,21 @@
   justify-content: center;
   padding: 2rem;
   text-align: center;
+  background: var(--surface-color);
+}
+
+:global(body.dark-mode) .pdfError {
+  background: var(--dark-surface-color);
 }
 
 .pdfErrorIcon {
   font-size: 4rem;
   color: var(--text-secondary);
   margin-bottom: 1rem;
+}
+
+:global(body.dark-mode) .pdfErrorIcon {
+  color: var(--dark-text-secondary);
 }
 
 .pdfError h3 {
@@ -627,6 +773,10 @@
   color: var(--text-secondary);
   margin: 0 0 2rem 0;
   font-size: 1.1rem;
+}
+
+:global(body.dark-mode) .pdfError p {
+  color: var(--dark-text-secondary);
 }
 
 .pdfErrorActions {
@@ -656,6 +806,11 @@
   margin-bottom: 1rem;
 }
 
+:global(body.dark-mode) .spinner {
+  border-color: var(--dark-border-color);
+  border-top-color: var(--primary-color);
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -671,6 +826,10 @@
   margin: 0;
 }
 
+:global(body.dark-mode) .loadingSpinner p {
+  color: var(--dark-text-secondary);
+}
+
 /* Error States */
 .errorContainer {
   display: flex;
@@ -682,6 +841,14 @@
   max-width: 600px;
   margin: 0 auto;
   padding: 2rem;
+  background: var(--surface-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+}
+
+:global(body.dark-mode) .errorContainer {
+  background: var(--dark-surface-color);
+  box-shadow: var(--dark-shadow-md);
 }
 
 .errorIcon {
@@ -700,6 +867,10 @@
   font-size: 1.1rem;
   margin: 0 0 2rem 0;
   line-height: 1.6;
+}
+
+:global(body.dark-mode) .errorContainer p {
+  color: var(--dark-text-secondary);
 }
 
 /* Image Loading Animation */

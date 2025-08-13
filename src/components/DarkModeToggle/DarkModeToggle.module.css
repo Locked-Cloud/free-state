@@ -128,19 +128,19 @@
 }
 
 /* Dark Mode Toggle Styles */
-.dark .toggle {
+.toggle.dark {
   background: var(--dark-surface);
   border-color: var(--dark-border);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.dark .toggle:hover {
+.toggle.dark:hover {
   background: var(--dark-surface-hover);
   border-color: var(--moon-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.dark .toggle:focus-visible {
+.toggle.dark:focus-visible {
   box-shadow: 0 0 0 3px var(--dark-surface), 0 0 0 6px var(--moon-color), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 

@@ -133,11 +133,20 @@ export async function fetchCompanies(): Promise<Company[]> {
     // Attempt to fetch from backend API first
     let csvText = "";
     try {
+      // Check if we're in production at pages.dev domain
+      const isPagesDev = typeof window !== 'undefined' && window.location.hostname.includes('pages.dev');
+      
       // Only use backend API in local or explicitly configured environments
-      const shouldUseBackend = API_BASE_URL && (API_BASE_URL.includes("localhost") || API_BASE_URL.includes("127.0.0.1") || process.env.REACT_APP_API_URL);
+      const shouldUseBackend = API_BASE_URL && 
+        (API_BASE_URL.includes("localhost") || 
+         API_BASE_URL.includes("127.0.0.1") || 
+         process.env.REACT_APP_API_URL) && 
+        !isPagesDev;
+      
       if (!shouldUseBackend) {
-        throw new Error("Skip backend fetch in production");
+        throw new Error("Skip backend fetch in production or pages.dev environment");
       }
+      
       const backendResponse = await fetch(`${API_BASE_URL}/api/sheets/companies`);
       if (backendResponse.ok) {
         csvText = await backendResponse.text();
@@ -233,6 +242,9 @@ export async function fetchSheetData(
   if (cachedData) {
     return { success: true, data: cachedData };
   }
+  
+  // Check if we're in production at pages.dev domain and skip API call
+  const isPagesDev = typeof window !== 'undefined' && window.location.hostname.includes('pages.dev');
 
   // If not in cache, fetch from API
   let retries = 0;
@@ -240,6 +252,7 @@ export async function fetchSheetData(
 
   while (retries < maxRetries) {
     try {
+      // If we're in pages.dev environment, skip API call and use direct Google Sheets URL
       const url = getSheetUrl(gid, format);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout

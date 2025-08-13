@@ -29,6 +29,14 @@ const Places: React.FC = () => {
       try {
         let csvText = "";
         try {
+          // Check if we're in production at pages.dev domain
+          const isPagesDev = window.location.hostname.includes('pages.dev');
+          
+          // If we're in pages.dev, skip the API call and go straight to fallback
+          if (isPagesDev) {
+            throw new Error('Skip API call in pages.dev environment');
+          }
+          
           const backendResponse = await fetch(PLACES_ENDPOINT);
           if (backendResponse.ok) {
             csvText = await backendResponse.text();
