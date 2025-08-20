@@ -9,6 +9,7 @@ import SessionTimeout from "./components/SessionTimeout";
 import PWAInstallPrompt from "./components/PWAInstallPrompt/PWAInstallPrompt";
 import NetworkStatusDetector from "./components/NetworkStatus/NetworkStatusDetector";
 import NetworkStatusNotification from "./components/NetworkStatus/NetworkStatusNotification";
+import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
 
 // Lazy load all main page components
 const Home = lazy(() => import("./components/Home/Home"));
@@ -57,7 +58,7 @@ function App() {
         >
         <NetworkStatusDetector>
           <div className="app">
-          <Suspense fallback={<div className="loading">Loading...</div>}>
+          <Suspense fallback={<LoadingScreen />}>
             <Navbar />
 
             <SessionTimeout 

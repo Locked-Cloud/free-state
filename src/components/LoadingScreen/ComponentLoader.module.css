@@ -1,0 +1,118 @@
+.loaderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--surface, #ffffff);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  margin: 1rem 0;
+  transition: all 0.3s ease;
+}
+
+:global(body.dark-mode) .loaderContainer {
+  background-color: var(--dark-surface, #1e1e1e);
+  box-shadow: var(--dark-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+.spinner {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 1rem;
+}
+
+.spinnerCircle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--primary-color, #3f51b5);
+  animation: spin 1s linear infinite;
+}
+
+:global(body.dark-mode) .spinnerCircle {
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary-color, #3f51b5);
+}
+
+.message {
+  font-size: 1rem;
+  color: var(--text-color, #333);
+  margin: 0;
+  text-align: center;
+}
+
+:global(body.dark-mode) .message {
+  color: var(--dark-text-color, #e0e0e0);
+}
+
+/* Inline variant */
+.inline {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  box-shadow: none;
+  margin: 0;
+}
+
+.inline .spinner {
+  width: 20px;
+  height: 20px;
+  margin: 0 0.5rem 0 0;
+}
+
+.inline .message {
+  font-size: 0.9rem;
+}
+
+/* Overlay variant */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+}
+
+:global(body.dark-mode) .overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Animations */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .loaderContainer {
+    padding: 1.5rem;
+  }
+  
+  .spinner {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .message {
+    font-size: 0.9rem;
+  }
+}

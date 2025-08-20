@@ -6,6 +6,7 @@ import OutOfStock from "../OutOfStock/OutOfStock";
 import OptimizedImage from "../common/OptimizedImage";
 import { getDirectImageUrl } from "../../utils/imageUtils";
 import { getSheetUrl, SHEET_GIDS } from "../../utils/sheetUtils";
+import { ComponentLoader } from "../LoadingScreen";
 
 // Backend API base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
@@ -370,6 +371,7 @@ const Product: React.FC = () => {
   if (loading) {
     return (
       <div className={styles.container}>
+        <ComponentLoader message="Loading company details..." />
         <div className={styles.skeleton}>
           <div className={styles.skeletonImage}></div>
           <div className={styles.skeletonContent}>

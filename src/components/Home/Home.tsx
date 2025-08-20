@@ -4,6 +4,7 @@ import styles from "./Home.module.css";
 import OptimizedImage from "../common/OptimizedImage";
 import { fetchCompanies } from "../../utils/sheetUtils";
 import { Search, Building2, ArrowRight, MapPin, Star, Filter, AlertCircle } from "lucide-react";
+import { ComponentLoader } from "../LoadingScreen";
 
 interface Company {
   id: number;
@@ -249,15 +250,15 @@ const Home: React.FC = () => {
       <div className={styles.container}>
         <div style={{ textAlign: 'center', padding: '20px' }}>
           <h1 className={styles.title}>Leading Real Estate Companies in Egypt</h1>
-          <div style={{ margin: '20px 0' }}>
-            <div>Loading companies... {retryCount > 0 && `(Attempt ${retryCount + 1})`}</div>
-            {!isOnline && (
+          <ComponentLoader 
+            message={`Loading companies${retryCount > 0 ? ` (Attempt ${retryCount + 1})` : ''}...`} 
+          />
+          {!isOnline && (
               <div style={{ color: 'orange', marginTop: '10px', fontSize: '14px' }}>
                 <AlertCircle size={16} style={{ verticalAlign: 'middle' }} /> 
                 No internet connection detected
               </div>
             )}
-          </div>
         </div>
         <LoadingSkeleton />
       </div>
