@@ -14,17 +14,8 @@ body {
   line-height: 1.6;
 }
 
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.main {
-  flex: 1;
-  width: 100%;
-  background-color: #f8f9fa;
-}
+/* App styles moved to AppStyles.css */
+/* Keeping this file for backward compatibility */
 
 /* Scrollbar Styles */
 ::-webkit-scrollbar {

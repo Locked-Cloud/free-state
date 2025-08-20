@@ -88,6 +88,26 @@
   padding: 0;
 }
 
+/* Network Status Link */
+.networkStatusLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  position: relative;
+}
+
+.networkStatusLink:hover {
+  transform: scale(1.1);
+}
+
+.networkStatusLink:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
 /* Individual Navigation Links */
 .link {
   color: var(--text-secondary);

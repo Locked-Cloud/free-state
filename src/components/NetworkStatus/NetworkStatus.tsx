@@ -24,23 +24,10 @@ const NetworkStatus: React.FC<NetworkStatusProps> = ({ showDetails = false }) =>
     <div className={`${styles.container} ${isOnline ? styles.online : styles.offline} ${styles.navbarStyle}`}>
       <div className={styles.statusIndicator}>
         <span className={styles.dot}></span>
-        {showDetails && (
-          <span className={styles.statusText}>
-            {isOnline ? 'Online' : 'Offline'}
-            {isSyncing && ' (Syncing...)'}
-          </span>
-        )}
+        
       </div>
 
-      {showDetails && (
-        <div className={styles.details}>
-          {isOnline ? (
-            <p>Connected since: {formatDate(lastOnlineAt)}</p>
-          ) : (
-            <p>Disconnected since: {formatDate(lastOfflineAt)}</p>
-          )}
-        </div>
-      )}
+      
     </div>
   );
 };

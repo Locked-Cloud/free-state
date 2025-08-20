@@ -1,0 +1,147 @@
+.offlineContainer {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: var(--bg-primary, #f5f7fa);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.05));
+}
+
+.icon {
+  color: var(--error-color, #f44336);
+  margin-bottom: 1.5rem;
+  font-size: 3rem;
+}
+
+.title {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: var(--text-color, #2d3748);
+  font-weight: 600;
+}
+
+.message {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: var(--text-secondary, #4a5568);
+  line-height: 1.6;
+}
+
+.tipsContainer {
+  background-color: var(--bg-secondary, #e2e8f0);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid var(--primary-color, #3182ce);
+  text-align: left;
+}
+
+.tipsTitle {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--text-color, #2d3748);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tipsList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tipsList li {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+  position: relative;
+  color: var(--text-secondary, #4a5568);
+}
+
+.tipsList li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--primary-color, #3182ce);
+  font-weight: bold;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.button {
+  background-color: var(--primary-color, #3182ce);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+  background-color: var(--primary-dark, #2c5282);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.secondaryButton {
+  background-color: transparent;
+  color: var(--primary-color, #3182ce);
+  border: 1px solid var(--primary-color, #3182ce);
+}
+
+.secondaryButton:hover {
+  background-color: rgba(49, 130, 206, 0.1);
+}
+
+/* Dark mode support */
+:global(body.dark-mode) .offlineContainer {
+  background-color: var(--bg-secondary, #1e1e1e);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+:global(body.dark-mode) .title {
+  color: var(--text-primary, #e0e0e0);
+}
+
+:global(body.dark-mode) .message {
+  color: var(--text-secondary, #b0b0b0);
+}
+
+:global(body.dark-mode) .tipsContainer {
+  background-color: var(--bg-tertiary, #2d2d2d);
+  border-left-color: var(--accent-color, #4a6bff);
+}
+
+:global(body.dark-mode) .tipsTitle {
+  color: var(--text-primary, #e0e0e0);
+}
+
+:global(body.dark-mode) .tipsList li {
+  color: var(--text-secondary, #b0b0b0);
+}
+
+:global(body.dark-mode) .tipsList li::before {
+  color: var(--accent-color, #4a6bff);
+}
+
+:global(body.dark-mode) .secondaryButton {
+  color: var(--accent-color, #4a6bff);
+  border-color: var(--accent-color, #4a6bff);
+}
+
+:global(body.dark-mode) .secondaryButton:hover {
+  background-color: rgba(74, 107, 255, 0.1);
+}

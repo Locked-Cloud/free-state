@@ -59,15 +59,9 @@
   font-weight: 500;
 }
 
-.details {
-  margin-top: 4px;
-  font-size: 12px;
-  opacity: 0.9;
-}
 
-.details p {
-  margin: 2px 0;
-}
+
+
 
 /* Pulse animation for the status dot */
 @keyframes pulse {

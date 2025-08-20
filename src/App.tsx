@@ -2,10 +2,13 @@ import React, { Suspense, lazy } from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import "./style/darkMode.css";
+import "./style/AppStyles.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NetworkProvider } from "./contexts/NetworkContext";
 import SessionTimeout from "./components/SessionTimeout";
 import PWAInstallPrompt from "./components/PWAInstallPrompt/PWAInstallPrompt";
+import NetworkStatusDetector from "./components/NetworkStatus/NetworkStatusDetector";
+import NetworkStatusNotification from "./components/NetworkStatus/NetworkStatusNotification";
 
 // Lazy load all main page components
 const Home = lazy(() => import("./components/Home/Home"));
@@ -35,6 +38,12 @@ const Places = lazy(() => import("./components/Places/Places"));
 const LocationProjects = lazy(
   () => import("./components/Places/LocationProjects")
 );
+{/*const NetworkStatusPage = lazy(
+  () => import("./components/NetworkStatus/NetworkStatusPage")
+);*/}
+const NetworkLostPage = lazy(
+  () => import("./components/NetworkStatus/NetworkLostPage")
+);
 
 function App() {
   return (
@@ -46,7 +55,8 @@ function App() {
             v7_relativeSplatPath: true,
           }}
         >
-        <div className="App">
+        <NetworkStatusDetector>
+          <div className="app">
           <Suspense fallback={<div className="loading">Loading...</div>}>
             <Navbar />
 
@@ -55,6 +65,7 @@ function App() {
               sessionDuration={30 * 60 * 1000} // 30 minutes total session duration
             />
             <PWAInstallPrompt />
+            <NetworkStatusNotification />
             <main className="content">
               <Routes>
                 {/* Public routes */}
@@ -178,6 +189,20 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                {/*<Route
+                  path="/network-status"
+                  element={
+                    <ProtectedRoute>
+                      <NetworkStatusPage />
+                    </ProtectedRoute>
+                  }
+                />*/}
+                <Route
+                  path="/network-lost"
+                  element={
+                    <NetworkLostPage />
+                  }
+                />
 
                 {/* Catch-all route for 404 and unknown routes */}
                 <Route
@@ -193,6 +218,7 @@ function App() {
             <Footer />
           </Suspense>
         </div>
+        </NetworkStatusDetector>
         </Router>
       </NetworkProvider>
     </AuthProvider>

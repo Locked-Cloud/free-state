@@ -1,0 +1,94 @@
+/* App Styles for both Light and Dark modes */
+
+/* Light Mode (Default) */
+:root {
+  --app-bg-color: #f8f9fa;
+  --app-text-color: #2c3e50;
+  --app-border-color: #e2e8f0;
+  --app-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --app-accent-color: #3498db;
+  --app-accent-hover: #2980b9;
+  --app-card-bg: #ffffff;
+  --app-card-border: #edf2f7;
+  --app-gradient: linear-gradient(135deg, #6ab7ff 0%, #3498db 100%);
+}
+
+/* App Container - Light Mode */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--app-bg-color);
+  color: var(--app-text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  overflow-x: hidden;
+  padding: 0;
+  margin: 0;
+  border-radius: 8px;
+  box-shadow: var(--app-shadow);
+}
+
+/* Dark Mode Styles */
+body.dark-mode .app {
+  --app-bg-color: #121212;
+  --app-text-color: #f1f5f9;
+  --app-border-color: #2d3748;
+  --app-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --app-accent-color: #4a6bff;
+  --app-accent-hover: #3451d1;
+  --app-card-bg: #1e1e1e;
+  --app-card-border: #333;
+  --app-gradient: linear-gradient(135deg, #6c8aff 0%, #4a6bff 100%);
+  
+  background-color: var(--app-bg-color);
+  color: var(--app-text-color);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Content Container */
+.content {
+  flex: 1;
+  width: 100%;
+  padding: 1rem;
+  background-color: var(--app-bg-color);
+  transition: background-color 0.3s ease;
+}
+
+body.dark-mode .content {
+  background-color: var(--app-bg-color);
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 1.5rem;
+  color: var(--app-accent-color);
+  background-color: var(--app-bg-color);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .loading {
+  color: var(--app-accent-color);
+  background-color: var(--app-bg-color);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .app {
+    border-radius: 0;
+  }
+  
+  .content {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 0.5rem;
+  }
+}

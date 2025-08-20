@@ -67,7 +67,9 @@ const Navbar: React.FC = () => {
 
             <span className={styles.username}>Welcome, {username}</span>
             <div className={styles.navbarControls}>
-              <NetworkStatus showDetails={false} />
+              <Link to="/network-status" className={styles.networkStatusLink} title="View Network Status">
+                <NetworkStatus showDetails={false} />
+              </Link>
               <DarkModeToggle className={styles.darkModeToggle} />
             </div>
             <button onClick={handleLogout} className={styles.logoutButton}>
