@@ -33,14 +33,13 @@ const Navbar: React.FC = () => {
   return (
     <nav className={styles.navbar}>
       <Link to="/" className={styles.logo} onClick={closeMenu}>
-        Free v2.2
+        Free v3.1
       </Link>
 
       {isAuthenticated && (
         <button
-          className={`${styles.menuButton} ${
-            isMenuOpen ? styles.menuOpen : ""
-          }`}
+          className={`${styles.menuButton} ${isMenuOpen ? styles.menuOpen : ""
+            }`}
           onClick={toggleMenu}
           aria-label="Toggle menu"
         >
@@ -56,9 +55,8 @@ const Navbar: React.FC = () => {
               <Link
                 key={link.to}
                 to={link.to}
-                className={`${styles.link} ${
-                  location.pathname === link.to ? styles.active : ""
-                }`}
+                className={`${styles.link} ${location.pathname === link.to ? styles.active : ""
+                  }`}
                 onClick={closeMenu}
               >
                 {link.label}
