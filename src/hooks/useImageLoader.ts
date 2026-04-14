@@ -60,32 +60,30 @@ const useImageLoader = (url: string, options: ImageLoaderOptions = {}) => {
 export default useImageLoader;
 
 
-const addCacheBuster = (url: string): string => {
-  const cacheParam = `cb=${Date.now() % 100000}`;
-  return url.includes("?") ? `${url}&${cacheParam}` : `${url}?${cacheParam}`;
-};
-
-// CORS proxy for Google Drive URLs
-const CORS_PROXY = "https://corsproxy.io/?";
-
-// Transform Google Drive links (or already transformed lh3 links) to a direct-download endpoint
+// Transform Google Drive links to a highly cacheable proxy endpoint to prevent 429 rate limiting
 const transformGoogleDriveUrl = (rawUrl: string): string => {
   if (!rawUrl) return rawUrl;
 
-  // If already using lh3.googleusercontent.com or uc?export, just append cache-buster
+  // Prevent double proxying if the URL has already been processed by imageUtils.ts
+  if (rawUrl.includes("wsrv.nl")) return rawUrl;
+
+  // We wrap Google Drive images with Weserv to ensure Google doesn't aggressively rate-limit (429) the user's IP.
+  // Weserv acts as a fully compliant, high-performance image CDN that masks the IP and aggressively caches.
   if (rawUrl.includes("lh3.googleusercontent.com/d/")) {
-    return addCacheBuster(rawUrl);
+    return `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}`;
   }
 
   let fileId = "";
   if (rawUrl.includes("/file/d/")) {
-    fileId = rawUrl.split("/file/d/")[1].split("/")[0];
+    const match = rawUrl.split("/file/d/")[1].split("/");
+    if (match.length > 0) fileId = match[0];
   } else if (rawUrl.includes("id=")) {
-    fileId = rawUrl.split("id=")[1].split("&")[0];
+    const match = rawUrl.split("id=")[1].split("&");
+    if (match.length > 0) fileId = match[0];
   }
 
   if (!fileId) return rawUrl;
 
-  // Use CORS proxy for Google Drive URLs
-  return addCacheBuster(`${CORS_PROXY}https://drive.google.com/uc?export=download&id=${fileId}`);
+  const directUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+  return `https://wsrv.nl/?url=${encodeURIComponent(directUrl)}`;
 };

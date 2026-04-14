@@ -51,16 +51,9 @@ export function getDirectImageUrl(url: string): string {
       }
 
       if (fileId) {
-        // Route through backend API via universal proxy to handle permissions and CORS
         const directUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
-        // Decide whether to route through the backend image proxy.
-        // When the frontend is hosted on a static platform such as Cloudflare Pages,
-        // the Express backend is not available, so we return the direct URL instead.
-        const API_BASE_URL = process.env.REACT_APP_API_URL || ((typeof window !== "undefined" && (window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1"))) ? window.location.origin : "");
-        if (API_BASE_URL && !API_BASE_URL.includes('.pages.dev')) {
-          return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(directUrl)}`;
-        }
-        return directUrl;
+        // Wrap with Weserv CDN globally to avoid Google Drive 429 Too Many Requests bans
+        return `https://wsrv.nl/?url=${encodeURIComponent(directUrl)}`;
       }
     }
 

@@ -9,8 +9,8 @@ import { getSheetUrl, SHEET_GIDS } from "../../utils/sheetUtils";
 import { ComponentLoader } from "../LoadingScreen";
 
 // Backend API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
-const API_URL = API_BASE_URL.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+const API_URL = API_BASE_URL ? (API_BASE_URL.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`) : "";
 
 // Endpoints for sheet data
 const COMPANIES_ENDPOINT = `${API_URL}/sheets/companies`;

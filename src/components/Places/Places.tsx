@@ -13,10 +13,9 @@ interface Place {
 }
 
 // Backend API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || (typeof window !== "undefined" ? window.location.origin : "");
-
-// Endpoint for places sheet data
-const PLACES_ENDPOINT = `${API_BASE_URL}/api/sheets/places`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+const API_URL = API_BASE_URL ? (API_BASE_URL.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`) : "";
+const PLACES_ENDPOINT = `${API_URL}/sheets/places`;
 
 const Places: React.FC = () => {
   const navigate = useNavigate();

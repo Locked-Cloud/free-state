@@ -19,10 +19,7 @@ const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
 const DATA_SHEET_GID = "1884577336";
 
 const getProjectsSheetURL = (gid: string) => {
-  const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
-  return process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}${baseUrl}`
-    : baseUrl;
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 };
 
 const PROJECTS_SHEET_URL = getProjectsSheetURL(DATA_SHEET_GID);

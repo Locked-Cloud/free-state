@@ -52,9 +52,8 @@ export function getSheetUrl(gid: string, format: 'csv' | 'tq' = 'csv'): string {
     baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
   }
   
-  return process.env.NODE_ENV === "production"
-    ? `${CORS_PROXY}${baseUrl}`
-    : baseUrl;
+  // Google Sheets export and gviz endpoints now support CORS directly
+  return baseUrl;
 }
 
 /**
@@ -120,7 +119,7 @@ export function parseCSV(text: string): string[][] {
  * @returns Promise with array of Company objects
  */
 export async function fetchCompanies(): Promise<Company[]> {
-  const API_BASE_URL = process.env.REACT_APP_API_URL || ((typeof window !== "undefined" && (window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1"))) ? window.location.origin : "");
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "";
   const cacheKey = 'companies_data';
   
   // Try to get from cache first
@@ -238,7 +237,7 @@ export async function fetchSheetData(
   }
   
   // Attempt to fetch from backend API first if available
-  const API_BASE_URL = process.env.REACT_APP_API_URL || ((typeof window !== "undefined" && (window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1"))) ? window.location.origin : "");
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "";
   if (API_BASE_URL) {
     try {
       const backendResponse = await fetch(`${API_BASE_URL}/api/sheets/${sheetType}?format=${format}`);
@@ -364,14 +363,14 @@ function getDirectImageUrlDeprecated(url: string): string {
 
       if (fileId) {
         // Use the server API to proxy Google Drive images
-        const API_BASE_URL = process.env.REACT_APP_API_URL || ((typeof window !== "undefined" && (window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1"))) ? window.location.origin : "");
+        const API_BASE_URL = process.env.REACT_APP_API_URL || "";
         return `${API_BASE_URL}/api/image?fileId=${fileId}`;
       }
     }
 
     if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl)) {
       // Use the server API to proxy image URLs
-      const API_BASE_URL = process.env.REACT_APP_API_URL || ((typeof window !== "undefined" && (window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1"))) ? window.location.origin : "");
+      const API_BASE_URL = process.env.REACT_APP_API_URL || "";
       return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(cleanUrl)}`;
     }
 
@@ -384,7 +383,7 @@ function getDirectImageUrlDeprecated(url: string): string {
       cleanUrl.includes("via.placeholder.com")
     ) {
       // Use the server API to proxy image URLs
-      const API_BASE_URL = process.env.REACT_APP_API_URL || ((typeof window !== "undefined" && (window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1"))) ? window.location.origin : "");
+      const API_BASE_URL = process.env.REACT_APP_API_URL || "";
       return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(cleanUrl)}`;
     }
 
