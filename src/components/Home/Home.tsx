@@ -5,6 +5,7 @@ import OptimizedImage from "../common/OptimizedImage";
 import { fetchCompanies } from "../../utils/sheetUtils";
 import { Search, Building2, ArrowRight, MapPin, Star, AlertCircle } from "lucide-react";
 import { ComponentLoader } from "../LoadingScreen";
+import { prefetchRoute } from "../../utils/prefetchUtils";
 import type { Company } from "../../types";
 
 
@@ -318,6 +319,7 @@ const Home: React.FC = () => {
               key={`featured-${company.id}`}
               className={styles.featuredCard}
               onClick={() => handleCardClick(company)}
+              onMouseEnter={() => prefetchRoute('product')}
             >
               <div className={styles.featuredImageContainer}>
                 <OptimizedImage
@@ -378,6 +380,7 @@ const Home: React.FC = () => {
                   company.active === 0 ? styles.inactiveCompany : ""
                 }`}
                 onClick={() => handleCardClick(company)}
+                onMouseEnter={() => prefetchRoute('product')}
               >
                 <div className={styles.imageContainer}>
                   <OptimizedImage

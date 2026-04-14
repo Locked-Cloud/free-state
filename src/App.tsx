@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import "./style/darkMode.css";
@@ -11,6 +11,7 @@ import NetworkStatusDetector from "./components/NetworkStatus/NetworkStatusDetec
 import NetworkStatusNotification from "./components/NetworkStatus/NetworkStatusNotification";
 import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
+import { prefetchCriticalRoutes } from "./utils/prefetchUtils";
 
 // Lazy load all main page components
 const Home = lazy(() => import("./components/Home/Home"));
@@ -46,6 +47,11 @@ const NetworkLostPage = lazy(
 );
 
 function App() {
+  // Prefetch critical routes after initial load
+  useEffect(() => {
+    prefetchCriticalRoutes();
+  }, []);
+
   return (
     <AuthProvider>
       <NetworkProvider>

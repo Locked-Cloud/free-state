@@ -6,6 +6,7 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
+import { secureSet, secureGet, secureRemove } from "../utils/encryptedStorage";
 
 // Define the authentication context type
 interface AuthContextType {
@@ -43,8 +44,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [username, setUsername] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [lastActivity, setLastActivity] = useState<number>(Date.now());
+  const [initialized, setInitialized] = useState(false);
 
-  // Check if the session is expired
+  // Check if the session is expired (uses plain localStorage for timestamp — speed matters)
   const isSessionExpired = useCallback(() => {
     const lastActivityTime = Number(localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY)) || 0;
     return Date.now() - lastActivityTime > SESSION_DURATION;
@@ -59,11 +61,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Logout function — declared before useEffect that depends on it
   const logout = useCallback(() => {
-    // Clear auth data from localStorage
-    localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
-    localStorage.removeItem(STORAGE_KEYS.USERNAME);
-    localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    // Clear encrypted auth data
+    secureRemove(STORAGE_KEYS.IS_AUTHENTICATED);
+    secureRemove(STORAGE_KEYS.USERNAME);
+    secureRemove(STORAGE_KEYS.USER_ROLE);
+    secureRemove(STORAGE_KEYS.AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY);
     
     // Clear OTP verification
@@ -75,31 +77,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUserRole(null);
   }, []);
 
-  // Initialize auth state from storage
+  // Initialize auth state from encrypted storage
   useEffect(() => {
-    // Check if user is already authenticated
-    const authStatus = localStorage.getItem(STORAGE_KEYS.IS_AUTHENTICATED);
-    const storedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
-    const storedRole = localStorage.getItem(STORAGE_KEYS.USER_ROLE);
-    const storedLastActivity = localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY);
+    const initAuth = async () => {
+      try {
+        const authStatus = await secureGet(STORAGE_KEYS.IS_AUTHENTICATED);
+        const storedUsername = await secureGet(STORAGE_KEYS.USERNAME);
+        const storedRole = await secureGet(STORAGE_KEYS.USER_ROLE);
+        const storedLastActivity = localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY);
 
-    // Check if session is expired
-    if (authStatus === "true" && storedUsername) {
-      if (isSessionExpired()) {
-        // Session expired, log out
-        logout();
-      } else {
-        // Session valid, restore state
-        setIsAuthenticated(true);
-        setUsername(storedUsername);
-        setUserRole(storedRole);
-        if (storedLastActivity) {
-          setLastActivity(Number(storedLastActivity));
+        if (authStatus === "true" && storedUsername) {
+          if (isSessionExpired()) {
+            logout();
+          } else {
+            setIsAuthenticated(true);
+            setUsername(storedUsername);
+            setUserRole(storedRole);
+            if (storedLastActivity) {
+              setLastActivity(Number(storedLastActivity));
+            }
+          }
         }
+      } catch {
+        // If decryption fails, data was tampered — force logout
+        logout();
+      } finally {
+        setInitialized(true);
       }
-    }
+    };
 
-    // Set up activity tracking
+    initAuth();
+  }, [isSessionExpired, logout]);
+
+  // Set up activity tracking (only after initialization)
+  useEffect(() => {
+    if (!initialized) return;
+
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
     
     const handleUserActivity = () => {
@@ -117,16 +130,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         window.removeEventListener(event, handleUserActivity);
       });
     };
-  }, [isAuthenticated, isSessionExpired, updateLastActivity, logout]);
+  }, [initialized, isAuthenticated, updateLastActivity]);
 
-  // Login function
+  // Login function — stores encrypted auth data
   const login = useCallback((username: string, role: string = "user") => {
     const now = Date.now();
     
-    // Store auth data in localStorage
-    localStorage.setItem(STORAGE_KEYS.IS_AUTHENTICATED, "true");
-    localStorage.setItem(STORAGE_KEYS.USERNAME, username);
-    localStorage.setItem(STORAGE_KEYS.USER_ROLE, role);
+    // Store encrypted auth data
+    secureSet(STORAGE_KEYS.IS_AUTHENTICATED, "true");
+    secureSet(STORAGE_KEYS.USERNAME, username);
+    secureSet(STORAGE_KEYS.USER_ROLE, role);
     localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, now.toString());
     
     // Update state

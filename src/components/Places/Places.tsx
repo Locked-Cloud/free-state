@@ -4,6 +4,7 @@ import styles from "./Places.module.css";
 import OptimizedImage from "../common/OptimizedImage";
 import { fetchPlaces } from "../../utils/sheetUtils";
 import { ComponentLoader } from "../LoadingScreen";
+import { prefetchRoute } from "../../utils/prefetchUtils";
 import type { Place } from "../../types";
 
 const Places: React.FC = () => {
@@ -57,6 +58,7 @@ const Places: React.FC = () => {
             key={place.id}
             className={styles.placeCard}
             onClick={() => handleCardClick(place)}
+            onMouseEnter={() => prefetchRoute('locationProjects')}
           >
             <div className={styles.imageContainer}>
               <OptimizedImage
