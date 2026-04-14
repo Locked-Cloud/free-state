@@ -5,83 +5,25 @@ import useTitle from "../../hooks/useTitle";
 import OutOfStock from "../OutOfStock/OutOfStock";
 import OptimizedImage from "../common/OptimizedImage";
 import { getDirectImageUrl } from "../../utils/imageUtils";
-import { getSheetUrl, SHEET_GIDS } from "../../utils/sheetUtils";
+import { fetchCompaniesCSV, fetchProjectsCSV, parseCSV, findColumnIndex } from "../../utils/sheetUtils";
 import { ComponentLoader } from "../LoadingScreen";
 
-// Backend API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-const API_URL = API_BASE_URL ? (API_BASE_URL.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`) : "";
-
-// Endpoints for sheet data
-const COMPANIES_ENDPOINT = `${API_URL}/sheets/companies`;
-const PROJECTS_ENDPOINT = `${API_URL}/sheets/projects`;
-
-// Remove the inline OutOfStock component since we now have a standalone one
-
-interface Company {
+interface CompanyData {
   id: string;
   name: string;
   description: string;
   image: string;
   location: string;
-  active: number; // 1 for active, 0 for inactive
+  active: number;
 }
 
-interface Project {
+interface ProjectData {
   id: string;
   title: string;
   location: string;
   image: string;
   features: string[];
 }
-
-const parseCSV = (text: string): string[][] => {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentCell = "";
-  let insideQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i + 1];
-
-    if (char === '"') {
-      if (insideQuotes && nextChar === '"') {
-        // Handle escaped quotes
-        currentCell += '"';
-        i++; // Skip next quote
-      } else {
-        // Toggle quote state
-        insideQuotes = !insideQuotes;
-      }
-    } else if (char === "," && !insideQuotes) {
-      // End of cell
-      currentRow.push(currentCell.trim());
-      currentCell = "";
-    } else if (char === "\n" && !insideQuotes) {
-      // End of row
-      currentRow.push(currentCell.trim());
-      if (currentRow.some((cell) => cell)) {
-        // Only add non-empty rows
-        rows.push(currentRow);
-      }
-      currentRow = [];
-      currentCell = "";
-    } else {
-      currentCell += char;
-    }
-  }
-
-  // Add the last cell and row if they exist
-  if (currentCell) {
-    currentRow.push(currentCell.trim());
-  }
-  if (currentRow.length > 0) {
-    rows.push(currentRow);
-  }
-
-  return rows;
-};
 
 const parseKeyFeatures = (keyFeaturesStr: string): string[] => {
   if (!keyFeaturesStr) return [];
@@ -93,8 +35,8 @@ const Product: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [companyData, setCompanyData] = useState<Company | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
+  const [projects, setProjects] = useState<ProjectData[]>([]);
   const [activeTab, setActiveTab] = useState<string>("projects");
 
   useTitle("Product Details");
@@ -105,60 +47,27 @@ const Product: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch company data with fallback to Google Sheets if backend is unavailable
-        let companyText = "";
-        try {
-          const isPagesDev = typeof window !== 'undefined' && window.location.hostname.endsWith('pages.dev');
-           const shouldUseBackend = Boolean(API_URL) && !isPagesDev;
-           if (!shouldUseBackend) {
-             throw new Error("Skip backend fetch in pages.dev or backend URL not configured");
-          }
-          const companyResponse = await fetch(COMPANIES_ENDPOINT);
-          if (!companyResponse.ok) throw new Error("Backend companies 404");
-          companyText = await companyResponse.text();
-        } catch (e) {
-          const fallbackUrl = getSheetUrl(SHEET_GIDS.COMPANIES, "csv");
-          const fallbackResp = await fetch(fallbackUrl);
-          if (!fallbackResp.ok) throw new Error("Failed to fetch companies sheet");
-          companyText = await fallbackResp.text();
-        }
-        const companyRows = companyText.split("\n");
+        // Fetch companies using centralized function
+        const companyRows = await fetchCompaniesCSV();
 
         // Parse the header row to find column indices
-        const headerRow = companyRows[0]
-          .split(",")
-          .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
-
-        // Find the index of the "active" column
-        const activeColumnIndex = headerRow.findIndex(
-          (col) => col === "active" || col === "status"
-        );
+        const headerRow = companyRows[0].map(col => col.toLowerCase().trim());
+        const activeColumnIndex = findColumnIndex(headerRow, ['active', 'status']);
 
         // Skip header row for data processing
         const dataRows = companyRows.slice(1);
+        let company: CompanyData | null = null;
 
-        let company: Company | null = null;
-
-        for (const row of dataRows) {
-          const matches = row.match(/("([^"]*)"|([^,]+))(,|$)/g) || [];
-          const columns = matches.map((column) =>
-            column
-              .replace(/(^,)|(,$)/g, "")
-              .replace(/^"|"$/g, "")
-              .trim()
-          );
+        for (const columns of dataRows) {
+          if (columns.length < 5) continue;
 
           if (columns[0] && columns[0] === companyId) {
             const imageUrl = columns[4]
               ? getDirectImageUrl(columns[4])
               : "https://placehold.co/800x600?text=Image+Not+Found";
 
-            // Get the active value from the correct column index
-            let activeValue = "1"; // Default to active
-            if (
-              activeColumnIndex !== -1 &&
-              columns[activeColumnIndex] !== undefined
-            ) {
+            let activeValue = "1";
+            if (activeColumnIndex !== -1 && columns[activeColumnIndex] !== undefined) {
               activeValue = columns[activeColumnIndex];
             }
 
@@ -168,7 +77,7 @@ const Product: React.FC = () => {
               description: columns[2] || "",
               image: imageUrl,
               location: columns[5] || "Multiple Locations",
-              active: parseInt(activeValue || "1"), // Use the found active value
+              active: parseInt(activeValue || "1"),
             };
             break;
           }
@@ -182,79 +91,38 @@ const Product: React.FC = () => {
 
         // Only fetch projects if company is active
         if (company.active === 1) {
-          // Fetch projects data with fallback
-          let csvText = "";
-          try {
-            const isPagesDev = typeof window !== 'undefined' && window.location.hostname.endsWith('pages.dev');
-             const shouldUseBackend = Boolean(API_URL) && !isPagesDev;
-             if (!shouldUseBackend) {
-               throw new Error("Skip backend fetch in pages.dev or backend URL not configured");
-            }
-            const projectsResponse = await fetch(PROJECTS_ENDPOINT);
-            if (!projectsResponse.ok) throw new Error("Backend projects 404");
-            csvText = await projectsResponse.text();
-          } catch (e) {
-            const fallbackUrl = getSheetUrl(SHEET_GIDS.PROJECTS, "csv");
-            const fallbackResp = await fetch(fallbackUrl);
-            if (!fallbackResp.ok) throw new Error("Failed to fetch projects sheet");
-            csvText = await fallbackResp.text();
-          }
-          if (!csvText.trim()) {
-            throw new Error("No data received from the sheet");
-          }
+          const rows = await fetchProjectsCSV();
 
-          const rows = parseCSV(csvText);
-          const projectsList: Project[] = [];
+          const projectsList: ProjectData[] = [];
+          const projHeaderRow = rows[0];
+          const idIndex = projHeaderRow.findIndex(col => col.toLowerCase() === "id");
+          const projectIdIndex = projHeaderRow.findIndex(col => col.toLowerCase() === "project_id");
+          const nameIndex = projHeaderRow.findIndex(col => col.toLowerCase() === "name");
+          const locationIndex = projHeaderRow.findIndex(col => col.toLowerCase() === "location");
+          const keyFeaturesIndex = projHeaderRow.findIndex(col => col.toLowerCase() === "key_features");
+          const imagePathIndex = projHeaderRow.findIndex(col => col.toLowerCase() === "image_path");
 
-          // Find the header row to determine column indices
-          const headerRow = rows[0];
-          const idIndex = headerRow.findIndex(
-            (col) => col.toLowerCase() === "id"
-          );
-          const projectIdIndex = headerRow.findIndex(
-            (col) => col.toLowerCase() === "project_id"
-          );
-          const nameIndex = headerRow.findIndex(
-            (col) => col.toLowerCase() === "name"
-          );
-          const locationIndex = headerRow.findIndex(
-            (col) => col.toLowerCase() === "location"
-          );
-          const keyFeaturesIndex = headerRow.findIndex(
-            (col) => col.toLowerCase() === "key_features"
-          );
-          const imagePathIndex = headerRow.findIndex(
-            (col) => col.toLowerCase() === "image_path"
-          );
-
-          // Skip header row
           for (let i = 1; i < rows.length; i++) {
             const columns = rows[i];
+            if (columns.length < Math.max(idIndex, projectIdIndex) + 1) continue;
 
-            if (columns.length < Math.max(idIndex, projectIdIndex) + 1)
-              continue;
-
-            const rowId = columns[idIndex].replace(/"/g, "");
+            const rowId = columns[idIndex]?.replace(/"/g, "");
             if (rowId === company.id) {
               let projectId = `project-${i}`;
               if (projectIdIndex >= 0 && columns[projectIdIndex]) {
                 projectId = columns[projectIdIndex].replace(/"/g, "");
               } else if (nameIndex >= 0 && columns[nameIndex]) {
-                // fallback: use project name as id (slugified)
                 projectId = columns[nameIndex]
                   .trim()
                   .toLowerCase()
                   .replace(/\s+/g, "-")
                   .replace(/[^a-z0-9-]/g, "");
               }
+
               const features =
                 keyFeaturesIndex >= 0 && columns[keyFeaturesIndex]
                   ? parseKeyFeatures(columns[keyFeaturesIndex])
-                  : [
-                      "Premium Location",
-                      "Modern Design",
-                      "Smart Home Technology",
-                    ];
+                  : ["Premium Location", "Modern Design", "Smart Home Technology"];
 
               const imagePath =
                 imagePathIndex >= 0 && columns[imagePathIndex]
@@ -266,18 +134,17 @@ const Product: React.FC = () => {
                 title: columns[nameIndex] || `Project ${i}`,
                 location: columns[locationIndex] || company.location,
                 image: imagePath,
-                features: features.slice(0, 3), // Limit to 3 features for display
+                features: features.slice(0, 3),
               });
             }
           }
 
           setProjects(projectsList);
         } else {
-          setProjects([]); // No projects if company is inactive
+          setProjects([]);
         }
         setLoading(false);
       } catch (err) {
-        // Replace detailed error logging with generic message
         setError(
           err instanceof Error
             ? err.message
@@ -293,7 +160,8 @@ const Product: React.FC = () => {
   const handleRetry = () => {
     setLoading(true);
     setError(null);
-    // Re-fetch data
+    // Trigger re-fetch by updating a state
+    window.location.reload();
   };
 
   const renderContent = () => {
@@ -303,7 +171,7 @@ const Product: React.FC = () => {
           <h2>Projects</h2>
           {projects && projects.length > 0 ? (
             <div className={styles.projectsGrid}>
-              {projects.map((project: Project, index: number) => (
+              {projects.map((project: ProjectData, index: number) => (
                 <div
                   key={project.id}
                   className={styles.projectCard}
@@ -316,7 +184,7 @@ const Product: React.FC = () => {
                       src={project.image}
                       alt={project.title}
                       className={styles.projectImage}
-                      loadingDelay={index * 150} // Stagger loading by 150ms per item
+                      loadingDelay={index * 150}
                       loadingClassName={styles.imageLoading}
                     />
                   </div>
@@ -328,8 +196,8 @@ const Product: React.FC = () => {
                     <div className={styles.projectFeatures}>
                       <ul>
                         {project.features.map(
-                          (feature: string, index: number) => (
-                            <li key={index}>{feature}</li>
+                          (feature: string, idx: number) => (
+                            <li key={idx}>{feature}</li>
                           )
                         )}
                       </ul>

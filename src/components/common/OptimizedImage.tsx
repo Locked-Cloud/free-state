@@ -9,6 +9,7 @@ interface OptimizedImageProps
   loadingDelay?: number;
   className?: string;
   loadingClassName?: string;
+  onError?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -18,6 +19,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   loadingDelay = 0,
   className = "",
   loadingClassName = "",
+  onError: onErrorProp,
   ...props
 }) => {
   // Use our custom hook with staggered loading
@@ -33,7 +35,10 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       alt={alt}
       className={`${className} ${isLoading ? loadingClassName : ""}`}
       loading="lazy"
-      onError={() => setError(true)}
+      onError={(e) => {
+        setError(true);
+        onErrorProp?.(e);
+      }}
       {...props}
     />
   );

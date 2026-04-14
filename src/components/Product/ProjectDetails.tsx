@@ -7,11 +7,7 @@ import styles from "./ProjectDetails.module.css"
 import useTitle from "../../hooks/useTitle"
 import OptimizedImage from "../common/OptimizedImage"
 import { getDirectImageUrl } from "../../utils/imageUtils"
-
-// Google Sheet constants
-const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM"
-const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?"
-const PLACES_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1884577336`
+import { fetchProjectDetailCSV } from "../../utils/sheetUtils"
 
 interface ProjectDetail {
   id: string
@@ -51,74 +47,7 @@ interface ProjectDetail {
   }
 }
 
-// Robust CSV parser for Google Sheets format
-const parseCSV = (text: string): string[][] => {
-  const result: string[][] = []
-  let row: string[] = []
-  let cell = ""
-  let inQuotes = false
-  let i = 0
-
-  while (i < text.length) {
-    const char = text[i]
-    const nextChar = text[i + 1]
-
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        // Escaped quote
-        cell += '"'
-        i += 2
-        continue
-      } else {
-        // Toggle quote state
-        inQuotes = !inQuotes
-        i++
-        continue
-      }
-    }
-
-    if (!inQuotes) {
-      if (char === ",") {
-        // End of cell
-        row.push(cell.trim())
-        cell = ""
-        i++
-        continue
-      } else if (char === "\n" || char === "\r") {
-        // End of row
-        if (cell || row.length > 0) {
-          row.push(cell.trim())
-          if (row.some((c) => c.trim())) {
-            // Only add non-empty rows
-            result.push(row)
-          }
-          row = []
-          cell = ""
-        }
-        // Skip \r\n combinations
-        if (char === "\r" && nextChar === "\n") {
-          i += 2
-        } else {
-          i++
-        }
-        continue
-      }
-    }
-
-    cell += char
-    i++
-  }
-
-  // Add final cell and row if they exist
-  if (cell || row.length > 0) {
-    row.push(cell.trim())
-    if (row.some((c) => c.trim())) {
-      result.push(row)
-    }
-  }
-
-  return result
-}
+// CSV parser is now centralized in sheetUtils.ts
 
 // Standardized data cleaning function
 const cleanData = (data: string): string => {
@@ -358,18 +287,8 @@ const ProjectDetails: React.FC = () => {
         setLoading(true)
         setError(null)
 
-        const response = await fetch(PLACES_SHEET_URL)
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const csvText = await response.text()
-
-        if (!csvText.trim()) {
-          throw new Error("No data received from the sheet")
-        }
-
-        const rows = parseCSV(csvText)
+        // Use centralized fetch function
+        const rows = await fetchProjectDetailCSV()
 
         if (rows.length < 2) {
           throw new Error("Invalid data format - no data rows found")

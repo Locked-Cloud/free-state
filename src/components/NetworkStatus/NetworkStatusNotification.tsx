@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNetwork } from '../../contexts/NetworkContext';
-import { Link } from 'react-router-dom';
+
+
 import styles from './NetworkStatusNotification.module.css';
 import { WifiOff, Wifi, X } from 'react-feather';
 

@@ -177,7 +177,6 @@ const OTP: React.FC = () => {
 
       const dataRows = rows.slice(1);
       let otpVerified = false;
-      let userRole = "user";
 
       for (const row of dataRows) {
         if (row.length <= Math.max(usernameIndex, otpIndex)) continue;
@@ -187,12 +186,6 @@ const OTP: React.FC = () => {
 
         if (rowUsername === username && storedOtp === otpValue) {
           otpVerified = true;
-          
-          // Get user role if available
-          if (roleIndex !== -1 && row[roleIndex]) {
-            userRole = row[roleIndex];
-          }
-          
           break;
         }
       }

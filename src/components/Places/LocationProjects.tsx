@@ -2,315 +2,57 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import styles from "./Places.module.css";
 import OptimizedImage from "../common/OptimizedImage";
-import { getDirectImageUrl } from "../../utils/imageUtils";
-
-interface Project {
-  id: string;
-  id_loc: string;
-  name: string;
-  image: string;
-  description?: string;
-  companyId: string;
-}
-
-const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
-
-const DATA_SHEET_GID = "1884577336";
-
-const getProjectsSheetURL = (gid: string) => {
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
-};
-
-const PROJECTS_SHEET_URL = getProjectsSheetURL(DATA_SHEET_GID);
-
-const ALTERNATIVE_GIDS = ["0", "1977229403", "658730705", "123456789"];
-
-const PUBLIC_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing`;
-
-const parseCSV = (text: string): string[][] => {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentCell = "";
-  let insideQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i + 1];
-
-    if (char === '"') {
-      if (insideQuotes && nextChar === '"') {
-        currentCell += '"';
-        i++;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-    } else if (char === "," && !insideQuotes) {
-      currentRow.push(currentCell.trim());
-      currentCell = "";
-    } else if ((char === "\n" || char === "\r") && !insideQuotes) {
-      if (char === "\r" && nextChar === "\n") {
-        i++; // Skip the \n in \r\n
-      }
-      currentRow.push(currentCell.trim());
-      if (currentRow.some((cell) => cell)) {
-        rows.push(currentRow);
-      }
-      currentRow = [];
-      currentCell = "";
-    } else {
-      currentCell += char;
-    }
-  }
-
-  if (currentCell) {
-    currentRow.push(currentCell.trim());
-  }
-  if (currentRow.length > 0) {
-    rows.push(currentRow);
-  }
-
-  return rows;
-};
+import { fetchLocationProjects } from "../../utils/sheetUtils";
+import { ComponentLoader } from "../LoadingScreen";
+import type { LocationProject } from "../../types";
 
 const LocationProjects: React.FC = () => {
   const { id_loc } = useParams<{ id_loc: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<LocationProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [placeName, setPlaceName] = useState<string>("");
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const loadProjects = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        let csvText = "";
-
-        try {
-          const response = await fetch(PROJECTS_SHEET_URL);
-          if (response.ok) {
-            csvText = await response.text();
-          } else {
-            throw new Error(`Main URL failed: ${response.status}`);
-          }
-        } catch (mainError) {
-          for (const altGid of ALTERNATIVE_GIDS) {
-            if (altGid === DATA_SHEET_GID) continue;
-
-            const altUrl = getProjectsSheetURL(altGid);
-
-            try {
-              const altResponse = await fetch(altUrl);
-              if (altResponse.ok) {
-                csvText = await altResponse.text();
-                break;
-              }
-            } catch (altError) {
-              continue;
-            }
-          }
-
-          if (!csvText) {
-            throw new Error(`All URL attempts failed. Please check:
-1. Sheet permissions: Visit ${PUBLIC_SHEET_URL}
-2. Make sure sheet is publicly viewable
-3. Verify the "data" sheet exists
-4. Check if you're using the correct sheet ID`);
-          }
+        if (!id_loc) {
+          throw new Error("Location ID is required");
         }
 
-        if (!csvText || csvText.trim() === "") {
-          throw new Error(
-            "Empty CSV response - check if sheet exists and is accessible"
-          );
-        }
-
-        if (csvText.includes("<!DOCTYPE html")) {
-          throw new Error(
-            "Received HTML instead of CSV - sheet may not be publicly accessible. Please visit: " +
-              PUBLIC_SHEET_URL
-          );
-        }
-
-        if (csvText.includes("400. That's an error")) {
-          throw new Error(
-            "Sheet access denied. Please make sure the sheet is publicly viewable"
-          );
-        }
-
-        const rows = parseCSV(csvText);
-
-        if (rows.length === 0) {
-          throw new Error("Empty CSV data");
-        }
-
-        const header = rows[0].map((col: string) =>
-          col.toLowerCase().replace(/"/g, "").trim()
-        );
-
-        const companyIdIndex = header.findIndex(
-          (col) =>
-            col === "id" || col === "company_id" || col.includes("company")
-        );
-        const projectIdIndex = header.findIndex(
-          (col) =>
-            col === "project_id" ||
-            (col.includes("project") && col.includes("id"))
-        );
-        const nameIndex = header.findIndex(
-          (col) => col === "name" || col === "title" || col === "project_name"
-        );
-        const descIndex = header.findIndex(
-          (col) =>
-            col === "description" ||
-            col === "desc" ||
-            col.includes("detail") ||
-            col === "key_features" ||
-            col.includes("feature")
-        );
-        const imageIndex = header.findIndex(
-          (col) =>
-            col === "image_url" ||
-            col === "image" ||
-            col === "image_path" ||
-            col.includes("photo") ||
-            col.includes("pic") ||
-            col.includes("img")
-        );
-        const idLocIndex = header.findIndex(
-          (col) =>
-            col === "id_loc" || col === "location_id" || col.includes("loc")
-        );
-
-        if (nameIndex === -1 || idLocIndex === -1) {
-          const errorMsg = `Missing required columns! Found headers: ${header.join(
-            ", "
-          )}. Need 'name' and 'id_loc' columns.`;
-          throw new Error(errorMsg);
-        }
-
-        const dataRows = rows.slice(1);
-        const filteredProjects: Project[] = [];
-
-        let projectCounter = 1;
-
-        for (let i = 0; i < dataRows.length; i++) {
-          const row = dataRows[i];
-
-          if (!row || row.length === 0) continue;
-
-          try {
-            const columns = row;
-
-            const maxIndex = Math.max(
-              companyIdIndex,
-              projectIdIndex,
-              nameIndex,
-              descIndex,
-              imageIndex,
-              idLocIndex
-            );
-
-            if (columns.length <= maxIndex) {
-              continue;
-            }
-
-            const companyId =
-              companyIdIndex !== -1
-                ? columns[companyIdIndex]?.trim() || ""
-                : "";
-            const projectId =
-              projectIdIndex !== -1
-                ? columns[projectIdIndex]?.trim() || ""
-                : "";
-            const rowIdLoc =
-              idLocIndex !== -1 ? columns[idLocIndex]?.trim() || "" : "";
-            const rowName =
-              nameIndex !== -1 ? columns[nameIndex]?.trim() || "" : "";
-            const rowDesc =
-              descIndex !== -1 ? columns[descIndex]?.trim() || "" : "";
-            const rowImage =
-              imageIndex !== -1 ? columns[imageIndex]?.trim() || "" : "";
-
-            if (rowIdLoc && rowIdLoc === id_loc && rowName) {
-              let uniqueProjectId;
-              if (projectId && projectId !== "") {
-                uniqueProjectId = projectId;
-              } else {
-                uniqueProjectId = companyId
-                  ? `${companyId}_${projectCounter}`
-                  : `project_${projectCounter}`;
-              }
-
-              const imageUrl = getDirectImageUrl(rowImage);
-
-              const project: Project = {
-                id: uniqueProjectId,
-                id_loc: rowIdLoc,
-                name: rowName,
-                image: imageUrl,
-                description: rowDesc,
-                companyId: companyId,
-              };
-
-              filteredProjects.push(project);
-              projectCounter++;
-            }
-          } catch (rowError) {
-            continue;
-          }
-        }
-
-        setProjects(filteredProjects);
+        const data = await fetchLocationProjects(id_loc);
+        setProjects(data);
       } catch (err) {
-
-        let errorMessage = "Failed to load projects: ";
-        if (err instanceof Error) {
-          errorMessage += err.message;
-        } else {
-          errorMessage += "Unknown error";
-        }
-
-        if (
-          errorMessage.includes("400") ||
-          errorMessage.includes("HTTP error")
-        ) {
-          errorMessage +=
-            "\n\n🔧 Fix this by:\n1. Open your Google Sheet\n2. Click 'Share' button\n3. Change to 'Anyone with the link can view'\n4. Make sure the 'data' sheet tab exists";
-        }
-
+        const errorMessage = err instanceof Error
+          ? `Failed to load projects: ${err.message}`
+          : "Failed to load projects. Please try again.";
         setError(errorMessage);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProjects();
+    loadProjects();
 
     if (location.state && (location.state as any).place) {
       setPlaceName((location.state as any).place.name);
     }
   }, [id_loc, location.state]);
 
-  const handleProjectClick = (project: Project) => {
-    const targetUrl = `/projects/${project.companyId}/${project.id}`;
-    navigate(targetUrl);
+  const handleProjectClick = (project: LocationProject) => {
+    navigate(`/projects/${project.companyId}/${project.id}`);
   };
 
   if (loading) {
     return (
       <div className={styles.container}>
         <h1 className={styles.title}>Projects in {placeName || id_loc}</h1>
-        <div className={styles.loadingSpinner}>
-          <div className={styles.spinner}></div>
-          <div style={{ marginTop: "16px", color: "#666" }}>
-            Loading projects from data sheet...
-          </div>
-        </div>
+        <ComponentLoader message="Loading projects..." />
       </div>
     );
   }
@@ -331,25 +73,10 @@ const LocationProjects: React.FC = () => {
                 border: "none",
                 borderRadius: "4px",
                 cursor: "pointer",
-                marginRight: "8px",
               }}
             >
               Try Again
             </button>
-            <a
-              href={PUBLIC_SHEET_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#28a745",
-                color: "white",
-                textDecoration: "none",
-                borderRadius: "4px",
-              }}
-            >
-              Check Sheet Access
-            </a>
           </div>
         </div>
       </div>
@@ -374,9 +101,6 @@ const LocationProjects: React.FC = () => {
             <div className={styles.noProjectsSecondary}>
               Please check back later or explore other locations!
             </div>
-            <div style={{ fontSize: "0.8em", color: "#999", marginTop: "8px" }}>
-              Location ID: {id_loc}
-            </div>
           </div>
         ) : (
           projects.map((project, index) => (
@@ -392,9 +116,6 @@ const LocationProjects: React.FC = () => {
                   className={styles.placeImage}
                   loadingDelay={index * 150}
                   loadingClassName={styles.imageLoading}
-                  onError={(e) => {
-                    // Failed to load image
-                  }}
                 />
               </div>
               <div className={styles.contentContainer}>

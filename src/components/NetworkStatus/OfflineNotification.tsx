@@ -1,6 +1,7 @@
 import React from 'react';
 import { WifiOff, RefreshCw, Home } from 'react-feather';
-import { useNetwork } from '../../contexts/NetworkContext';
+
+
 import styles from './OfflineNotification.module.css';
 
 interface OfflineNotificationProps {
@@ -12,16 +13,6 @@ const OfflineNotification: React.FC<OfflineNotificationProps> = ({
   onRefresh = () => window.location.reload(), 
   onGoHome = () => window.location.href = '/' 
 }) => {
-  const { lastOfflineAt } = useNetwork();
-  
-  // Format date for display
-  const formatDate = (date: Date | null) => {
-    if (!date) return '';
-    return new Intl.DateTimeFormat('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(date);
-  };
 
   return (
     <div className={styles.offlineContainer}>

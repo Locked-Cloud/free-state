@@ -12,6 +12,18 @@ import {
   sanitizeInput
 } from "../../utils/securityUtils";
 
+/**
+ * Hash a password using SHA-256 via the Web Crypto API.
+ * Returns a hex string.
+ */
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 interface LoginFormData {
   username: string;
   password: string;
@@ -131,23 +143,27 @@ const Login: React.FC = () => {
         if (row.length <= Math.max(usernameIndex, passwordIndex)) continue;
 
         const username = row[usernameIndex];
-        const password = row[passwordIndex];
+        const storedPassword = row[passwordIndex];
 
-        // Check if username and password match
-        if (username === formData.username && password === formData.password) {
-          authenticated = true;
+        // Compare passwords: try SHA-256 hash first, then plaintext for migration
+        if (username === formData.username) {
+          const inputHash = await hashPassword(formData.password);
+          const passwordMatch = storedPassword === inputHash || storedPassword === formData.password;
+          if (passwordMatch) {
+            authenticated = true;
 
-          // Check if user is active
-          if (activeIndex !== -1 && row[activeIndex] === "0") {
-            isActive = false;
+            // Check if user is active
+            if (activeIndex !== -1 && row[activeIndex] === "0") {
+              isActive = false;
+            }
+
+            // Get user role if available
+            if (roleIndex !== -1 && row[roleIndex]) {
+              userRole = row[roleIndex];
+            }
+
+            break;
           }
-
-          // Get user role if available
-          if (roleIndex !== -1 && row[roleIndex]) {
-            userRole = row[roleIndex];
-          }
-
-          break;
         }
       }
 

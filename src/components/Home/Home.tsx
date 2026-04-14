@@ -1,19 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Home.module.css";
 import OptimizedImage from "../common/OptimizedImage";
 import { fetchCompanies } from "../../utils/sheetUtils";
-import { Search, Building2, ArrowRight, MapPin, Star, Filter, AlertCircle } from "lucide-react";
+import { Search, Building2, ArrowRight, MapPin, Star, AlertCircle } from "lucide-react";
 import { ComponentLoader } from "../LoadingScreen";
+import type { Company } from "../../types";
 
-interface Company {
-  id: number;
-  name: string;
-  description: string;
-  website: string;
-  imageUrl: string;
-  active: number; // 1 for active, 0 for inactive
-}
+
 
 const DEFAULT_LOGO = "https://placehold.co/800x600?text=Image+Not+Found";
 
@@ -32,39 +26,7 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-// Debug component to show network/device info
-const DebugInfo = ({ error, retryCount }: { error: string | null, retryCount: number }) => {
-  const [debugInfo, setDebugInfo] = useState<any>({});
 
-  useEffect(() => {
-    const info = {
-      userAgent: navigator.userAgent,
-      connection: (navigator as any).connection ? {
-        effectiveType: (navigator as any).connection.effectiveType,
-        downlink: (navigator as any).connection.downlink,
-        rtt: (navigator as any).connection.rtt,
-      } : null,
-      online: navigator.onLine,
-      cookieEnabled: navigator.cookieEnabled,
-      platform: navigator.platform,
-      language: navigator.language,
-      timestamp: new Date().toISOString(),
-      retryAttempts: retryCount,
-    };
-    setDebugInfo(info);
-  }, [error, retryCount]);
-
-  if (!error) return null;
-
-  return (
-    <details style={{ marginTop: '10px', fontSize: '12px', opacity: 0.7 }}>
-      <summary>Debug Info (Tap to expand)</summary>
-      <pre style={{ fontSize: '10px', overflow: 'auto' }}>
-        {JSON.stringify(debugInfo, null, 2)}
-      </pre>
-    </details>
-  );
-};
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -74,7 +36,7 @@ const Home: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [heroSearchTerm, setHeroSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "none">("none");
+  const [sortBy] = useState<"name" | "none">("none");
   const [retryCount, setRetryCount] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const mainSearchInputRef = useRef<HTMLInputElement>(null);
@@ -94,7 +56,7 @@ const Home: React.FC = () => {
     };
   }, []);
 
-  const fetchDataWithRetry = async (maxRetries = 3, delay = 1000) => {
+  const fetchDataWithRetry = useCallback(async (maxRetries = 3, delay = 1000) => {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         setLoading(true);
@@ -167,7 +129,7 @@ const Home: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDataWithRetry();
@@ -189,14 +151,13 @@ const Home: React.FC = () => {
         clearTimeout(fetchTimeoutRef.current);
       }
     };
-  }, []);
+  }, [fetchDataWithRetry]);
 
-  // Retry when coming back online
   useEffect(() => {
     if (isOnline && error && companies.length === 0) {
       fetchDataWithRetry();
     }
-  }, [isOnline]);
+  }, [isOnline, error, companies.length, fetchDataWithRetry]);
 
   useEffect(() => {
     let result = [...companies];
@@ -297,8 +258,6 @@ const Home: React.FC = () => {
               Refresh Page
             </button>
           </div>
-          
-          <DebugInfo error={error} retryCount={retryCount} />
         </div>
       </div>
     );

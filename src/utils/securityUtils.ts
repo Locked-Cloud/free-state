@@ -3,12 +3,6 @@
  * Includes rate limiting, input validation, and security helpers
  */
 
-// Rate limiting configuration
-interface RateLimitConfig {
-  maxAttempts: number;  // Maximum number of attempts allowed
-  timeWindow: number;   // Time window in milliseconds
-  blockDuration: number; // Duration to block in milliseconds after max attempts
-}
 
 // Default configurations for different security features
 const DEFAULT_CONFIGS = {

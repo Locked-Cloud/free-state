@@ -57,6 +57,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, now.toString());
   }, []);
 
+  // Logout function — declared before useEffect that depends on it
+  const logout = useCallback(() => {
+    // Clear auth data from localStorage
+    localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
+    localStorage.removeItem(STORAGE_KEYS.USERNAME);
+    localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY);
+    
+    // Clear OTP verification
+    sessionStorage.removeItem("otpVerified");
+    
+    // Reset state
+    setIsAuthenticated(false);
+    setUsername(null);
+    setUserRole(null);
+  }, []);
+
   // Initialize auth state from storage
   useEffect(() => {
     // Check if user is already authenticated
@@ -99,7 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         window.removeEventListener(event, handleUserActivity);
       });
     };
-  }, [isAuthenticated, isSessionExpired, updateLastActivity]);
+  }, [isAuthenticated, isSessionExpired, updateLastActivity, logout]);
 
   // Login function
   const login = useCallback((username: string, role: string = "user") => {
@@ -116,24 +134,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUsername(username);
     setUserRole(role);
     setLastActivity(now);
-  }, []);
-
-  // Logout function
-  const logout = useCallback(() => {
-    // Clear auth data from localStorage
-    localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
-    localStorage.removeItem(STORAGE_KEYS.USERNAME);
-    localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY);
-    
-    // Clear OTP verification
-    sessionStorage.removeItem("otpVerified");
-    
-    // Reset state
-    setIsAuthenticated(false);
-    setUsername(null);
-    setUserRole(null);
   }, []);
 
   return (

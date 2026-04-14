@@ -1,23 +1,17 @@
 /**
- * Utilities for fetching and processing Google Sheets data with caching and error handling
+ * Centralized data service for fetching and processing Google Sheets data.
+ * ALL components should use these functions — never call fetch() directly.
  */
 
 import { getFromCache, saveToCache, CACHE_DURATIONS } from './cacheUtils';
 import { getDirectImageUrl } from './imageUtils';
+import type { Company, Place, LocationProject } from '../types';
 
-// Define the Company interface
-export interface Company {
-  id: number;
-  name: string;
-  description: string;
-  website: string;
-  imageUrl: string;
-  active: number; // 1 for active, 0 for inactive
-}
+// Re-export types so existing imports don't break
+export type { Company };
 
 // Constants
 export const SHEET_ID = process.env.REACT_APP_SHEET_ID || "1LBjCIE_wvePTszSrbSmt3szn-7m8waGX5Iut59zwURM";
-export const CORS_PROXY = process.env.REACT_APP_CORS_PROXY || "https://corsproxy.io/?";
 
 // Sheet GIDs
 export const SHEET_GIDS = {
@@ -39,27 +33,17 @@ const ERROR_MESSAGES = {
 
 /**
  * Get the URL for a Google Sheet
- * @param gid The sheet GID
- * @param format The export format (default: csv)
- * @returns The sheet URL
  */
 export function getSheetUrl(gid: string, format: 'csv' | 'tq' = 'csv'): string {
-  let baseUrl = '';
-  
   if (format === 'tq') {
-    baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
-  } else {
-    baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+    return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
   }
-  
-  // Google Sheets export and gviz endpoints now support CORS directly
-  return baseUrl;
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 }
 
 /**
- * Parse CSV data into rows and columns
- * @param text The CSV text
- * @returns Array of rows, each containing an array of column values
+ * Robust CSV parser for Google Sheets format.
+ * This is the ONLY CSV parser in the project — all components use this.
  */
 export function parseCSV(text: string): string[][] {
   const rows: string[][] = [];
@@ -106,293 +90,304 @@ export function parseCSV(text: string): string[][] {
   return rows;
 }
 
-/**
- * Fetch data from a Google Sheet with caching, retries, and error handling
- * @param sheetType The type of sheet to fetch (companies, projects, users, places)
- * @param cacheDuration How long to cache the data
- * @param format The export format
- * @param maxRetries Maximum number of retry attempts
- * @returns Object with success flag, data (if successful), and error message (if failed)
- */
-/**
- * Fetch companies data from the server API
- * @returns Promise with array of Company objects
- */
-export async function fetchCompanies(): Promise<Company[]> {
-  const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-  const cacheKey = 'companies_data';
-  
-  // Try to get from cache first
-  const cachedData = getFromCache<Company[]>(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
-  
-  try {
-    // Attempt to fetch from backend API first
-    let csvText = "";
-    try {
-      // Check if we're in production at pages.dev domain
-      // Use backend API whenever a base URL is provided via environment variables
-      const shouldUseBackend = Boolean(API_BASE_URL);
-      
-      if (!shouldUseBackend) {
-        throw new Error("Skip backend fetch in production or pages.dev environment");
-      }
-      
-      const backendResponse = await fetch(`${API_BASE_URL}/api/sheets/companies`);
-      if (backendResponse.ok) {
-        csvText = await backendResponse.text();
-      } else {
-        throw new Error(`Backend responded with status: ${backendResponse.status}`);
-      }
-    } catch (backendError) {
-      const fallbackUrl = getSheetUrl(SHEET_GIDS.COMPANIES, 'csv');
-      const fallbackResponse = await fetch(fallbackUrl);
-      if (!fallbackResponse.ok) {
-        throw new Error(`Fallback Google Sheets responded with status: ${fallbackResponse.status}`);
-      }
-      csvText = await fallbackResponse.text();
-    }
-    
-    // Parse CSV data
-    const rows = parseCSV(csvText);
-    
-    if (rows.length < 2) {
-      throw new Error('Invalid data format');
-    }
-    
-    // Get header row and find column indices
-    const headerRow = rows[0].map(col => col.toLowerCase().trim());
-    const activeColumnIndex = findColumnIndex(headerRow, ['active', 'status']);
-    
-    // Parse companies data
-    const companies = rows.slice(1)
-      .map(columns => {
-        if (columns.length < 5) return null;
-        
-        try {
-          const imageUrl = getDirectImageUrl(columns[4]);
-          
-          // Get active status
-          let activeValue = '1'; // Default to active
-          if (activeColumnIndex !== -1 && columns[activeColumnIndex]) {
-            activeValue = columns[activeColumnIndex];
-          }
-          
-          return {
-            id: parseInt(columns[0], 10),
-            name: columns[1],
-            description: columns[2] || '',
-            website: columns[3] || '',
-            imageUrl,
-            active: parseInt(activeValue || '1'),
-          };
-        } catch (error) {
-          return null;
-        }
-      })
-      .filter((company): company is Company => company !== null);
-    
-    // Cache the results
-    saveToCache(cacheKey, companies, CACHE_DURATIONS.MEDIUM);
-    
-    return companies;
-  } catch (error) {
-    throw error;
-  }
-}
+// ──────────────────────────────────────────────
+// Centralized Fetch Helpers
+// ──────────────────────────────────────────────
 
-export async function fetchSheetData(
-  sheetType: 'companies' | 'projects' | 'users' | 'places',
-  cacheDuration = CACHE_DURATIONS.MEDIUM,
-  format: 'csv' | 'tq' = 'csv',
-  maxRetries = 3
-): Promise<{ success: boolean; data?: string; error?: string }> {
-  // Map sheet type to GID
-  let gid: string;
-  switch (sheetType) {
-    case 'companies':
-      gid = SHEET_GIDS.COMPANIES;
-      break;
-    case 'projects':
-      gid = SHEET_GIDS.PROJECTS;
-      break;
-    case 'users':
-      gid = SHEET_GIDS.USERS;
-      break;
-    case 'places':
-      gid = SHEET_GIDS.PLACES;
-      break;
-    default:
-      return { success: false, error: 'Invalid sheet type' };
-  }
-  
-  const cacheKey = `sheet_${sheetType}`;
-  
-  // Try to get from cache first
+/**
+ * Core fetch function that handles Google Sheets fetching with caching and retries.
+ * All specific fetch functions delegate to this.
+ */
+async function fetchSheetCSV(
+  gid: string,
+  cacheKey: string,
+  cacheDuration: number = CACHE_DURATIONS.MEDIUM,
+  maxRetries: number = 3
+): Promise<string> {
+  // Try cache first
   const cachedData = getFromCache<string>(cacheKey);
-  if (cachedData) {
-    return { success: true, data: cachedData };
-  }
-  
-  // Attempt to fetch from backend API first if available
-  const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-  if (API_BASE_URL) {
-    try {
-      const backendResponse = await fetch(`${API_BASE_URL}/api/sheets/${sheetType}?format=${format}`);
-      if (backendResponse.ok) {
-        const csvText = await backendResponse.text();
-        // Cache and return immediately on success
-        saveToCache(cacheKey, csvText, cacheDuration);
-        return { success: true, data: csvText };
-      }
-    } catch (_) {
-      // Silent failover to direct sheet fetch below
-    }
-  }
+  if (cachedData) return cachedData;
 
-  // If not in cache, fetch from API
-  let retries = 0;
   let lastError: Error | null = null;
 
-  while (retries < maxRetries) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      // If we're in pages.dev environment, skip API call and use direct Google Sheets URL
-      const url = getSheetUrl(gid, format);
+      const url = getSheetUrl(gid, 'csv');
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      try {
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
 
-        if (!response.ok) {
-          const errorMessage = response.status === 403
-            ? ERROR_MESSAGES.ACCESS_DENIED
-            : `${ERROR_MESSAGES.SERVER} (Status: ${response.status})`;
-          throw new Error(errorMessage);
-        }
-
-        const csvText = await response.text();
-
-        // Validate the response
-        if (!csvText || csvText.trim() === "") {
-          throw new Error(ERROR_MESSAGES.EMPTY);
-        }
-
-        if (csvText.includes("<!DOCTYPE html")) {
-          throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
-        }
-
-        if (csvText.includes("400. That's an error")) {
-          throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
-        }
-
-        // Cache the successful result
-        saveToCache(cacheKey, csvText, cacheDuration);
-
-        return { success: true, data: csvText };
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
+      if (!response.ok) {
+        const errorMessage = response.status === 403
+          ? ERROR_MESSAGES.ACCESS_DENIED
+          : `${ERROR_MESSAGES.SERVER} (Status: ${response.status})`;
+        throw new Error(errorMessage);
       }
+
+      const csvText = await response.text();
+
+      // Validate the response
+      if (!csvText || csvText.trim() === "") {
+        throw new Error(ERROR_MESSAGES.EMPTY);
+      }
+      if (csvText.includes("<!DOCTYPE html")) {
+        throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
+      }
+      if (csvText.includes("400. That's an error")) {
+        throw new Error(ERROR_MESSAGES.ACCESS_DENIED);
+      }
+
+      // Cache and return
+      saveToCache(cacheKey, csvText, cacheDuration);
+      return csvText;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      retries++;
 
-      // Add exponential backoff between retries
-      if (retries < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries - 1)));
+      // Exponential backoff between retries
+      if (attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
       }
     }
   }
 
-  // If all retries failed, return error
-  const errorMessage = lastError?.message || ERROR_MESSAGES.NETWORK;
-  return { success: false, error: errorMessage };
+  throw lastError || new Error(ERROR_MESSAGES.NETWORK);
+}
+
+// ──────────────────────────────────────────────
+// Public API: Typed fetch functions
+// ──────────────────────────────────────────────
+
+/**
+ * Fetch companies data, parsed and typed.
+ */
+export async function fetchCompanies(): Promise<Company[]> {
+  const cacheKey = 'companies_data';
+
+  // Try parsed cache first
+  const cachedCompanies = getFromCache<Company[]>(cacheKey);
+  if (cachedCompanies) return cachedCompanies;
+
+  const csvText = await fetchSheetCSV(SHEET_GIDS.COMPANIES, 'sheet_companies_raw');
+  const rows = parseCSV(csvText);
+
+  if (rows.length < 2) {
+    throw new Error('Invalid data format');
+  }
+
+  const headerRow = rows[0].map(col => col.toLowerCase().trim());
+  const activeColumnIndex = findColumnIndex(headerRow, ['active', 'status']);
+
+  const companies = rows.slice(1)
+    .map(columns => {
+      if (columns.length < 5) return null;
+      try {
+        const imageUrl = getDirectImageUrl(columns[4]);
+        let activeValue = '1';
+        if (activeColumnIndex !== -1 && columns[activeColumnIndex]) {
+          activeValue = columns[activeColumnIndex];
+        }
+        return {
+          id: parseInt(columns[0], 10),
+          name: columns[1],
+          description: columns[2] || '',
+          website: columns[3] || '',
+          imageUrl,
+          active: parseInt(activeValue || '1'),
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter((company): company is Company => company !== null);
+
+  saveToCache(cacheKey, companies, CACHE_DURATIONS.MEDIUM);
+  return companies;
 }
 
 /**
- * Find column indices from header row
- * @param headerRow The header row
- * @param columnNames Array of possible column names to find
- * @returns The index of the first matching column, or -1 if not found
+ * Fetch raw sheet data (for login/OTP which need raw CSV).
+ */
+export async function fetchSheetData(
+  sheetType: 'companies' | 'projects' | 'users' | 'places',
+  cacheDuration = CACHE_DURATIONS.MEDIUM
+): Promise<{ success: boolean; data?: string; error?: string }> {
+  let gid: string;
+  switch (sheetType) {
+    case 'companies': gid = SHEET_GIDS.COMPANIES; break;
+    case 'projects': gid = SHEET_GIDS.PROJECTS; break;
+    case 'users': gid = SHEET_GIDS.USERS; break;
+    case 'places': gid = SHEET_GIDS.PLACES; break;
+    default: return { success: false, error: 'Invalid sheet type' };
+  }
+
+  try {
+    const csvText = await fetchSheetCSV(gid, `sheet_${sheetType}`, cacheDuration);
+    return { success: true, data: csvText };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.NETWORK;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Fetch places data, parsed and typed.
+ */
+export async function fetchPlaces(): Promise<Place[]> {
+  const cacheKey = 'places_data';
+
+  const cachedPlaces = getFromCache<Place[]>(cacheKey);
+  if (cachedPlaces) return cachedPlaces;
+
+  const csvText = await fetchSheetCSV(SHEET_GIDS.PLACES, 'sheet_places_raw');
+  const rows = parseCSV(csvText);
+
+  if (rows.length < 2) {
+    throw new Error('Invalid data format');
+  }
+
+  const header = rows[0].map(col => col.toLowerCase().trim());
+  const idIndex = header.findIndex(col => col === "id_loc" || col === "id");
+  const nameIndex = header.findIndex(col => col === "name");
+  const descIndex = header.findIndex(col => col === "description");
+  const imageIndex = header.findIndex(col => col === "image_url");
+
+  const places = rows.slice(1)
+    .map(columns => {
+      if (columns[idIndex] && columns[nameIndex]) {
+        return {
+          id: columns[idIndex],
+          name: columns[nameIndex],
+          description: descIndex !== -1 ? columns[descIndex] : "",
+          image: getDirectImageUrl(columns[imageIndex] || ""),
+        };
+      }
+      return null;
+    })
+    .filter((place): place is Place => place !== null);
+
+  saveToCache(cacheKey, places, CACHE_DURATIONS.MEDIUM);
+  return places;
+}
+
+/**
+ * Fetch projects for a specific location, parsed and typed.
+ */
+export async function fetchLocationProjects(locationId: string): Promise<LocationProject[]> {
+  const csvText = await fetchSheetCSV(SHEET_GIDS.PROJECTS, 'sheet_projects_raw');
+  const rows = parseCSV(csvText);
+
+  if (rows.length < 2) return [];
+
+  const header = rows[0].map(col => col.toLowerCase().replace(/"/g, "").trim());
+
+  const companyIdIndex = header.findIndex(col => col === "id" || col === "company_id" || col.includes("company"));
+  const projectIdIndex = header.findIndex(col => col === "project_id" || (col.includes("project") && col.includes("id")));
+  const nameIndex = header.findIndex(col => col === "name" || col === "title" || col === "project_name");
+  const descIndex = header.findIndex(col => col === "description" || col === "desc" || col.includes("detail") || col === "key_features" || col.includes("feature"));
+  const imageIndex = header.findIndex(col => col === "image_url" || col === "image" || col === "image_path" || col.includes("photo") || col.includes("pic") || col.includes("img"));
+  const idLocIndex = header.findIndex(col => col === "id_loc" || col === "location_id" || col.includes("loc"));
+
+  if (nameIndex === -1 || idLocIndex === -1) {
+    throw new Error(`Missing required columns. Found: ${header.join(", ")}. Need 'name' and 'id_loc'.`);
+  }
+
+  const projects: LocationProject[] = [];
+  let counter = 1;
+
+  for (const row of rows.slice(1)) {
+    if (!row || row.length === 0) continue;
+
+    const maxIndex = Math.max(companyIdIndex, projectIdIndex, nameIndex, descIndex, imageIndex, idLocIndex);
+    if (row.length <= maxIndex) continue;
+
+    const rowIdLoc = idLocIndex !== -1 ? row[idLocIndex]?.trim() || "" : "";
+    const rowName = nameIndex !== -1 ? row[nameIndex]?.trim() || "" : "";
+
+    if (rowIdLoc === locationId && rowName) {
+      const companyId = companyIdIndex !== -1 ? row[companyIdIndex]?.trim() || "" : "";
+      const projectId = projectIdIndex !== -1 ? row[projectIdIndex]?.trim() || "" : "";
+      const rowDesc = descIndex !== -1 ? row[descIndex]?.trim() || "" : "";
+      const rowImage = imageIndex !== -1 ? row[imageIndex]?.trim() || "" : "";
+
+      projects.push({
+        id: projectId || (companyId ? `${companyId}_${counter}` : `project_${counter}`),
+        id_loc: rowIdLoc,
+        name: rowName,
+        image: getDirectImageUrl(rowImage),
+        description: rowDesc,
+        companyId,
+      });
+      counter++;
+    }
+  }
+
+  return projects;
+}
+
+/**
+ * Fetch projects sheet CSV for the Product page (company projects).
+ */
+export async function fetchProjectsCSV(): Promise<string[][]> {
+  const csvText = await fetchSheetCSV(SHEET_GIDS.PROJECTS, 'sheet_projects_raw');
+  return parseCSV(csvText);
+}
+
+/**
+ * Fetch companies sheet CSV for the Product page.
+ */
+export async function fetchCompaniesCSV(): Promise<string[][]> {
+  const csvText = await fetchSheetCSV(SHEET_GIDS.COMPANIES, 'sheet_companies_raw');
+  return parseCSV(csvText);
+}
+
+/**
+ * Fetch projects sheet CSV using the tq format (for ProjectDetails).
+ */
+export async function fetchProjectDetailCSV(): Promise<string[][]> {
+  const cacheKey = 'sheet_projects_tq';
+  const cachedData = getFromCache<string>(cacheKey);
+  
+  let csvText: string;
+  if (cachedData) {
+    csvText = cachedData;
+  } else {
+    const url = getSheetUrl(SHEET_GIDS.PROJECTS, 'tq');
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    csvText = await response.text();
+    
+    if (!csvText.trim()) {
+      throw new Error("No data received from the sheet");
+    }
+    
+    saveToCache(cacheKey, csvText, CACHE_DURATIONS.MEDIUM);
+  }
+  
+  return parseCSV(csvText);
+}
+
+// ──────────────────────────────────────────────
+// Utility functions
+// ──────────────────────────────────────────────
+
+/**
+ * Find column indices from header row.
  */
 export function findColumnIndex(headerRow: string[], columnNames: string[]): number {
-  const normalizedHeaders = headerRow.map(col => 
+  const normalizedHeaders = headerRow.map(col =>
     col.toLowerCase().replace(/["']/g, '').trim()
   );
-  
+
   for (const name of columnNames) {
-    const index = normalizedHeaders.findIndex(header => 
+    const index = normalizedHeaders.findIndex(header =>
       header === name.toLowerCase() || header.includes(name.toLowerCase())
     );
     if (index !== -1) return index;
   }
-  
+
   return -1;
-}
-
-/**
- * Get a direct image URL from a Google Drive link or other image URL
- * @param url The original image URL
- * @returns A direct image URL
- */
-function getDirectImageUrlDeprecated(url: string): string {
-  if (!url || url.trim() === "") {
-    return "https://placehold.co/800x600?text=No+Image";
-  }
-
-  try {
-    const cleanUrl = url.trim();
-
-    if (cleanUrl.includes("drive.google.com")) {
-      let fileId = "";
-
-      if (cleanUrl.includes("/file/d/")) {
-        const match = cleanUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      } else if (cleanUrl.includes("id=")) {
-        const match = cleanUrl.match(/id=([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      } else if (cleanUrl.includes("/d/")) {
-        const match = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        if (match) fileId = match[1];
-      }
-
-      if (fileId) {
-        // Use the server API to proxy Google Drive images
-        const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-        return `${API_BASE_URL}/api/image?fileId=${fileId}`;
-      }
-    }
-
-    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl)) {
-      // Use the server API to proxy image URLs
-      const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-      return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(cleanUrl)}`;
-    }
-
-    if (
-      cleanUrl.includes("imgur.com") ||
-      cleanUrl.includes("cloudinary.com") ||
-      cleanUrl.includes("amazonaws.com") ||
-      cleanUrl.includes("unsplash.com") ||
-      cleanUrl.includes("picsum.photos") ||
-      cleanUrl.includes("via.placeholder.com")
-    ) {
-      // Use the server API to proxy image URLs
-      const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-      return `${API_BASE_URL}/api/proxy-image?url=${encodeURIComponent(cleanUrl)}`;
-    }
-
-    if (cleanUrl.startsWith("http")) {
-      return cleanUrl;
-    }
-  } catch (error) {
-    // Silent error handling to prevent crashes
-  }
-
-  return "https://placehold.co/800x600?text=Invalid+URL";
 }

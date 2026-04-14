@@ -2,20 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Places.module.css";
 import OptimizedImage from "../common/OptimizedImage";
-import { getDirectImageUrl } from "../../utils/imageUtils";
-import { getSheetUrl, SHEET_GIDS } from "../../utils/sheetUtils";
-
-interface Place {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-}
-
-// Backend API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-const API_URL = API_BASE_URL ? (API_BASE_URL.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`) : "";
-const PLACES_ENDPOINT = `${API_URL}/sheets/places`;
+import { fetchPlaces } from "../../utils/sheetUtils";
+import { ComponentLoader } from "../LoadingScreen";
+import type { Place } from "../../types";
 
 const Places: React.FC = () => {
   const navigate = useNavigate();
@@ -24,71 +13,17 @@ const Places: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPlaces = async () => {
+    const loadPlaces = async () => {
       try {
-        let csvText = "";
-        try {
-          // Use backend API whenever available, otherwise fall back to direct Google Sheets
-          const isPagesDev = window.location.hostname.endsWith('pages.dev');
-           const shouldUseBackend = Boolean(API_BASE_URL) && !isPagesDev;
-           
-           if (!shouldUseBackend) {
-             throw new Error('Skip backend fetch in pages.dev or backend URL not configured');
-           }
-          
-          const backendResponse = await fetch(PLACES_ENDPOINT);
-          if (backendResponse.ok) {
-            csvText = await backendResponse.text();
-          } else {
-            throw new Error(`Backend responded with status: ${backendResponse.status}`);
-          }
-        } catch (backendError) {
-          const fallbackUrl = getSheetUrl(SHEET_GIDS.PLACES, 'csv');
-          const fallbackResponse = await fetch(fallbackUrl);
-          if (!fallbackResponse.ok) {
-            throw new Error(`Fallback Google Sheets responded with status: ${fallbackResponse.status}`);
-          }
-          csvText = await fallbackResponse.text();
-        }
-        const rows = csvText.split("\n");
-        const header = rows[0]
-          .split(",")
-          .map((col) => col.replace(/^"|"$/g, "").trim().toLowerCase());
-        const idIndex = header.findIndex(
-          (col) => col === "id_loc" || col === "id"
-        );
-        const nameIndex = header.findIndex((col) => col === "name");
-        const descIndex = header.findIndex((col) => col === "description");
-        const imageIndex = header.findIndex((col) => col === "image_url");
-        const dataRows = rows.slice(1);
-        const parsedPlaces: Place[] = dataRows
-          .map((row) => {
-            const matches = row.match(/("([^"]*)"|([^,]+))(,|$)/g) || [];
-            const columns = matches.map((column) =>
-              column
-                .replace(/(^,)|(,$)/g, "")
-                .replace(/^"|"$/g, "")
-                .trim()
-            );
-            if (columns[idIndex] && columns[nameIndex]) {
-              return {
-                id: columns[idIndex],
-                name: columns[nameIndex],
-                description: descIndex !== -1 ? columns[descIndex] : "",
-                image: getDirectImageUrl(columns[imageIndex]),
-              };
-            }
-            return null;
-          })
-          .filter((place): place is Place => place !== null);
-        setPlaces(parsedPlaces);
-        setLoading(false);
+        const data = await fetchPlaces();
+        setPlaces(data);
       } catch (err) {
         setError("Failed to load places data. Please try again later.");
+      } finally {
         setLoading(false);
       }
     };
-    fetchPlaces();
+    loadPlaces();
   }, []);
 
   const handleCardClick = (place: Place) => {
@@ -99,10 +34,11 @@ const Places: React.FC = () => {
     return (
       <div className={styles.container}>
         <h1 className={styles.title}>Places</h1>
-        <div>Loading...</div>
+        <ComponentLoader message="Loading places..." />
       </div>
     );
   }
+
   if (error) {
     return (
       <div className={styles.container}>
@@ -137,7 +73,6 @@ const Places: React.FC = () => {
                 )}
               </div>
             </div>
-
           </div>
         ))}
       </div>

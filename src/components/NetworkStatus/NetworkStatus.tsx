@@ -7,18 +7,10 @@ interface NetworkStatusProps {
 }
 
 const NetworkStatus: React.FC<NetworkStatusProps> = ({ showDetails = false }) => {
-  const { isOnline, lastOnlineAt, lastOfflineAt, isSyncing } = useNetwork();
+  const { isOnline } = useNetwork();
 
-  // Format date for display
-  const formatDate = (date: Date | null) => {
-    if (!date) return 'N/A';
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    }).format(date);
-  };
+
+
 
   return (
     <div className={`${styles.container} ${isOnline ? styles.online : styles.offline} ${styles.navbarStyle}`}>

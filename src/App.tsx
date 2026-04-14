@@ -10,6 +10,7 @@ import PWAInstallPrompt from "./components/PWAInstallPrompt/PWAInstallPrompt";
 import NetworkStatusDetector from "./components/NetworkStatus/NetworkStatusDetector";
 import NetworkStatusNotification from "./components/NetworkStatus/NetworkStatusNotification";
 import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
+import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 
 // Lazy load all main page components
 const Home = lazy(() => import("./components/Home/Home"));
@@ -39,9 +40,7 @@ const Places = lazy(() => import("./components/Places/Places"));
 const LocationProjects = lazy(
   () => import("./components/Places/LocationProjects")
 );
-{/*const NetworkStatusPage = lazy(
-  () => import("./components/NetworkStatus/NetworkStatusPage")
-);*/}
+// NetworkStatusPage removed — uncomment if needed
 const NetworkLostPage = lazy(
   () => import("./components/NetworkStatus/NetworkLostPage")
 );
@@ -68,6 +67,7 @@ function App() {
             <PWAInstallPrompt />
             <NetworkStatusNotification />
             <main className="content">
+              <ErrorBoundary>
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<Login />} />
@@ -215,6 +215,7 @@ function App() {
                   }
                 />
               </Routes>
+            </ErrorBoundary>
             </main>
             <Footer />
           </Suspense>
